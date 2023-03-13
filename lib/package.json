@@ -1,0 +1,20 @@
+{
+  "name": "liquidjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "description": "An attempt at a JS framework",
+  "author": "Jackson Otto",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "npx tsc",
+    "dev": "npx nodemon -e ts --watch src --exec npx tsc"
+  },
+  "dependencies": {
+    "start-dom-jsx": "1.0.0-beta.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.21",
+    "typescript": "^4.9.5"
+  }
+}
