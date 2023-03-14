@@ -1,5 +1,5 @@
 {
-  "name": "liquidjs",
+  "name": "lampjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",

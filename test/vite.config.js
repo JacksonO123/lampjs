@@ -6,8 +6,8 @@ export default defineConfig({
     open: true
   },
   esbuild: {
-    jsxFactory: 'LiquidJs.createElement',
+    jsxFactory: 'LampJs.createElement',
     jsxFragment: 'Fragment',
-    jsxInject: 'import LiquidJs from "liquidjs"'
+    jsxInject: 'import LampJs from "lampjs"'
   }
 });

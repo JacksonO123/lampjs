@@ -1,4 +1,4 @@
-import { createState, createEffect } from 'liquidjs';
+import { createState, createEffect } from 'lampjs';
 
 const Root = () => {
   const text = createState('');

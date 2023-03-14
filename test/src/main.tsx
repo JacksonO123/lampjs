@@ -1,5 +1,5 @@
 import './style.css';
 import Root from './pages/root';
-import 'liquidjs';
+import 'lampjs';
 
-LiquidJs.mount(document.body, <Root />);
+LampJs.mount(document.body, <Root />);

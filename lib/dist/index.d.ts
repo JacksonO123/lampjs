@@ -1,4 +1,4 @@
-import { mount, createState, createElement, createEffect } from './liquidjs';
+import { mount, createState, createElement, createEffect } from './lampjs';
 declare const exportObj: {
     createElement: (tag: string | import("start-dom-jsx").ComponentFactory, attrs: import("start-dom-jsx").ComponentAttributes, ...children: import("start-dom-jsx").ComponentChild[]) => JSX.Element;
     mount: (root: HTMLElement | null, el: JSX.Element) => void;
@@ -14,7 +14,7 @@ declare const exportObj: {
     })[]) => void;
 };
 declare global {
-    let LiquidJs: typeof exportObj;
+    let LampJs: typeof exportObj;
 }
 export { createElement, mount, createState, createEffect };
 export default exportObj;

@@ -1,9 +1,9 @@
-import { mount, createState, createElement, createEffect } from './liquidjs';
+import { mount, createState, createElement, createEffect } from './lampjs';
 
 const exportObj = { createElement, mount, createState, createEffect };
 
 declare global {
-  let LiquidJs: typeof exportObj;
+  let LampJs: typeof exportObj;
 }
 
 export { createElement, mount, createState, createEffect };
