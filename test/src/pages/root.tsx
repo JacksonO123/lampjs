@@ -2,7 +2,7 @@ import Test from '../components/test';
 
 const Root = () => {
   return (
-    <div>
+    <div id="test">
       <Test />
     </div>
   );

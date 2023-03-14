@@ -1,11 +1,12 @@
-// import { h, ComponentFactory, ComponentAttributes, ComponentChild } from 'start-dom-jsx';
 import { h as createElement } from 'start-dom-jsx';
-import { mount } from './liquidjs';
+import { mount, createState } from './liquidjs';
 
-const exportObj = { createElement, mount };
+const exportObj = { createElement, mount, createState };
 
 declare global {
   let LiquidJs: typeof exportObj;
 }
+
+export { createElement, mount, createState };
 
 export default exportObj;
