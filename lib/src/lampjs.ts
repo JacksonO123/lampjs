@@ -1,4 +1,4 @@
-import { ComponentAttributes, ComponentChild, ComponentFactory } from 'start-dom-jsx';
+import type { JSX, ComponentChild, ComponentFactory, ComponentAttributes } from './types';
 import { isSvgTag, setElementStyle, applyChildren } from 'start-dom-jsx/dist/utils';
 
 export const mount = (root: HTMLElement | null, el: JSX.Element) => {
@@ -60,8 +60,7 @@ export const createState = <T>(value: T, builder?: (val: T) => JSX.Element) => {
   };
 };
 
-// export const createEffect = (cb: () => void, deps: ((...args: any[]) => void)[]) => {
-export const createEffect = (cb: () => void, deps: ((val?: any) => stateObj<any>)[]) => {
+export const createEffect = <T extends (val?: any) => stateObj<any>>(cb: () => void, deps: T[]) => {
   deps.forEach((dep) => {
     dep().applyDep(cb);
   });
@@ -90,7 +89,13 @@ export const createElement = (
     }
     for (let name of Object.keys(attrs)) {
       const value = attrs[name];
-      if (name.startsWith('on')) {
+      if (tag === 'input' && name === 'value') {
+        const state = value as (val?: any) => stateObj<any>;
+        const update = () => {
+          (element as HTMLInputElement).value = state().value;
+        };
+        state().applyDep(update);
+      } else if (name.startsWith('on')) {
         if (name === 'onChange') {
           name = 'onInput';
         }

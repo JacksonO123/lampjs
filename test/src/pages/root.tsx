@@ -8,14 +8,14 @@ const Root = () => {
   };
 
   createEffect(() => {
-    console.log('update');
+    console.log('new thing');
   }, [text]);
 
   return (
     <div>
       <input
         onChange={handleUpdate}
-        value={text().value}
+        value={text}
       />
       {text().el}
     </div>
