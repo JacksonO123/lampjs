@@ -1,9 +1,23 @@
-import Test from '../components/test';
+import { createState, createEffect } from 'liquidjs';
 
 const Root = () => {
+  const text = createState('');
+
+  const handleUpdate = (e: any) => {
+    text(e.target.value);
+  };
+
+  createEffect(() => {
+    console.log('update');
+  }, [text]);
+
   return (
-    <div id="test">
-      <Test />
+    <div>
+      <input
+        onChange={handleUpdate}
+        value={text().value}
+      />
+      {text().el}
     </div>
   );
 };
