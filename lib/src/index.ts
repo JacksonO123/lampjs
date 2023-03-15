@@ -33,3 +33,4 @@ declare global {
 
 export default exportObj;
 export * from './lampjs';
+export type { ChangeEvent } from './types';

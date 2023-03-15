@@ -1,7 +1,20 @@
+import { ChangeEvent } from 'lampjs';
 import { test } from '../contexts/test';
 
 const Test = () => {
-  return <>{test().el}</>;
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    test(e.currentTarget.value);
+  };
+
+  return (
+    <div>
+      <input
+        onChange={handleChange}
+        value={test}
+      />
+      {/* {test().el} */}
+    </div>
+  );
 };
 
 export default Test;

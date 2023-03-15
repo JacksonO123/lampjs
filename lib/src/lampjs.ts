@@ -17,8 +17,8 @@ const getStateEl = <T>(val: T, builder?: (value: T) => JSX.Element) => {
   }
 };
 
-type stateObj<T> = {
-  el: JSX.Element;
+export type stateObj<T> = {
+  el: () => JSX.Element;
   applyDep: (dep: () => void) => void;
   value: T;
 };
@@ -26,10 +26,11 @@ type stateObj<T> = {
 export const createState = <T>(value: T, builder?: (val: T) => JSX.Element) => {
   let currentValue = value;
   let builderCb: ((val: T) => JSX.Element) | undefined = builder;
-  let node: HTMLElement | JSX.Element;
+  let refNode: HTMLElement | JSX.Element;
   let deps: (() => void)[] = [];
+  let nodes: (HTMLElement | JSX.Element)[] = [];
 
-  node = getStateEl(currentValue, builderCb);
+  refNode = getStateEl(currentValue, builderCb);
 
   const applyDep = (dep: () => void) => {
     deps.push(dep);
@@ -44,16 +45,27 @@ export const createState = <T>(value: T, builder?: (val: T) => JSX.Element) => {
         currentValue = newValue;
       }
 
-      const newNode = getStateEl(currentValue, builderCb);
-      node.replaceWith(newNode);
-      node = newNode;
+      refNode = getStateEl(currentValue, builderCb);
+
+      nodes = nodes.map((node) => {
+        const clone = refNode.cloneNode(true) as HTMLElement | JSX.Element;
+        node.replaceWith(clone);
+        return clone;
+      });
 
       deps.forEach((dep) => {
         dep();
       });
     }
+
+    const getElNode = () => {
+      const clone = refNode.cloneNode(true) as HTMLElement | JSX.Element;
+      nodes.push(clone);
+      return clone;
+    };
+
     return {
-      el: node,
+      el: getElNode,
       value: currentValue,
       applyDep
     } as stateObj<T>;
@@ -95,7 +107,6 @@ export const createAsyncCall = {
 };
 
 export const Fragment = ({ children }: { children: JSX.Element }) => {
-  console.log(children);
   return children;
 };
 
@@ -105,7 +116,6 @@ export const createElement = (
   attrs: ComponentAttributes,
   ...children: ComponentChild[]
 ) => {
-  console.log(tag);
   if (typeof tag === 'function') return tag(Object.assign(Object.assign({}, attrs), { children }));
   const isSvg = isSvgTag(tag);
   const element = isSvg

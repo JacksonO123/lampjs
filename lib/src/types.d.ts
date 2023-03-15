@@ -1,3 +1,5 @@
+import type { stateObj } from './index';
+
 export type { JSX };
 export declare type ComponentChild =
   | ComponentChild[]
@@ -22,6 +24,28 @@ export declare type ComponentAttributes = {
     | Partial<CSSStyleDeclaration>
     | EventListenerOrEventListenerObject;
 };
+interface BaseSyntheticEvent<E = object, C = any, T = any> {
+  nativeEvent: E;
+  currentTarget: C;
+  target: T;
+  bubbles: boolean;
+  cancelable: boolean;
+  defaultPrevented: boolean;
+  eventPhase: number;
+  isTrusted: boolean;
+  preventDefault(): void;
+  isDefaultPrevented(): boolean;
+  stopPropagation(): void;
+  isPropagationStopped(): boolean;
+  persist(): void;
+  timeStamp: number;
+  type: string;
+}
+interface SyntheticEvent<T = Element, E = Event>
+  extends BaseSyntheticEvent<E, EventTarget & T, EventTarget> {}
+export declare interface ChangeEvent<T = Element> extends SyntheticEvent<T> {
+  target: EventTarget & T;
+}
 declare global {
   namespace JSX {
     type Element = HTMLElement | SVGElement;
@@ -68,7 +92,7 @@ declare global {
       onFocusCapture?: FocusEventHandler;
       onBlur?: FocusEventHandler;
       onBlurCapture?: FocusEventHandler;
-      onChange?: GenericEventHandler;
+      onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
       onChangeCapture?: GenericEventHandler;
       onInput?: GenericEventHandler;
       onInputCapture?: GenericEventHandler;
@@ -339,7 +363,7 @@ declare global {
       title?: string;
       type?: string;
       useMap?: string;
-      value?: string | string[] | number;
+      value?: string | string[] | number | ((val: any) => stateObj<any>);
       volume?: string | number;
       width?: number | string;
       wmode?: string;

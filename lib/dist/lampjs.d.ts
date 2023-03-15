@@ -1,7 +1,7 @@
 import type { JSX, ComponentChild, ComponentFactory, ComponentAttributes } from './types';
 export declare const mount: (root: HTMLElement | null, el: JSX.Element) => void;
-type stateObj<T> = {
-    el: JSX.Element;
+export type stateObj<T> = {
+    el: () => JSX.Element;
     applyDep: (dep: () => void) => void;
     value: T;
 };
@@ -18,4 +18,3 @@ export declare const Fragment: ({ children }: {
     children: JSX.Element;
 }) => JSX.Element;
 export declare const createElement: (tag: string | ComponentFactory, attrs: ComponentAttributes, ...children: ComponentChild[]) => JSX.Element;
-export {};
