@@ -17,5 +17,5 @@
     "skipLibCheck": true,
     "jsxFactory": "LampJs.createElement"
   },
-  "include": ["src"]
+  "include": ["src", "api"]
 }
