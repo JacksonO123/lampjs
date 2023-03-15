@@ -7,7 +7,7 @@ export default defineConfig({
   },
   esbuild: {
     jsxFactory: 'LampJs.createElement',
-    jsxFragment: 'Fragment',
+    jsxFragment: 'LampJs.Fragment',
     jsxInject: 'import LampJs from "lampjs"'
   }
 });

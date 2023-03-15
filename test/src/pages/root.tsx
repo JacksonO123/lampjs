@@ -1,24 +1,14 @@
-import { createState, createEffect, createAsyncCall } from 'lampjs';
+import Test from '../components/test';
+import { test } from '../contexts/test';
 
 const Root = () => {
-  type testRes = {
-    working: boolean;
-  };
+  test('working');
 
-  const testBuilder = (res: testRes | null) => <div>working: {res?.working ? 'working' : 'not working'}</div>;
-
-  const async = createAsyncCall.get<testRes>('/api/test');
-  const test = createState<testRes | null>(null, testBuilder);
-
-  async((val) => {
-    test(val.data);
-  });
-
-  createEffect(() => {
-    console.log(test().value);
-  }, [test]);
-
-  return <div>{test().el}</div>;
+  return (
+    <div>
+      <Test />
+    </div>
+  );
 };
 
 export default Root;

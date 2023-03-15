@@ -14,5 +14,8 @@ export type asyncCallState<T> = {
 export declare const createAsyncCall: {
     get: <T>(url: string, requestInit?: RequestInit) => (cb: (val: asyncCallState<T>) => void, parser?: ((...args: any[]) => any) | undefined) => void;
 };
+export declare const Fragment: ({ children }: {
+    children: JSX.Element;
+}) => JSX.Element;
 export declare const createElement: (tag: string | ComponentFactory, attrs: ComponentAttributes, ...children: ComponentChild[]) => JSX.Element;
 export {};

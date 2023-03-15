@@ -94,12 +94,18 @@ export const createAsyncCall = {
   }
 };
 
+export const Fragment = ({ children }: { children: JSX.Element }) => {
+  console.log(children);
+  return children;
+};
+
 const xlinkNS = 'http://www.w3.org/1999/xlink';
 export const createElement = (
   tag: string | ComponentFactory,
   attrs: ComponentAttributes,
   ...children: ComponentChild[]
 ) => {
+  console.log(tag);
   if (typeof tag === 'function') return tag(Object.assign(Object.assign({}, attrs), { children }));
   const isSvg = isSvgTag(tag);
   const element = isSvg

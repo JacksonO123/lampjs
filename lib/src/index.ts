@@ -23,9 +23,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-import { mount, createState, createElement, createEffect } from './lampjs';
+import { mount, createState, createElement, createEffect, Fragment } from './lampjs';
 
-export const exportObj = { createElement, mount, createState, createEffect };
+export const exportObj = { createElement, mount, createState, createEffect, Fragment };
 
 declare global {
   let LampJs: typeof exportObj;

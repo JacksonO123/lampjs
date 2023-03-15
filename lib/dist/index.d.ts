@@ -11,6 +11,9 @@ export declare const exportObj: {
         applyDep: (dep: () => void) => void;
         value: any;
     }>(cb: () => void, deps: T_1[]) => void;
+    Fragment: ({ children }: {
+        children: JSX.Element;
+    }) => JSX.Element;
 };
 declare global {
     let LampJs: typeof exportObj;

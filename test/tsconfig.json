@@ -15,7 +15,8 @@
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "skipLibCheck": true,
-    "jsxFactory": "LampJs.createElement"
+    "jsxFactory": "LampJs.createElement",
+    "jsxFragmentFactory": "LampJs.Fragment"
   },
   "include": ["src", "api"]
 }
