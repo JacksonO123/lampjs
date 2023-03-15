@@ -1,5 +1,5 @@
 import type { JSX, ComponentChild, ComponentFactory, ComponentAttributes } from './types';
-import { isSvgTag, setElementStyle, applyChildren } from 'start-dom-jsx/dist/utils';
+import { isSvgTag, applyChildren, setElementStyle } from './util';
 
 export const mount = (root: HTMLElement | null, el: JSX.Element) => {
   if (!root) return;

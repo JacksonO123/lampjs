@@ -11,8 +11,7 @@
     "dev": "npx nodemon -e ts --watch src --exec npx tsc"
   },
   "dependencies": {
-    "@bugsnag/cuid": "^3.0.2",
-    "start-dom-jsx": "1.0.0-beta.1"
+    "@bugsnag/cuid": "^3.0.2"
   },
   "devDependencies": {
     "nodemon": "^2.0.21",
