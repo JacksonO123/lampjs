@@ -1,13 +1,13 @@
 lockfileVersion: 5.4
 
 specifiers:
-  '@jacksonotto/lampjs': link:../lib
+  '@jacksonotto/lampjs': ^1.1.1
   '@vercel/node': ^2.9.12
   typescript: ^4.9.3
   vite: ^4.1.0
 
 dependencies:
-  '@jacksonotto/lampjs': link:../lib
+  '@jacksonotto/lampjs': 1.1.1
 
 devDependencies:
   '@vercel/node': 2.9.12
@@ -234,6 +234,10 @@ packages:
     requiresBuild: true
     dev: true
     optional: true
+
+  /@jacksonotto/lampjs/1.1.1:
+    resolution: {integrity: sha512-SODeYQ+Mdi2GPl6deziN8Vh7FRnnlUJMrT9ULdFvfcucH7dyRVLbDrC9Kb8Q8CUMHfadCU8frdIcq6YJKRHgOg==}
+    dev: false
 
   /@jridgewell/resolve-uri/3.1.0:
     resolution: {integrity: sha512-F2msla3tad+Mfht5cJq7LSXcdudKTWCVYUgw6pLFOOHSTtZlj6SWNYAp+AhuqLmWdBO2X5hPrLcu8cVP8fy28w==}

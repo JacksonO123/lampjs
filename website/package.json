@@ -12,6 +12,6 @@
     "vite": "^4.1.0"
   },
   "dependencies": {
-    "@jacksonotto/lampjs": "link:../lib"
+    "@jacksonotto/lampjs": "^1.1.1"
   }
 }
