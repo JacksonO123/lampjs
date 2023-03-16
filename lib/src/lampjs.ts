@@ -101,6 +101,11 @@ export const createAsyncCall = {
           data.loading = false;
           data.data = resData as T;
           cb(data);
+        })
+        .catch(() => {
+          data.loading = false;
+          data.data = null;
+          cb(data);
         });
     };
   }
