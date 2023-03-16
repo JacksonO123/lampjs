@@ -2,7 +2,6 @@ import { ComponentChild } from './types';
 
 export const isSvgTag = (tag: string) => {
   return [
-    'a',
     'circle',
     'clipPath',
     'defs',
@@ -47,9 +46,7 @@ export const isSvgTag = (tag: string) => {
     'polyline',
     'radialGradient',
     'rect',
-    'script',
     'stop',
-    'style',
     'svg',
     'switch',
     'symbol',

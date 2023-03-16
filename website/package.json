@@ -1,7 +1,5 @@
 {
-  "name": "lampjs-test",
-  "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,7 +12,6 @@
     "vite": "^4.1.0"
   },
   "dependencies": {
-    "@jacksonotto/lampjs": "link:../lib",
-    "simulationjs": "^3.1.10"
+    "@jacksonotto/lampjs": "link:../lib"
   }
 }
