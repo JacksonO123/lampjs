@@ -10,7 +10,7 @@ const Root = () => {
 
   return (
     <div class="root">
-      <img src="/lamp.svg" />
+      <img src="/lamp.svg" alt="" />
       <h1>LampJs</h1>
       <span>A powerful, lightweight JS framework</span>
       <button onClick={handleClick}>Count is {num().el()}</button>
