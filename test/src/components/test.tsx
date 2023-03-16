@@ -1,4 +1,4 @@
-import { ChangeEvent } from 'lampjs';
+import { ChangeEvent } from '@jacksonotto/lampjs';
 import { test } from '../contexts/test';
 
 const Test = () => {

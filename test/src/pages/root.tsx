@@ -1,6 +1,6 @@
 import Test from '../components/test';
 import { test } from '../contexts/test';
-import { ChangeEvent } from 'lampjs';
+import { ChangeEvent } from '@jacksonotto/lampjs';
 
 const Root = () => {
   test('working');

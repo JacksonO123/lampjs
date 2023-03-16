@@ -1,13 +1,13 @@
 lockfileVersion: 5.4
 
 specifiers:
+  '@jacksonotto/lampjs': link:../lib
   '@vercel/node': ^2.9.12
-  lampjs: link:../lib
   typescript: ^4.9.3
   vite: ^4.1.0
 
 dependencies:
-  lampjs: link:../lib
+  '@jacksonotto/lampjs': link:../lib
 
 devDependencies:
   '@vercel/node': 2.9.12
