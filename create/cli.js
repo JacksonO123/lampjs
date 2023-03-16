@@ -12,10 +12,10 @@ readline.question("? What will your project be called: ", (name) => {
   fs.renameSync(path.join(from, "_gitignore"), path.join(from, ".gitignore"));
   fs.copySync(from, to, { overwrite: true });
   console.log("Done!");
-  console.log("Next steps:");
+  console.log("Next steps:\n");
   if (name !== ".") {
-    console.log(`\n-  "cd ${name}"`);
+    console.log(`-  "cd ${name}"`);
   }
-  console.log('\n-  "npm install"\n-  "npm run dev"');
+  console.log('-  "npm install"\n-  "npm run dev"');
   readline.close();
 });
