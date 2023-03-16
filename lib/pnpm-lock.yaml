@@ -1,22 +1,14 @@
 lockfileVersion: 5.4
 
 specifiers:
-  '@bugsnag/cuid': ^3.0.2
   nodemon: ^2.0.21
   typescript: ^4.9.5
-
-dependencies:
-  '@bugsnag/cuid': 3.0.2
 
 devDependencies:
   nodemon: 2.0.21
   typescript: 4.9.5
 
 packages:
-
-  /@bugsnag/cuid/3.0.2:
-    resolution: {integrity: sha512-cIwzC93r3PQ/INeuwtZwkZIG2K8WWN0rRLZQhu+mr48Ay+i6sEki4GYfTsflse7hZ1BeDWrNb/Q9vgY3B31xHQ==}
-    dev: false
 
   /abbrev/1.1.1:
     resolution: {integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==}

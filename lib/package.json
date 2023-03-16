@@ -5,13 +5,10 @@
   "type": "module",
   "description": "A lightweight front-end JavaScript framework",
   "author": "Jackson Otto",
-  "version": "0.1.2",
+  "version": "1.0.1",
   "scripts": {
     "build": "npx tsc",
     "dev": "npx nodemon -e ts --watch src --exec npx tsc"
-  },
-  "dependencies": {
-    "@bugsnag/cuid": "^3.0.2"
   },
   "devDependencies": {
     "nodemon": "^2.0.21",
