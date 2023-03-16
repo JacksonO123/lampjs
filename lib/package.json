@@ -16,5 +16,13 @@
   "devDependencies": {
     "nodemon": "^2.0.21",
     "typescript": "^4.9.5"
-  }
+  },
+  "keywords": [
+    "lampjs",
+    "frontend",
+    "javascript",
+    "typescript",
+    "framework",
+    "jsx"
+  ]
 }
