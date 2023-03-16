@@ -1,4 +1,4 @@
-// inspired by start-dom-jsx (https://github.com/NewBuilding/dom-jsx/)
+// jsx implementation inspired by start-dom-jsx (https://github.com/NewBuilding/dom-jsx/)
 /*
 The MIT License (MIT)
 
