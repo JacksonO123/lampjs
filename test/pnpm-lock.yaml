@@ -3,11 +3,13 @@ lockfileVersion: 5.4
 specifiers:
   '@jacksonotto/lampjs': link:../lib
   '@vercel/node': ^2.9.12
+  simulationjs: ^3.1.10
   typescript: ^4.9.3
   vite: ^4.1.0
 
 dependencies:
   '@jacksonotto/lampjs': link:../lib
+  simulationjs: 3.1.10
 
 devDependencies:
   '@vercel/node': 2.9.12
@@ -892,6 +894,10 @@ packages:
     dependencies:
       queue-microtask: 1.2.3
     dev: true
+
+  /simulationjs/3.1.10:
+    resolution: {integrity: sha512-wycUExz0ECc4ICIhEQT7+O6q2Vk6cMRP+h2+zX+yNXF4QrF5MO+VjsqwtdWPXfbIrxKuhShGfqklhC2RnI9KKQ==}
+    dev: false
 
   /source-map-js/1.0.2:
     resolution: {integrity: sha512-R0XvVJ9WusLiqTCEiGCmICCMplcCkIwwR11mOSD9CR5u+IXYdiseeEuXCVAjS54zqwkLcPNnmU4OeJ6tUrWhDw==}

@@ -1,8 +1,9 @@
 {
   "name": "create-lampjs",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "author": "Jackson Otto",
   "description": "A lightweight JS framework",
+  "type": "module",
   "bin": {
     "create-lampjs": "./cli.js"
   },
