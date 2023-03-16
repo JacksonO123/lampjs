@@ -139,6 +139,7 @@ export const createElement = (
           (element as HTMLInputElement).value = state().value;
         };
         state().applyDep(update);
+        update();
       } else if (name.startsWith('on')) {
         if (name === 'onChange') {
           name = 'onInput';
