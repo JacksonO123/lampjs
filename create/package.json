@@ -1,6 +1,6 @@
 {
   "name": "create-lampjs-app",
-  "version": "0.1.10",
+  "version": "1.0.2",
   "description": "A lightweight JS framework",
   "main": "cli.js",
   "bin": {
