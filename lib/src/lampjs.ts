@@ -1,5 +1,15 @@
 import type { JSX, ComponentChild, ComponentFactory, ComponentAttributes } from './types';
 import { isSvgTag, applyChildren, setElementStyle } from './util';
+import { v4 as uuid } from 'uuid';
+
+type Listener = {
+  event: EventListenerOrEventListenerObject;
+  name: string;
+  useCapture: boolean;
+};
+
+const eventListeners = new Map<string, Listener[]>();
+const stateListeners = new Map<string, ExtendId<JSX.Element>[]>();
 
 export const mount = (root: HTMLElement | null, el: JSX.Element) => {
   if (!root) return;
@@ -7,12 +17,17 @@ export const mount = (root: HTMLElement | null, el: JSX.Element) => {
   root.appendChild(el);
 };
 
-const getStateEl = <T>(val: T, builder?: (value: T) => JSX.Element) => {
+const getStateEl = <T>(val: T, id: string, builder?: (value: T) => JSX.Element) => {
   if (builder) {
-    return builder(val);
+    const el = builder(val) as ExtendId<JSX.Element>;
+    el.stateId = id;
+    el.elId = uuid();
+    return el;
   } else {
-    const node = document.createElement('span');
+    const node = document.createElement('span') as ExtendId<HTMLElement>;
     node.innerHTML = val + '';
+    node.stateId = id;
+    node.elId = uuid();
     return node;
   }
 };
@@ -23,14 +38,68 @@ export type stateObj<T> = {
   value: T;
 };
 
+const replaceStateNode = (from: ExtendId<JSX.Element>, to: ExtendId<JSX.Element>, id?: string) => {
+  const stateRefs = stateListeners.get(id ? id : from.stateId);
+  let index: number | null = null;
+  stateRefs?.forEach((ref, i) => {
+    if (ref.elId == from.elId) {
+      index = i;
+    }
+  });
+
+  if (index !== null) {
+    from.stateId;
+    if (!stateRefs) {
+      stateListeners.set(from.stateId, [to]);
+    } else {
+      stateRefs[index] = to;
+      stateListeners.set(from.stateId, stateRefs);
+    }
+  }
+};
+
+const cloneNode = (el: ExtendId<JSX.Element>, id?: string) => {
+  const events = eventListeners.get(id ? id : el.elId);
+  const clone = el.cloneNode(false) as ExtendId<JSX.Element>;
+  clone.elId = id ? id : el.elId;
+  replaceStateNode(el, clone);
+  if (events) {
+    events.forEach((event) => {
+      clone.addEventListener(event.name, event.event, event.useCapture);
+    });
+  }
+  el.childNodes.forEach((node) => {
+    const nodeClone = cloneNode(node as ExtendId<JSX.Element>);
+    clone.appendChild(nodeClone);
+  });
+  return clone as JSX.Element;
+};
+
+type StateChangeEvent<T> = Event & { value: T };
+
+type ExtendId<T> = T extends {} ? T & { stateId: string; elId: string } : T;
+
 export const createState = <T>(value: T, builder?: (val: T) => JSX.Element) => {
   let currentValue = value;
   let builderCb: ((val: T) => JSX.Element) | undefined = builder;
-  let refNode: HTMLElement | JSX.Element;
+  let refNode: ExtendId<HTMLElement | JSX.Element>;
   let deps: (() => void)[] = [];
-  let nodes: (HTMLElement | JSX.Element)[] = [];
+  const id = uuid();
 
-  refNode = getStateEl(currentValue, builderCb);
+  const handleStateChangeEvent = (e: Event) => stateChangeEventCb(e, builderCb);
+
+  refNode = getStateEl(currentValue, id, builderCb);
+  const stateChangeEventCb = (e: Event, _builder?: (val: T) => JSX.Element) => {
+    const evt = e as StateChangeEvent<T>;
+    const el = getStateEl(evt.value, id, builder);
+    if (evt.currentTarget) {
+      el.elId = (evt.currentTarget as ExtendId<JSX.Element>).elId;
+      evt.currentTarget.removeEventListener('state-change', handleStateChangeEvent);
+      replaceStateNode(evt.currentTarget as ExtendId<JSX.Element>, el, id);
+      el.addEventListener('state-change', handleStateChangeEvent);
+      (evt.currentTarget as ExtendId<JSX.Element>).replaceWith(el);
+    }
+  };
 
   const applyDep = (dep: () => void) => {
     deps.push(dep);
@@ -45,22 +114,42 @@ export const createState = <T>(value: T, builder?: (val: T) => JSX.Element) => {
         currentValue = newValue;
       }
 
-      refNode = getStateEl(currentValue, builderCb);
+      refNode = getStateEl(currentValue, id, builderCb);
 
-      nodes = nodes.map((node) => {
-        const clone = refNode.cloneNode(true) as HTMLElement | JSX.Element;
-        node.replaceWith(clone);
-        return clone;
-      });
+      const eventsToDispatch = stateListeners.get(id);
+      if (eventsToDispatch !== undefined) {
+        eventsToDispatch.forEach((node) => {
+          const event = new Event('state-change') as StateChangeEvent<T>;
+          event.value = currentValue;
+          node.dispatchEvent(event);
+        });
+      }
 
       deps.forEach((dep) => {
         dep();
       });
     }
 
+    const addToStateNodes = (node: ExtendId<JSX.Element>) => {
+      const elements = stateListeners.get(id);
+      if (!elements) stateListeners.set(id, [node]);
+      else stateListeners.set(id, [...elements, node]);
+    };
+
     const getElNode = () => {
-      const clone = refNode.cloneNode(true) as HTMLElement | JSX.Element;
-      nodes.push(clone);
+      const elId = uuid();
+      eventListeners.set(elId, [
+        {
+          event: handleStateChangeEvent,
+          name: 'state-change',
+          useCapture: false
+        }
+      ]);
+      const clone = cloneNode(refNode, elId) as ExtendId<JSX.Element>;
+      clone.stateId = id;
+      clone.elId = elId;
+      clone.addEventListener('state-change', handleStateChangeEvent);
+      addToStateNodes(clone);
       return clone;
     };
 
@@ -123,9 +212,10 @@ export const createElement = (
 ) => {
   if (typeof tag === 'function') return tag(Object.assign(Object.assign({}, attrs), { children }));
   const isSvg = isSvgTag(tag);
-  const element = isSvg
-    ? document.createElementNS('http://www.w3.org/2000/svg', tag)
-    : document.createElement(tag);
+  const element = (
+    isSvg ? document.createElementNS('http://www.w3.org/2000/svg', tag) : document.createElement(tag)
+  ) as ExtendId<JSX.Element>;
+  element.elId = uuid();
   if (attrs) {
     if (
       attrs.style &&
@@ -141,7 +231,7 @@ export const createElement = (
       if (tag === 'input' && name === 'value') {
         const state = value as (val?: any) => stateObj<any>;
         const update = () => {
-          (element as HTMLInputElement).value = state().value;
+          (element as ExtendId<HTMLInputElement>).value = state().value;
         };
         state().applyDep(update);
         update();
@@ -152,8 +242,20 @@ export const createElement = (
         const finalName = name.replace(/Capture$/, '');
         const useCapture = name !== finalName;
         const eventName = finalName.toLowerCase().substring(2);
-        if (value && typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean')
+        if (value && typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean') {
+          const listeners = eventListeners.get(element.elId);
+          if (!listeners) {
+            eventListeners.set(element.elId, [
+              { event: value as EventListenerOrEventListenerObject, name: eventName, useCapture }
+            ]);
+          } else {
+            eventListeners.set(element.elId, [
+              ...listeners,
+              { event: value as EventListenerOrEventListenerObject, name: eventName, useCapture }
+            ]);
+          }
           element.addEventListener(eventName, value as EventListenerOrEventListenerObject, useCapture);
+        }
       } else if (isSvg && name.startsWith('xlink:')) {
         if (value && typeof value !== 'number' && typeof value !== 'boolean') {
           element.setAttributeNS(xlinkNS, name, value as string);
