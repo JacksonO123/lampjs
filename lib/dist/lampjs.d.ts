@@ -12,9 +12,7 @@ export type asyncCallState<T> = {
     loading: boolean;
     data: T | null;
 };
-export declare const createAsyncCall: {
-    get: <T>(url: string, requestInit?: RequestInit) => (cb: (val: asyncCallState<T>) => void, parser?: ((...args: any[]) => any) | undefined) => void;
-};
+export declare const createAsyncCall: <T>(url: string, requestInit?: RequestInit) => (cb: (val: asyncCallState<T>) => void, parser?: ((...args: any[]) => any) | undefined) => void;
 export declare const Fragment: ({ children }: {
     children: JSX.Element;
 }) => JSX.Element;

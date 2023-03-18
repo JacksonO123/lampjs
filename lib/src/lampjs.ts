@@ -191,32 +191,30 @@ export type asyncCallState<T> = {
   data: T | null;
 };
 
-export const createAsyncCall = {
-  get: <T>(url: string, requestInit?: RequestInit) => {
-    const data: asyncCallState<T> = {
-      loading: true,
-      data: null
-    };
-    return (cb: (val: typeof data) => void, parser?: (...args: any[]) => any) => {
-      cb(data);
-      fetch(url, requestInit)
-        .then((res) => {
-          if (parser === null) return res;
-          else if (parser) return parser(res);
-          return res.json();
-        })
-        .then((resData) => {
-          data.loading = false;
-          data.data = resData as T;
-          cb(data);
-        })
-        .catch(() => {
-          data.loading = false;
-          data.data = null;
-          cb(data);
-        });
-    };
-  }
+export const createAsyncCall = <T>(url: string, requestInit?: RequestInit) => {
+  const data: asyncCallState<T> = {
+    loading: true,
+    data: null
+  };
+  return (cb: (val: typeof data) => void, parser?: (...args: any[]) => any) => {
+    cb(data);
+    fetch(url, requestInit)
+      .then((res) => {
+        if (parser === null) return res;
+        else if (parser) return parser(res);
+        return res.json();
+      })
+      .then((resData) => {
+        data.loading = false;
+        data.data = resData as T;
+        cb(data);
+      })
+      .catch(() => {
+        data.loading = false;
+        data.data = null;
+        cb(data);
+      });
+  };
 };
 
 export const Fragment = ({ children }: { children: JSX.Element }) => {
