@@ -11,6 +11,11 @@ type Listener = {
 const eventListeners = new Map<string, Listener[]>();
 const stateListeners = new Map<string, ExtendId<JSX.Element>[]>();
 
+const testEl = document.createElement('span') as ExtendId<JSX.Element>;
+testEl.id = uuid();
+testEl.stateId = uuid();
+stateListeners.set('some_key', [testEl]);
+
 export const mount = (root: HTMLElement | null, el: JSX.Element) => {
   if (!root) return;
 
@@ -62,6 +67,7 @@ const cloneNode = (el: ExtendId<JSX.Element>, id?: string) => {
   const events = eventListeners.get(id ? id : el.elId);
   const clone = el.cloneNode(false) as ExtendId<JSX.Element>;
   clone.elId = id ? id : el.elId;
+  clone.stateId = el.stateId;
   replaceStateNode(el, clone);
   if (events) {
     events.forEach((event) => {
@@ -79,6 +85,10 @@ type StateChangeEvent<T> = Event & { value: T };
 
 type ExtendId<T> = T extends {} ? T & { stateId: string; elId: string } : T;
 
+// const cleanStateListeners = () => {
+//   // implement later
+// };
+
 export const createState = <T>(value: T, builder?: (val: T) => JSX.Element) => {
   let currentValue = value;
   let builderCb: ((val: T) => JSX.Element) | undefined = builder;
@@ -88,7 +98,6 @@ export const createState = <T>(value: T, builder?: (val: T) => JSX.Element) => {
 
   const handleStateChangeEvent = (e: Event) => stateChangeEventCb(e, builderCb);
 
-  refNode = getStateEl(currentValue, id, builderCb);
   const stateChangeEventCb = (e: Event, _builder?: (val: T) => JSX.Element) => {
     const evt = e as StateChangeEvent<T>;
     const el = getStateEl(evt.value, id, builder);
@@ -105,7 +114,7 @@ export const createState = <T>(value: T, builder?: (val: T) => JSX.Element) => {
     deps.push(dep);
   };
 
-  return (newValue?: T | ((val: T) => T)) => {
+  const updateCb = (newValue?: T | ((val: T) => T)) => {
     if (newValue !== undefined) {
       if (typeof newValue === 'function') {
         const updateCb = newValue as (val: T) => T;
@@ -117,6 +126,7 @@ export const createState = <T>(value: T, builder?: (val: T) => JSX.Element) => {
       refNode = getStateEl(currentValue, id, builderCb);
 
       const eventsToDispatch = stateListeners.get(id);
+      console.log(stateListeners);
       if (eventsToDispatch !== undefined) {
         eventsToDispatch.forEach((node) => {
           const event = new Event('state-change') as StateChangeEvent<T>;
@@ -125,14 +135,19 @@ export const createState = <T>(value: T, builder?: (val: T) => JSX.Element) => {
         });
       }
 
+      // cleanStateListeners();
+
       deps.forEach((dep) => {
         dep();
       });
+    } else if (!refNode) {
+      refNode = getStateEl(currentValue, id, builderCb);
     }
 
     const addToStateNodes = (node: ExtendId<JSX.Element>) => {
+      const nodes = [node];
       const elements = stateListeners.get(id);
-      if (!elements) stateListeners.set(id, [node]);
+      if (elements === undefined) stateListeners.set(id, nodes);
       else stateListeners.set(id, [...elements, node]);
     };
 
@@ -159,6 +174,8 @@ export const createState = <T>(value: T, builder?: (val: T) => JSX.Element) => {
       applyDep
     } as stateObj<T>;
   };
+  updateCb(value);
+  return updateCb;
 };
 
 export const createEffect = <T extends (val?: any) => stateObj<any>>(cb: () => void, deps: T[]) => {

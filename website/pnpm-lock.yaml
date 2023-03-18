@@ -1,13 +1,13 @@
 lockfileVersion: 5.4
 
 specifiers:
-  '@jacksonotto/lampjs': ^1.1.1
+  '@jacksonotto/lampjs': ^2.0.0
   '@vercel/node': ^2.9.12
   typescript: ^4.9.3
   vite: ^4.1.0
 
 dependencies:
-  '@jacksonotto/lampjs': 1.1.1
+  '@jacksonotto/lampjs': 2.0.0
 
 devDependencies:
   '@vercel/node': 2.9.12
@@ -235,8 +235,10 @@ packages:
     dev: true
     optional: true
 
-  /@jacksonotto/lampjs/1.1.1:
-    resolution: {integrity: sha512-SODeYQ+Mdi2GPl6deziN8Vh7FRnnlUJMrT9ULdFvfcucH7dyRVLbDrC9Kb8Q8CUMHfadCU8frdIcq6YJKRHgOg==}
+  /@jacksonotto/lampjs/2.0.0:
+    resolution: {integrity: sha512-fw3qUSi0ZtTa+7Fu1W7Th2ZqVSWnQQiGTQj/fqU+fz9n+KM4Vam0WPOuirMc0iIct6q6zoRmH3HathnwvdK+Nw==}
+    dependencies:
+      uuid: 9.0.0
     dev: false
 
   /@jridgewell/resolve-uri/3.1.0:
@@ -984,6 +986,11 @@ packages:
     dependencies:
       punycode: 2.3.0
     dev: true
+
+  /uuid/9.0.0:
+    resolution: {integrity: sha512-MXcSTerfPa4uqyzStbRoTgt5XIe3x5+42+q1sDuy3R5MDk66URdLMOZe5aPX/SQd+kuYAh0FdP/pO28IkQyTeg==}
+    hasBin: true
+    dev: false
 
   /v8-compile-cache-lib/3.0.1:
     resolution: {integrity: sha512-wa7YjyUGfNZngI/vtK0UHAN+lgDCxBPCylVXGp0zu59Fz5aiGtNXaq3DhIov063MorB+VfufLh3JlF2KdTK3xg==}

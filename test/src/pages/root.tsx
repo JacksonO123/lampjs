@@ -1,26 +1,35 @@
-import { createEffect, createState } from "@jacksonotto/lampjs";
+import { createState } from "@jacksonotto/lampjs";
 import "./root.css";
 
 const Root = () => {
   const show = createState(true, (val) => {
     const num = createState(0, (val) => {
-      return <h1>{val}</h1>;
+      const thing = createState(10);
+
+      setTimeout(() => {
+        console.log("run");
+        thing(100);
+      }, 1000);
+
+      return (
+        <h1>
+          {val}
+          {thing().el()}
+        </h1>
+      );
     });
 
     const handleClick = () => {
       num((prev) => prev + 1);
     };
 
-    createEffect(() => {
-      console.log(num().value);
-    }, [num]);
     return (
       <span>
         {val ? (
-          <button onClick={handleClick}>
+          <div>
+            <button onClick={handleClick}>another</button>
             Count is {num().el()}
-            {num().el()}
-          </button>
+          </div>
         ) : (
           ""
         )}
