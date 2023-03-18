@@ -10,11 +10,15 @@ type Listener = {
 
 const eventListeners = new Map<string, Listener[]>();
 const stateListeners = new Map<string, ExtendId<JSX.Element>[]>();
+let mountEvents: (() => void)[] = [];
 
 export const mount = (root: HTMLElement | null, el: JSX.Element) => {
   if (!root) return;
 
   root.appendChild(el);
+
+  mountEvents.forEach((event) => event());
+  mountEvents = [];
 };
 
 const getStateEl = <T>(val: T, id: string, builder?: (value: T) => JSX.Element) => {
@@ -36,6 +40,10 @@ export type stateObj<T> = {
   el: () => JSX.Element;
   applyDep: (dep: () => void) => void;
   value: T;
+};
+
+export const onPageMount = (cb: () => void) => {
+  mountEvents.push(cb);
 };
 
 const replaceStateNode = (from: ExtendId<JSX.Element>, to: ExtendId<JSX.Element>, id?: string) => {

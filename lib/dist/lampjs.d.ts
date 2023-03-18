@@ -5,6 +5,7 @@ export type stateObj<T> = {
     applyDep: (dep: () => void) => void;
     value: T;
 };
+export declare const onPageMount: (cb: () => void) => void;
 export declare const createState: <T>(value: T, builder?: ((val: T) => JSX.Element) | undefined) => (newValue?: T | ((val: T) => T) | undefined) => stateObj<T>;
 export declare const createEffect: <T extends (val?: any) => stateObj<any>>(cb: () => void, deps: T[]) => void;
 export type asyncCallState<T> = {

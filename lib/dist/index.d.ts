@@ -6,6 +6,7 @@ export declare const exportObj: {
     Fragment: ({ children }: {
         children: JSX.Element;
     }) => JSX.Element;
+    onPageMount: (cb: () => void) => void;
 };
 declare global {
     let LampJs: typeof exportObj;
