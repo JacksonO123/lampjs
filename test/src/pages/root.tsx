@@ -1,53 +1,44 @@
-import { createState } from "@jacksonotto/lampjs";
+import { ChangeEvent, createState } from "@jacksonotto/lampjs";
+import Letter from "../components/letter";
 import "./root.css";
 
 const Root = () => {
-  const show = createState(true, (val) => {
-    const num = createState(0, (val) => {
-      const thing = createState(10);
-
-      setTimeout(() => {
-        console.log("run");
-        thing(100);
-      }, 1000);
-
-      return (
-        <h1>
-          {val}
-          {thing().el()}
-        </h1>
-      );
-    });
-
-    const handleClick = () => {
-      num((prev) => prev + 1);
+  let nums: number[] = [];
+  const text = createState("", (val) => {
+    const updateNumsIndex = (val: number, index: number) => {
+      nums[index] = val;
+      console.log(nums);
     };
 
+    console.log(nums);
+
     return (
-      <span>
-        {val ? (
-          <div>
-            <button onClick={handleClick}>another</button>
-            Count is {num().el()}
-          </div>
-        ) : (
-          ""
-        )}
-      </span>
+      <div>
+        {val.split("").map((c, i) => (
+          <Letter
+            letter={c}
+            startNum={nums[i]}
+            updateNum={(val) => updateNumsIndex(val, i)}
+          />
+        ))}
+      </div>
     );
   });
 
-  const handleShow = () => {
-    show((prev) => !prev);
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.currentTarget.value;
+    if (value.length > nums.length) {
+      nums = [...nums, ...Array(value.length - nums.length).fill(0)];
+    } else if (value.length < nums.length) {
+      nums = nums.slice(0, value.length);
+    }
+    text(value);
   };
 
   return (
     <div class="root">
-      <img src="/lamp.svg" alt="" />
-      <h1>LampJs</h1>
-      <span>A powerful, lightweight JS framework</span>
-      <button onClick={handleShow}>Toggle show</button>
-      {show().el()}
+      <input onChange={handleChange} />
+      {text().el()}
     </div>
   );
 };

@@ -11,11 +11,6 @@ type Listener = {
 const eventListeners = new Map<string, Listener[]>();
 const stateListeners = new Map<string, ExtendId<JSX.Element>[]>();
 
-const testEl = document.createElement('span') as ExtendId<JSX.Element>;
-testEl.id = uuid();
-testEl.stateId = uuid();
-stateListeners.set('some_key', [testEl]);
-
 export const mount = (root: HTMLElement | null, el: JSX.Element) => {
   if (!root) return;
 
@@ -126,7 +121,6 @@ export const createState = <T>(value: T, builder?: (val: T) => JSX.Element) => {
       refNode = getStateEl(currentValue, id, builderCb);
 
       const eventsToDispatch = stateListeners.get(id);
-      console.log(stateListeners);
       if (eventsToDispatch !== undefined) {
         eventsToDispatch.forEach((node) => {
           const event = new Event('state-change') as StateChangeEvent<T>;
