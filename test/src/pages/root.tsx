@@ -1,4 +1,4 @@
-import { ChangeEvent, createState } from "@jacksonotto/lampjs";
+import { ChangeEvent, createEffect, createState } from "@jacksonotto/lampjs";
 import "./root.css";
 
 const Root = () => {
@@ -19,6 +19,10 @@ const Root = () => {
       </div>
     );
   });
+
+  createEffect(() => {
+    console.log(text().value);
+  }, [text]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.currentTarget.value;
