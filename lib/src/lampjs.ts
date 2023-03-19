@@ -104,6 +104,7 @@ export const createState = <T>(value: T, builder?: (val: T) => JSX.Element) => {
   const stateChangeEventCb = (e: Event, _builder?: (val: T) => JSX.Element) => {
     const evt = e as StateChangeEvent<T>;
     const el = getStateEl(evt.value, id, builder);
+    if (!el.addEventListener) return;
     if (evt.currentTarget) {
       el.elId = (evt.currentTarget as ExtendId<JSX.Element>).elId;
       evt.currentTarget.removeEventListener('state-change', handleStateChangeEvent);
