@@ -197,7 +197,7 @@ export const createAsyncCall = <T>(url: string, requestInit?: RequestInit) => {
     loading: true,
     data: null
   };
-  return (cb: (val: typeof data) => void, parser?: (...args: any[]) => any) => {
+  return (cb: (val: typeof data) => void, parser?: ((...args: any[]) => any) | null) => {
     cb(data);
     fetch(url, requestInit)
       .then((res) => {
@@ -210,7 +210,8 @@ export const createAsyncCall = <T>(url: string, requestInit?: RequestInit) => {
         data.data = resData as T;
         cb(data);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error(err);
         data.loading = false;
         data.data = null;
         cb(data);
