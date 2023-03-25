@@ -273,7 +273,7 @@ declare global {
       default?: boolean;
       defer?: boolean;
       dir?: 'auto' | 'rtl' | 'ltr';
-      disabled?: boolean;
+      disabled?: boolean | ((val: boolean) => stateObj<boolean>);
       disableRemotePlayback?: boolean;
       download?: string;
       draggable?: boolean;

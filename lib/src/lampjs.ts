@@ -246,11 +246,24 @@ export const createElement = (
       delete attrs.style;
     }
     for (let name of Object.keys(attrs)) {
+      console.log(tag, name);
       const value = attrs[name];
       if (tag === 'input' && name === 'value') {
         const state = value as (val?: any) => stateObj<any>;
         const update = () => {
           (element as ExtendId<HTMLInputElement>).value = state().value;
+        };
+        state().applyDep(update);
+        update();
+      } else if (
+        ['input', 'button', 'optgroup', 'option', 'select', 'textarea'].includes(tag) &&
+        name === 'disabled'
+      ) {
+        console.log('adding');
+        const state = value as (val?: any) => stateObj<any>;
+        const update = () => {
+          console.log('updating');
+          (element as ExtendId<HTMLButtonElement | HTMLInputElement>).disabled = state().value;
         };
         state().applyDep(update);
         update();
