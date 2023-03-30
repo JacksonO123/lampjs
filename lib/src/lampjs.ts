@@ -1,6 +1,5 @@
 import type { JSX, ComponentChild, ComponentFactory, ComponentAttributes } from './types';
 import { isSvgTag, applyChildren, setElementStyle } from './util';
-import { v4 as uuid } from 'uuid';
 
 type Listener = {
   event: EventListenerOrEventListenerObject;
@@ -11,6 +10,8 @@ type Listener = {
 const eventListeners = new Map<string, Listener[]>();
 const stateListeners = new Map<string, ExtendId<JSX.Element>[]>();
 let mountEvents: (() => void)[] = [];
+
+const uuid = () => crypto.randomUUID();
 
 export const mount = (root: HTMLElement | null, el: JSX.Element) => {
   if (!root) return;
@@ -246,7 +247,6 @@ export const createElement = (
       delete attrs.style;
     }
     for (let name of Object.keys(attrs)) {
-      console.log(tag, name);
       const value = attrs[name];
       if (tag === 'input' && name === 'value') {
         const state = value as (val?: any) => stateObj<any>;
@@ -259,10 +259,8 @@ export const createElement = (
         ['input', 'button', 'optgroup', 'option', 'select', 'textarea'].includes(tag) &&
         name === 'disabled'
       ) {
-        console.log('adding');
         const state = value as (val?: any) => stateObj<any>;
         const update = () => {
-          console.log('updating');
           (element as ExtendId<HTMLButtonElement | HTMLInputElement>).disabled = state().value;
         };
         state().applyDep(update);

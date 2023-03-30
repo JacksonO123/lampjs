@@ -1,11 +1,16 @@
-import { createEffect, createState } from "@jacksonotto/lampjs";
+import { ChangeEvent, createEffect, createState } from "@jacksonotto/lampjs";
 import "./root.css";
 
 const Root = () => {
   const disabled = createState(false);
+  const text = createState("");
 
   const handleClick = () => {
     disabled((prev) => !prev);
+  };
+
+  const changeText = (e: ChangeEvent<HTMLInputElement>) => {
+    text(e.currentTarget.value);
   };
 
   createEffect(() => {
@@ -18,7 +23,10 @@ const Root = () => {
       <h1>LampJs</h1>
       <span>A powerful, lightweight JS framework</span>
       <button onClick={handleClick}>Toggle</button>
-      <textarea disabled={disabled}>test</textarea>
+      <textarea disabled={disabled} onChange={changeText}>
+        test
+      </textarea>
+      {text().el()}
     </div>
   );
 };
