@@ -49,6 +49,13 @@ export declare interface ChangeEvent<T = Element> extends SyntheticEvent<T> {
 declare global {
   namespace JSX {
     type Element = HTMLElement | SVGElement;
+
+    interface ArrayElement extends Array<Element> {}
+
+    interface FunctionElement {
+      (): Element;
+    }
+
     interface ElementAttributesProperty {
       props: any;
     }

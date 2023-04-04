@@ -14,7 +14,7 @@ let mountEvents: (() => void)[] = [];
 const uuid = () => crypto.randomUUID();
 
 export const mount = (root: HTMLElement | null, el: JSX.Element) => {
-  if (!root) return;
+  if (!root || !el) return;
 
   root.appendChild(el);
 
@@ -22,9 +22,21 @@ export const mount = (root: HTMLElement | null, el: JSX.Element) => {
   mountEvents = [];
 };
 
-const getStateEl = <T>(val: T, id: string, builder?: (value: T) => JSX.Element) => {
+type Builder<T> = (value: T) => [JSX.Element, ReturnType<typeof createState<any>>[]];
+
+const removeStates = <T>(states: ReturnType<typeof createState<T>>[]) => {
+  states.forEach((state) => {
+    stateListeners.delete(state().getStateId());
+  });
+};
+
+const getStateEl = <T>(val: T, id: string, builder?: Builder<T>) => {
   if (builder) {
-    const el = builder(val) as ExtendId<JSX.Element>;
+    const [builderEl, states] = builder(val);
+
+    removeStates(states);
+
+    const el = builderEl as ExtendId<JSX.Element>;
     el.stateId = id;
     el.elId = uuid();
     return el;
@@ -40,6 +52,7 @@ const getStateEl = <T>(val: T, id: string, builder?: (value: T) => JSX.Element) 
 export type stateObj<T> = {
   el: () => JSX.Element;
   applyDep: (dep: () => void) => void;
+  getStateId: () => string;
   value: T;
 };
 
@@ -57,7 +70,6 @@ const replaceStateNode = (from: ExtendId<JSX.Element>, to: ExtendId<JSX.Element>
   });
 
   if (index !== null) {
-    from.stateId;
     if (!stateRefs) {
       stateListeners.set(from.stateId, [to]);
     } else {
@@ -66,6 +78,10 @@ const replaceStateNode = (from: ExtendId<JSX.Element>, to: ExtendId<JSX.Element>
     }
   }
 };
+
+type StateChangeEvent<T> = Event & { value: T };
+
+type ExtendId<T> = T extends {} ? T & { stateId: string; elId: string } : T;
 
 const cloneNode = (el: ExtendId<JSX.Element>, id?: string) => {
   const events = eventListeners.get(id ? id : el.elId);
@@ -85,24 +101,16 @@ const cloneNode = (el: ExtendId<JSX.Element>, id?: string) => {
   return clone as JSX.Element;
 };
 
-type StateChangeEvent<T> = Event & { value: T };
-
-type ExtendId<T> = T extends {} ? T & { stateId: string; elId: string } : T;
-
-// const cleanStateListeners = () => {
-//   // implement later
-// };
-
-export const createState = <T>(value: T, builder?: (val: T) => JSX.Element) => {
+export const createState = <T>(value: T, builder?: Builder<T>) => {
   let currentValue = value;
-  let builderCb: ((val: T) => JSX.Element) | undefined = builder;
+  let builderCb: Builder<T> | undefined = builder;
   let refNode: ExtendId<HTMLElement | JSX.Element>;
   let deps: (() => void)[] = [];
   const id = uuid();
 
   const handleStateChangeEvent = (e: Event) => stateChangeEventCb(e, builderCb);
 
-  const stateChangeEventCb = (e: Event, _builder?: (val: T) => JSX.Element) => {
+  const stateChangeEventCb = (e: Event, _builder?: Builder<T>) => {
     const evt = e as StateChangeEvent<T>;
     const el = getStateEl(evt.value, id, builder);
     if (!el.addEventListener) return;
@@ -130,6 +138,8 @@ export const createState = <T>(value: T, builder?: (val: T) => JSX.Element) => {
 
       refNode = getStateEl(currentValue, id, builderCb);
 
+      console.log(stateListeners);
+
       const eventsToDispatch = stateListeners.get(id);
       if (eventsToDispatch !== undefined) {
         eventsToDispatch.forEach((node) => {
@@ -138,8 +148,6 @@ export const createState = <T>(value: T, builder?: (val: T) => JSX.Element) => {
           node.dispatchEvent(event);
         });
       }
-
-      // cleanStateListeners();
 
       deps.forEach((dep) => {
         dep();
@@ -151,8 +159,13 @@ export const createState = <T>(value: T, builder?: (val: T) => JSX.Element) => {
     const addToStateNodes = (node: ExtendId<JSX.Element>) => {
       const nodes = [node];
       const elements = stateListeners.get(id);
-      if (elements === undefined) stateListeners.set(id, nodes);
-      else stateListeners.set(id, [...elements, node]);
+      if (elements === undefined) {
+        console.log([...stateListeners.keys()], id);
+        stateListeners.set(id, nodes);
+      } else {
+        console.log([...stateListeners.keys()], id);
+        stateListeners.set(id, [...elements, node]);
+      }
     };
 
     const getElNode = () => {
@@ -167,15 +180,18 @@ export const createState = <T>(value: T, builder?: (val: T) => JSX.Element) => {
       const clone = cloneNode(refNode, elId) as ExtendId<JSX.Element>;
       clone.stateId = id;
       clone.elId = elId;
-      clone.addEventListener('state-change', handleStateChangeEvent);
       addToStateNodes(clone);
+      clone.addEventListener('state-change', handleStateChangeEvent);
       return clone;
     };
+
+    const getId = () => id;
 
     return {
       el: getElNode,
       value: currentValue,
-      applyDep
+      applyDep,
+      getStateId: getId
     } as stateObj<T>;
   };
   updateCb(value);
@@ -248,7 +264,7 @@ export const createElement = (
     }
     for (let name of Object.keys(attrs)) {
       const value = attrs[name];
-      if (tag === 'input' && name === 'value') {
+      if (['textarea', 'input'].includes(tag) && name === 'value') {
         const state = value as (val?: any) => stateObj<any>;
         const update = () => {
           (element as ExtendId<HTMLInputElement>).value = state().value;
@@ -259,12 +275,16 @@ export const createElement = (
         ['input', 'button', 'optgroup', 'option', 'select', 'textarea'].includes(tag) &&
         name === 'disabled'
       ) {
-        const state = value as (val?: any) => stateObj<any>;
-        const update = () => {
-          (element as ExtendId<HTMLButtonElement | HTMLInputElement>).disabled = state().value;
-        };
-        state().applyDep(update);
-        update();
+        if (typeof value === 'boolean') {
+          (element as ExtendId<HTMLButtonElement | HTMLInputElement>).disabled = value;
+        } else {
+          const state = value as (val?: any) => stateObj<any>;
+          const update = () => {
+            (element as ExtendId<HTMLButtonElement | HTMLInputElement>).disabled = state().value;
+          };
+          state().applyDep(update);
+          update();
+        }
       } else if (name.startsWith('on')) {
         if (name === 'onChange') {
           name = 'onInput';
