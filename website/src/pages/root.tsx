@@ -9,6 +9,9 @@ const Root = () => {
       <a href="https://npmjs.com/@jacksonotto/lampjs" target="_blank">
         LampJs on npm
       </a>
+      <a href="https://github.com/JacksonO123/lampjs" target="_blank">
+        LampJs on Github
+      </a>
     </div>
   );
 };
