@@ -1,4 +1,4 @@
-import type { stateObj } from './index';
+import type { StateData } from "./index";
 
 export type { JSX };
 export declare type ComponentChild =
@@ -8,7 +8,8 @@ export declare type ComponentChild =
   | number
   | boolean
   | undefined
-  | null;
+  | null
+  | StateData<any>;
 export declare type ComponentChildren = ComponentChild | ComponentChild[];
 export interface BaseProps {
   children?: ComponentChildren;
@@ -62,7 +63,10 @@ declare global {
     interface ElementChildrenAttribute {
       children: any;
     }
-    type EventHandler<TEvent extends Event> = (this: HTMLElement, ev: TEvent) => void;
+    type EventHandler<TEvent extends Event> = (
+      this: HTMLElement,
+      ev: TEvent
+    ) => void;
     type ClipboardEventHandler = EventHandler<ClipboardEvent>;
     type CompositionEventHandler = EventHandler<CompositionEvent>;
     type DragEventHandler = EventHandler<DragEvent>;
@@ -279,8 +283,8 @@ declare global {
       dateTime?: string;
       default?: boolean;
       defer?: boolean;
-      dir?: 'auto' | 'rtl' | 'ltr';
-      disabled?: boolean | ((val: boolean) => stateObj<boolean>);
+      dir?: "auto" | "rtl" | "ltr";
+      disabled?: boolean | StateData<any>;
       disableRemotePlayback?: boolean;
       download?: string;
       draggable?: boolean;
@@ -312,7 +316,7 @@ declare global {
       label?: string;
       lang?: string;
       list?: string;
-      loading?: 'eager' | 'lazy';
+      loading?: "eager" | "lazy";
       loop?: boolean;
       low?: number;
       manifest?: string;
@@ -370,7 +374,7 @@ declare global {
       title?: string;
       type?: string;
       useMap?: string;
-      value?: string | string[] | number | ((val: any) => stateObj<any>);
+      value?: string | string[] | number | ((val: any) => StateData<any>);
       volume?: string | number;
       width?: number | string;
       wmode?: string;

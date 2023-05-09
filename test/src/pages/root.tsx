@@ -1,42 +1,29 @@
-import { ChangeEvent, createEffect, createState } from "@jacksonotto/lampjs";
+import { createState } from "@jacksonotto/lampjs";
 import "./root.css";
 
 const Root = () => {
-  const disabled = createState(false, (disabled) => {
-    const text = createState("test");
-    const changeText = (e: ChangeEvent<HTMLInputElement>) => {
-      text(e.currentTarget.value);
-    };
+  // const test = createState({ something: true });
+  const test = createState("no");
 
-    return [
-      <div>
-        <textarea
-          disabled={disabled}
-          onChange={changeText}
-          value={text}
-        ></textarea>
-        {text().el()}
-      </div>,
-      [text],
-    ];
-  });
+  // setTimeout(() => {
+  //   test((prev) => {
+  //     prev.something = false;
+  //     console.log(prev);
+  //     return prev;
+  //   });
+  // }, 1000);
 
-  const handleClick = () => {
-    disabled((prev) => !prev);
-  };
-
-  createEffect(() => {
-    console.log(disabled().value);
-  }, [disabled]);
+  setTimeout(() => {
+    test("ok");
+  }, 1000);
 
   return (
     <div class="root">
       <img src="/lamp.svg" alt="" />
       <h1>LampJs</h1>
-      {(() => 2)()}
       <span>A powerful, lightweight JS framework</span>
-      <button onClick={handleClick}>Toggle</button>
-      {disabled().el()}
+      <span>test</span>
+      {test()}
     </div>
   );
 };
