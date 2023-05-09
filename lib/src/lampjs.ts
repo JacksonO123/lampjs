@@ -20,7 +20,7 @@ export const mount = (root: HTMLElement | null, el: JSX.Element) => {
 export class StateData<T> {
   isState = true;
   addEffect: (effect: () => void) => void;
-  onStateChange: ((val: T) => void)[];
+  private onStateChange: ((val: T) => void)[];
   value: T;
   constructor(value: T, addEffect: (effect: () => void) => void) {
     this.value = value;
