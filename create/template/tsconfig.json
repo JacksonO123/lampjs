@@ -18,5 +18,5 @@
     "jsxFactory": "LampJs.createElement",
     "jsxFragmentFactory": "LampJs.Fragment"
   },
-  "include": ["src", "api"]
+  "include": ["src"]
 }
