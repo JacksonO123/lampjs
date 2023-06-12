@@ -268,7 +268,7 @@ declare global {
       cellSpacing?: number | string;
       charSet?: string;
       challenge?: string;
-      checked?: boolean;
+      checked?: boolean | StateData<any>;
       class?: string;
       cols?: number;
       colSpan?: number;

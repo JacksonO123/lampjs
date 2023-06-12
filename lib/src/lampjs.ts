@@ -34,7 +34,6 @@ export class StateData<T> {
     this.addEffect = addEffect;
   }
   toString() {
-    console.log("returning value", this.value);
     return this.value;
   }
   addStateChangeEvent(event: (val: T) => void) {
@@ -156,45 +155,58 @@ export const createElement = (
     }
     for (let name of Object.keys(attrs)) {
       const value = attrs[name];
-      if (["textarea", "input"].includes(tag) && name === "value") {
-        (element as HTMLTextAreaElement | HTMLInputElement).value =
+      // @ts-ignore
+      if (value.isState === true) {
+        if (tag === "input" && name === "checked") {
           // @ts-ignore
-          value.value;
-        const effect = () => {
+          element.checked = value.value;
+          const effect = () => {
+            // @ts-ignore
+            element.checked = value.value;
+          };
+          // @ts-ignore
+          value.addEffect(effect);
+        } else if (["textarea", "input"].includes(tag) && name === "value") {
           (element as HTMLTextAreaElement | HTMLInputElement).value =
             // @ts-ignore
             value.value;
-        };
-        // @ts-ignore
-        value.addEffect(effect);
-      } else if (
-        [
-          "input",
-          "button",
-          "optgroup",
-          "option",
-          "select",
-          "textarea",
-        ].includes(tag) &&
-        name === "disabled"
-      ) {
-        type DisableableType =
-          | HTMLInputElement
-          | HTMLButtonElement
-          | HTMLOptGroupElement
-          | HTMLOptionElement
-          | HTMLSelectElement
-          | HTMLTextAreaElement;
-        // @ts-ignore
-        (element as DisableableType).disabled = value.value;
-        const effect = () => {
-          (element as DisableableType).disabled =
-            // @ts-ignore
-            value.value;
-        };
-        // @ts-ignore
-        value.addEffect(effect);
-      } else if (name.startsWith("on")) {
+          const effect = () => {
+            (element as HTMLTextAreaElement | HTMLInputElement).value =
+              // @ts-ignore
+              value.value;
+          };
+          // @ts-ignore
+          value.addEffect(effect);
+        } else if (
+          [
+            "input",
+            "button",
+            "optgroup",
+            "option",
+            "select",
+            "textarea",
+          ].includes(tag) &&
+          name === "disabled"
+        ) {
+          type DisableableType =
+            | HTMLInputElement
+            | HTMLButtonElement
+            | HTMLOptGroupElement
+            | HTMLOptionElement
+            | HTMLSelectElement
+            | HTMLTextAreaElement;
+          // @ts-ignore
+          (element as DisableableType).disabled = value.value;
+          const effect = () => {
+            (element as DisableableType).disabled =
+              // @ts-ignore
+              value.value;
+          };
+          // @ts-ignore
+          value.addEffect(effect);
+        }
+      }
+      if (name.startsWith("on")) {
         if (name === "onChange") {
           name = "onInput";
         }
