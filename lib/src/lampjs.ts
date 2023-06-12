@@ -101,7 +101,7 @@ export const reactive = (
   states: StateData<any>[]
 ): JSX.Element => {
   const values = states.map((s) => s.value);
-  let res = fn([1, 1, 1, 1, 1]);
+  let res = fn(...values);
 
   const onStateChange = (val: unknown, index: number) => {
     values[index] = val;
