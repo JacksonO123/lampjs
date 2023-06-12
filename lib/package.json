@@ -5,7 +5,7 @@
   "type": "module",
   "description": "A lightweight front-end JavaScript framework",
   "author": "Jackson Otto",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "scripts": {
     "build": "npx tsc",
     "dev": "npx nodemon -e ts --watch src --exec npx tsc"
