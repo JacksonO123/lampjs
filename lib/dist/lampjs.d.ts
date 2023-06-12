@@ -3,7 +3,7 @@ export declare const mount: (root: HTMLElement | null, el: JSX.Element) => void;
 export declare class StateData<T> {
     isState: boolean;
     addEffect: (effect: () => void) => void;
-    onStateChange: ((val: T) => void)[];
+    private onStateChange;
     value: T;
     constructor(value: T, addEffect: (effect: () => void) => void);
     toString(): T;
@@ -11,7 +11,7 @@ export declare class StateData<T> {
     distributeNewState(data: T): void;
 }
 export declare const onPageMount: (cb: () => void) => void;
-export declare const createState: <T>(value: T) => (newState?: T | ((val: T) => T) | undefined) => StateData<T> | undefined;
+export declare const createState: <T>(value: T) => (newState?: T | ((val: T) => T) | undefined) => StateData<T>;
 export declare const createEffect: <T extends (newState?: any) => StateData<any> | undefined>(cb: () => void, deps: T[]) => void;
 export type asyncCallState<T> = {
     loading: boolean;
