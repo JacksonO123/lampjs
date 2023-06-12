@@ -63,14 +63,16 @@ export const createState = <T>(value: T) => {
   let currentState = initState(value, addEffect);
 
   const updateCb = (newState?: T | ((val: T) => T)) => {
-    if (newState instanceof Function) {
-      const newVal = (newState as (val: T) => T)(currentState.value);
-      currentState.value = newVal;
-    } else if (newState !== undefined) {
-      currentState.value = newState;
+    if (newState !== undefined) {
+      if (newState instanceof Function) {
+        const newVal = (newState as (val: T) => T)(currentState.value);
+        currentState.value = newVal;
+      } else {
+        currentState.value = newState;
+      }
+      currentState.distributeNewState(currentState.value);
+      effects.forEach((effect) => effect());
     }
-    currentState.distributeNewState(currentState.value);
-    effects.forEach((effect) => effect());
 
     return currentState;
   };
