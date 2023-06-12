@@ -11,7 +11,13 @@ let mountEvents: (() => void)[] = [];
 export const mount = (root: HTMLElement | null, el: JSX.Element) => {
   if (!root || !el) return;
 
-  root.appendChild(el);
+  if (Array.isArray(el)) {
+    el.forEach((newEl) => {
+      root.appendChild(newEl);
+    });
+  } else {
+    root.appendChild(el);
+  }
 
   mountEvents.forEach((event) => event());
   mountEvents = [];
