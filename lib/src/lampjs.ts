@@ -40,6 +40,7 @@ export class StateData<T> {
     this.onStateChange.push(event);
   }
   distributeNewState(data: T) {
+    this.value = data;
     this.onStateChange.forEach((fn) => fn(data));
   }
 }
@@ -63,13 +64,11 @@ export const createState = <T>(value: T) => {
 
   const updateCb = (newState?: T | ((val: T) => T)) => {
     if (newState !== undefined) {
-      if (newState instanceof Function) {
-        const newVal = (newState as (val: T) => T)(currentState.value);
-        currentState.value = newVal;
-      } else {
-        currentState.value = newState;
-      }
-      currentState.distributeNewState(currentState.value);
+      const newStateVal =
+        newState instanceof Function
+          ? (newState as (val: T) => T)(currentState.value)
+          : newState;
+      currentState.distributeNewState(newStateVal);
       effects.forEach((effect) => effect());
     }
 
@@ -95,6 +94,28 @@ export const createEffect = <
 export type asyncCallState<T> = {
   loading: boolean;
   data: T | null;
+};
+
+export const reactive = (
+  fn: (...val: any[]) => JSX.Element,
+  states: StateData<any>[]
+): JSX.Element => {
+  const values = states.map((s) => s.value);
+  let res = fn([1, 1, 1, 1, 1]);
+
+  const onStateChange = (val: unknown, index: number) => {
+    values[index] = val;
+    console.log(res);
+    const newNode = fn(...values);
+    res.replaceWith(newNode);
+    res = newNode;
+  };
+
+  states.forEach((state, index) => {
+    state.addStateChangeEvent((val) => onStateChange(val, index));
+  });
+
+  return res;
 };
 
 export const createAsyncCall = <T>(url: string, requestInit?: RequestInit) => {
@@ -156,26 +177,24 @@ export const createElement = (
     for (let name of Object.keys(attrs)) {
       const value = attrs[name];
       // @ts-ignore
-      if (value.isState === true) {
-        if (tag === "input" && name === "checked") {
-          // @ts-ignore
-          element.checked = value.value;
+      if (attrs[name].isState === true) {
+        // @ts-ignore
+        const value = attrs[name] as StateData<any>;
+        if (name === "ref") {
+          value.distributeNewState(element);
+        } else if (tag === "input" && name === "checked") {
+          (element as HTMLInputElement).checked = value.value;
           const effect = () => {
-            // @ts-ignore
-            element.checked = value.value;
+            (element as HTMLInputElement).checked = value.value;
           };
-          // @ts-ignore
           value.addEffect(effect);
         } else if (["textarea", "input"].includes(tag) && name === "value") {
           (element as HTMLTextAreaElement | HTMLInputElement).value =
-            // @ts-ignore
             value.value;
           const effect = () => {
             (element as HTMLTextAreaElement | HTMLInputElement).value =
-              // @ts-ignore
               value.value;
           };
-          // @ts-ignore
           value.addEffect(effect);
         } else if (
           [
@@ -195,18 +214,13 @@ export const createElement = (
             | HTMLOptionElement
             | HTMLSelectElement
             | HTMLTextAreaElement;
-          // @ts-ignore
           (element as DisableableType).disabled = value.value;
           const effect = () => {
-            (element as DisableableType).disabled =
-              // @ts-ignore
-              value.value;
+            (element as DisableableType).disabled = value.value;
           };
-          // @ts-ignore
           value.addEffect(effect);
         }
-      }
-      if (name.startsWith("on")) {
+      } else if (name.startsWith("on")) {
         if (name === "onChange") {
           name = "onInput";
         }

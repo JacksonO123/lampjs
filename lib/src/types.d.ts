@@ -301,6 +301,7 @@ declare global {
       hidden?: boolean;
       high?: number;
       href?: string;
+      ref?: StateData<any>;
       hrefLang?: string;
       for?: string;
       htmlFor?: string;

@@ -1,11 +1,16 @@
-import { createState } from "@jacksonotto/lampjs";
+import { ChangeEvent, createState, reactive } from "@jacksonotto/lampjs";
 import "./root.css";
 
 const Root = () => {
-  const num = createState(0);
+  const text = createState("");
+  const nums = createState<number[]>([]);
 
   const handleClick = () => {
-    num((prev) => prev + 1);
+    nums((prev) => [...prev, 1]);
+  };
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    text(e.currentTarget.value);
   };
 
   return (
@@ -13,7 +18,23 @@ const Root = () => {
       <img src="/lamp.svg" alt="" />
       <h1>LampJs</h1>
       <span>A powerful, lightweight JS framework</span>
-      <button onClick={handleClick}>Count is {num()}</button>
+      <button onClick={handleClick}>Count is {nums()}</button>
+      <input onChange={handleChange} value={text()} />
+      {reactive(
+        (val: number[], text: string) => {
+          const res = (
+            <div>
+              {text}
+              {val.map((_, index) => (
+                <span>{index}</span>
+              ))}
+            </div>
+          );
+          console.log(res);
+          return res;
+        },
+        [nums(), text()]
+      )}
     </div>
   );
 };

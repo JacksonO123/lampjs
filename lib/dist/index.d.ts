@@ -7,10 +7,11 @@ export declare const exportObj: {
         children: JSX.Element;
     }) => JSX.Element;
     onPageMount: (cb: () => void) => void;
+    reactive: (fn: (...val: any[]) => JSX.Element, states: import("./lampjs").StateData<any>[]) => JSX.Element;
 };
 declare global {
     let LampJs: typeof exportObj;
 }
 export default exportObj;
-export * from './lampjs';
-export type { ChangeEvent } from './types';
+export * from "./lampjs";
+export type { ChangeEvent } from "./types";

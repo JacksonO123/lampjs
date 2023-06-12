@@ -17,6 +17,7 @@ export type asyncCallState<T> = {
     loading: boolean;
     data: T | null;
 };
+export declare const reactive: (fn: (...val: any[]) => JSX.Element, states: StateData<any>[]) => JSX.Element;
 export declare const createAsyncCall: <T>(url: string, requestInit?: RequestInit) => (cb: (val: asyncCallState<T>) => void, parser?: ((...args: any[]) => any) | null | undefined) => void;
 export declare const Fragment: ({ children }: {
     children: JSX.Element;

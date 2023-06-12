@@ -23,14 +23,30 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-import { mount, createState, createElement, createEffect, Fragment, onPageMount } from './lampjs';
+import {
+  mount,
+  createState,
+  createElement,
+  createEffect,
+  Fragment,
+  onPageMount,
+  reactive,
+} from "./lampjs";
 
-export const exportObj = { createElement, mount, createState, createEffect, Fragment, onPageMount };
+export const exportObj = {
+  createElement,
+  mount,
+  createState,
+  createEffect,
+  Fragment,
+  onPageMount,
+  reactive,
+};
 
 declare global {
   let LampJs: typeof exportObj;
 }
 
 export default exportObj;
-export * from './lampjs';
-export type { ChangeEvent } from './types';
+export * from "./lampjs";
+export type { ChangeEvent } from "./types";
