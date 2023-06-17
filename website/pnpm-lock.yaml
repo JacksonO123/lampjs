@@ -1,9 +1,13 @@
-lockfileVersion: '6.0'
+lockfileVersion: '6.1'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
 
 dependencies:
   '@jacksonotto/lampjs':
-    specifier: ^2.7.0
-    version: 2.7.0
+    specifier: ^3.1.0
+    version: 3.1.0
 
 devDependencies:
   '@vercel/node':
@@ -237,8 +241,8 @@ packages:
     dev: true
     optional: true
 
-  /@jacksonotto/lampjs@2.7.0:
-    resolution: {integrity: sha512-L0DAWcYhrtFQqtToznxKPIuIL4f/QO2RIuag5pQsf3v/GApRj/ca0hluc12M+AzGOjG9OChwzkRbs6W7BSihpw==}
+  /@jacksonotto/lampjs@3.1.0:
+    resolution: {integrity: sha512-j1WvNItR53fhU5jwwqEvJAJHDfijizrTCCerIqIpG4yTDDaz8uf3f1RKGIfsuXSHTFOlN01GlUl2ftCh106cng==}
     dev: false
 
   /@jridgewell/resolve-uri@3.1.0:
