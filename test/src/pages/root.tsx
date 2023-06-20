@@ -1,9 +1,14 @@
-import { ChangeEvent, createState, reactive } from "@jacksonotto/lampjs";
+import { ChangeEvent, createEffect, createState } from "@jacksonotto/lampjs";
 import "./root.css";
 
 const Root = () => {
   const text = createState("");
   const nums = createState<number[]>([]);
+  const elRef = createState<any>(null);
+
+  createEffect(() => {
+    console.log(elRef().value);
+  }, [elRef()]);
 
   const handleClick = () => {
     nums((prev) => [...prev, 1]);
@@ -20,21 +25,7 @@ const Root = () => {
       <span>A powerful, lightweight JS framework</span>
       <button onClick={handleClick}>Count is {nums()}</button>
       <input onChange={handleChange} value={text()} />
-      {reactive(
-        (val: number[], text: string) => {
-          const res = (
-            <div>
-              {text}
-              {val.map((_, index) => (
-                <span>{index}</span>
-              ))}
-            </div>
-          );
-          console.log(res);
-          return res;
-        },
-        [nums(), text()]
-      )}
+      <div class="test" ref={elRef}></div>
     </div>
   );
 };

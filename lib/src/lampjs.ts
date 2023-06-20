@@ -74,20 +74,20 @@ export const createState = <T>(value: T) => {
 
     return currentState;
   };
+
   return updateCb;
 };
 
-export const createEffect = <
-  T extends (
-    newState?: any | ((newState: any) => any)
-  ) => StateData<any> | undefined
->(
+export const createEffect = <T extends StateData<any>>(
   cb: () => void,
   deps: T[]
 ) => {
+  if (deps.length === 0) {
+    mountEvents.push(cb);
+  }
+
   deps.forEach((dep) => {
-    const d = dep();
-    if (d) d.addEffect(cb);
+    dep.addEffect(cb);
   });
 };
 
@@ -105,7 +105,6 @@ export const reactive = (
 
   const onStateChange = (val: unknown, index: number) => {
     values[index] = val;
-    console.log(res);
     const newNode = fn(...values);
     res.replaceWith(newNode);
     res = newNode;
@@ -177,12 +176,14 @@ export const createElement = (
     for (let name of Object.keys(attrs)) {
       const value = attrs[name];
       // @ts-ignore
-      if (attrs[name].isState === true) {
+      if (name === "ref") {
+        // @ts-ignore
+        value(element);
+        // @ts-ignore
+      } else if (attrs[name].isState === true) {
         // @ts-ignore
         const value = attrs[name] as StateData<any>;
-        if (name === "ref") {
-          value.distributeNewState(element);
-        } else if (tag === "input" && name === "checked") {
+        if (tag === "input" && name === "checked") {
           (element as HTMLInputElement).checked = value.value;
           const effect = () => {
             (element as HTMLInputElement).checked = value.value;

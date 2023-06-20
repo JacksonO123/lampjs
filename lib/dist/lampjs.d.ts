@@ -12,7 +12,7 @@ export declare class StateData<T> {
 }
 export declare const onPageMount: (cb: () => void) => void;
 export declare const createState: <T>(value: T) => (newState?: T | ((val: T) => T) | undefined) => StateData<T>;
-export declare const createEffect: <T extends (newState?: any) => StateData<any> | undefined>(cb: () => void, deps: T[]) => void;
+export declare const createEffect: <T extends StateData<any>>(cb: () => void, deps: T[]) => void;
 export type asyncCallState<T> = {
     loading: boolean;
     data: T | null;
