@@ -18,4 +18,6 @@ LampJs uses a variation of signals that is pure javascript, no compiler used. La
 
 For doing things like looping over a reactive array, you need to use the `reactive` api. This api works but it kinda defeats the purpose of fine grain reactivity when more than one state variables are provided. Hard to get around this without a compiler.
 
+There is a known memory leak when creating state in components that are unmounted and remounted. LampJS does not have a state cleanup cycle for unmounted components. Might implement this later.
+
 _By Jackson Otto_
