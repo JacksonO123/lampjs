@@ -1,8 +1,13 @@
-lockfileVersion: '6.1'
+lockfileVersion: '6.0'
 
 settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
+
+dependencies:
+  '@jacksonotto/lampjs':
+    specifier: 'link:'
+    version: 'link:'
 
 devDependencies:
   '@types/node':

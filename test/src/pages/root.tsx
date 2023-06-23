@@ -1,31 +1,24 @@
-import { ChangeEvent, createEffect, createState } from "@jacksonotto/lampjs";
+import { createState, reactive } from "@jacksonotto/lampjs";
+import Test from "../components/Test";
 import "./root.css";
 
 const Root = () => {
-  const text = createState("");
-  const nums = createState<number[]>([]);
-  const elRef = createState<any>(null);
+  const num = createState(0);
 
-  createEffect(() => {
-    console.log(elRef().value);
-  }, [elRef()]);
-
-  const handleClick = () => {
-    nums((prev) => [...prev, 1]);
-  };
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    text(e.currentTarget.value);
+  const addItem = () => {
+    num((prev) => prev + 1);
   };
 
   return (
     <div class="root">
-      <img src="/lamp.svg" alt="" />
-      <h1>LampJs</h1>
-      <span>A powerful, lightweight JS framework</span>
-      <button onClick={handleClick}>Count is {nums()}</button>
-      <input onChange={handleChange} value={text()} />
-      <div class="test" ref={elRef}></div>
+      <button onClick={addItem}>Add</button>
+      <Test list={num} />
+      {reactive(
+        (val: number) => (
+          <div></div>
+        ),
+        [num()]
+      )}
     </div>
   );
 };
