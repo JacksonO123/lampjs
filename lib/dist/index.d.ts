@@ -7,7 +7,7 @@ export declare const exportObj: {
         children: JSX.Element;
     }) => JSX.Element;
     onPageMount: (cb: () => void) => void;
-    reactive: (fn: (...val: any[]) => JSX.Element, states: import("./lampjs").StateData<any>[]) => JSX.Element;
+    reactive: <T_2 extends readonly import("./lampjs").StateData<any>[]>(fn: (...val: { [K in keyof T_2]: T_2[K] extends import("./lampjs").StateData<infer U> ? U : never; }) => JSX.Element, states: T_2) => JSX.Element;
 };
 declare global {
     let LampJs: typeof exportObj;

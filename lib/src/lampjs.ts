@@ -98,16 +98,20 @@ export type asyncCallState<T> = {
   data: T | null;
 };
 
-export const reactive = (
-  fn: (...val: any[]) => JSX.Element,
-  states: StateData<any>[]
+type InnerStateFromArray<T extends readonly StateData<any>[]> = {
+  [K in keyof T]: T[K] extends StateData<infer U> ? U : never;
+};
+
+export const reactive = <T extends readonly StateData<any>[]>(
+  fn: (...val: InnerStateFromArray<T>) => JSX.Element,
+  states: T
 ): JSX.Element => {
   const values = states.map((s) => s.value);
-  let res = fn(...values);
+  let res = fn(...(values as InnerStateFromArray<T>));
 
   const onStateChange = (val: unknown, index: number) => {
     values[index] = val;
-    const newNode = fn(...values);
+    const newNode = fn(...(values as InnerStateFromArray<T>));
     res.replaceWith(newNode);
     res = newNode;
   };

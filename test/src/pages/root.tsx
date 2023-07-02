@@ -14,10 +14,10 @@ const Root = () => {
       <button onClick={addItem}>Add</button>
       <Test list={num} />
       {reactive(
-        (val: number) => (
-          <div></div>
+        (val) => (
+          <div>{val}</div>
         ),
-        [num()]
+        [num()] as const
       )}
     </div>
   );
