@@ -5,14 +5,13 @@
   "type": "module",
   "description": "A lightweight front-end JavaScript framework",
   "author": "Jackson Otto",
-  "version": "3.3.0",
+  "version": "3.3.1",
   "scripts": {
     "build": "npx tsc",
     "dev": "npx nodemon -e ts --watch src --exec npx tsc"
   },
   "devDependencies": {
     "@types/node": "^18.15.11",
-    "@types/uuid": "^9.0.1",
     "nodemon": "^2.0.21",
     "typescript": "^4.9.5"
   },
@@ -23,8 +22,5 @@
     "typescript",
     "framework",
     "jsx"
-  ],
-  "dependencies": {
-    "@jacksonotto/lampjs": "link:"
-  }
+  ]
 }

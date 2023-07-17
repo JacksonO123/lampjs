@@ -4,18 +4,10 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-dependencies:
-  '@jacksonotto/lampjs':
-    specifier: 'link:'
-    version: 'link:'
-
 devDependencies:
   '@types/node':
     specifier: ^18.15.11
     version: 18.15.11
-  '@types/uuid':
-    specifier: ^9.0.1
-    version: 9.0.1
   nodemon:
     specifier: ^2.0.21
     version: 2.0.21
@@ -27,10 +19,6 @@ packages:
 
   /@types/node@18.15.11:
     resolution: {integrity: sha512-E5Kwq2n4SbMzQOn6wnmBjuK9ouqlURrcZDVfbo9ftDDTFt3nk7ZKK4GMOzoYgnpQJKcxwQw+lGaBvvlMo0qN/Q==}
-    dev: true
-
-  /@types/uuid@9.0.1:
-    resolution: {integrity: sha512-rFT3ak0/2trgvp4yYZo5iKFEPsET7vKydKF+VRCxlQ9bpheehyAJH89dAkaLEq/j/RZXJIqcgsmPJKUP1Z28HA==}
     dev: true
 
   /abbrev@1.1.1:
