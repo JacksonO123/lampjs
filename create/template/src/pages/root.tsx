@@ -14,6 +14,7 @@ const Root = () => {
       <h1>LampJs</h1>
       <span>A powerful, lightweight JS framework</span>
       <button onClick={handleClick}>Count is {num()}</button>
+      <Link href="/about">about</Link>
     </div>
   );
 };
