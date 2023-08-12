@@ -1,5 +1,5 @@
 import type { JSX, ComponentChild, ComponentFactory, ComponentAttributes } from "./types";
-export declare const mount: (root: HTMLElement | null, el: JSX.Element) => void;
+export declare const mount: (root: HTMLElement | null, el: JSX.Element | JSX.Element[]) => void;
 export declare class StateData<T> {
     isState: boolean;
     addEffect: (effect: () => void) => void;
@@ -21,10 +21,23 @@ export type asyncCallState<T> = {
 type InnerStateFromArray<T extends readonly StateData<any>[]> = {
     [K in keyof T]: T[K] extends StateData<infer U> ? U : never;
 };
-export declare const reactive: <T extends readonly StateData<any>[]>(fn: (...val: InnerStateFromArray<T>) => JSX.Element, states: T) => JSX.Element;
+export declare const reactive: <T extends readonly StateData<any>[]>(fn: (...val: InnerStateFromArray<T>) => JSX.Element | null, states: T) => JSX.Element | null;
 export declare const createAsyncCall: <T>(url: string, requestInit?: RequestInit) => (cb: (val: asyncCallState<T>) => void, parser?: ((...args: any[]) => any) | null | undefined) => void;
 export declare const Fragment: ({ children }: {
-    children: JSX.Element;
-}) => JSX.Element;
+    children: ComponentChild;
+}) => ComponentChild;
+type RoutesType = {
+    path: string;
+    element: JSX.Element;
+}[];
+type RouterProps = {
+    routes: RoutesType;
+};
+export declare const Router: ({ routes }: RouterProps) => JSX.Element | null;
+type LinkProps = {
+    children: ComponentChild;
+    href: string;
+};
+export declare const Link: ({ children, href }: LinkProps) => JSX.Element;
 export declare const createElement: (tag: string | ComponentFactory, attrs: ComponentAttributes, ...children: ComponentChild[]) => JSX.Element;
 export {};

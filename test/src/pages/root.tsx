@@ -1,4 +1,4 @@
-import { createState, reactive } from "@jacksonotto/lampjs";
+import { createState, reactive, Link } from "@jacksonotto/lampjs";
 import Test from "../components/Test";
 import "./root.css";
 
@@ -11,6 +11,7 @@ const Root = () => {
 
   return (
     <div class="root">
+      <Link href="/about">about</Link>
       <button onClick={addItem}>Add</button>
       <Test list={num} />
       {reactive(

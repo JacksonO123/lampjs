@@ -1,14 +1,24 @@
 {
   "name": "@jacksonotto/lampjs",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "type": "module",
   "description": "A lightweight front-end JavaScript framework",
   "author": "Jackson Otto",
   "version": "3.3.1",
   "scripts": {
     "build": "npx tsc",
     "dev": "npx nodemon -e ts --watch src --exec npx tsc"
+  },
+  "exports": {
+    ".": {
+      "import": "dist/index.js",
+      "types": "dist/index.d.ts"
+    },
+    "./router": {
+      "import": "dist/router.js",
+      "types": "dist/router.d.ts"
+    }
   },
   "devDependencies": {
     "@types/node": "^18.15.11",

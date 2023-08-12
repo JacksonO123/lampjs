@@ -31,6 +31,8 @@ import {
   Fragment,
   onPageMount,
   reactive,
+  Router,
+  Link,
 } from "./lampjs";
 
 export const exportObj = {
@@ -41,6 +43,8 @@ export const exportObj = {
   Fragment,
   onPageMount,
   reactive,
+  Router,
+  Link,
 };
 
 declare global {

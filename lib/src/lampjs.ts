@@ -8,16 +8,23 @@ import { isSvgTag, applyChildren, setElementStyle } from "./util";
 
 let mountEvents: (() => void)[] = [];
 
-export const mount = (root: HTMLElement | null, el: JSX.Element) => {
+export const mount = (
+  root: HTMLElement | null,
+  el: JSX.Element | JSX.Element[]
+) => {
   if (!root || !el) return;
 
-  if (Array.isArray(el)) {
-    el.forEach((newEl) => {
-      root.appendChild(newEl);
-    });
-  } else {
-    root.appendChild(el);
+  function mountEl(el: JSX.Element | JSX.Element[]) {
+    if (!root) return;
+
+    if (Array.isArray(el)) {
+      el.forEach((newEl) => mountEl(newEl));
+    } else {
+      root.appendChild(el);
+    }
   }
+
+  mountEl(el);
 
   mountEvents.forEach((event) => event());
   mountEvents = [];
@@ -103,15 +110,16 @@ type InnerStateFromArray<T extends readonly StateData<any>[]> = {
 };
 
 export const reactive = <T extends readonly StateData<any>[]>(
-  fn: (...val: InnerStateFromArray<T>) => JSX.Element,
+  fn: (...val: InnerStateFromArray<T>) => JSX.Element | null,
   states: T
-): JSX.Element => {
+): JSX.Element | null => {
   const values = states.map((s) => s.value);
   let res = fn(...(values as InnerStateFromArray<T>));
 
   const onStateChange = (val: unknown, index: number) => {
     values[index] = val;
     const newNode = fn(...(values as InnerStateFromArray<T>));
+    if (!res || !newNode) return;
     res.replaceWith(newNode);
     res = newNode;
   };
@@ -153,8 +161,47 @@ export const createAsyncCall = <T>(url: string, requestInit?: RequestInit) => {
   };
 };
 
-export const Fragment = ({ children }: { children: JSX.Element }) => {
+export const Fragment = ({ children }: { children: ComponentChild }) => {
   return children;
+};
+
+type RoutesType = {
+  path: string;
+  element: JSX.Element;
+}[];
+
+type RouterProps = {
+  routes: RoutesType;
+};
+
+const currentPathname = createState("/");
+
+export const Router = ({ routes }: RouterProps) => {
+  const pathname = location.pathname;
+
+  currentPathname(pathname);
+
+  createEffect(() => {}, [currentPathname()]);
+
+  return reactive(
+    (path) => routes.find((item) => item.path === path)?.element || null,
+    [currentPathname()]
+  );
+};
+
+type LinkProps = {
+  children: ComponentChild;
+  href: string;
+};
+
+export const Link = ({ children, href }: LinkProps) => {
+  const handleClick = (e: any) => {
+    e.preventDefault();
+    currentPathname(href);
+    window.history.pushState({}, "", href);
+  };
+
+  return createElement("a", { onClick: handleClick, href }, children);
 };
 
 const xlinkNS = "http://www.w3.org/1999/xlink";
