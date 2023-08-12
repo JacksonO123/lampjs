@@ -1,16 +1,26 @@
-const fs = require("fs-extra");
-const path = require("path");
+#!/usr/bin/env node
 
-const readline = require("readline").createInterface({
+import fsPkg from "fs-extra";
+import { join } from "path";
+import rl from "readline";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+const { renameSync, copySync } = fsPkg;
+
+const readline = rl.createInterface({
   input: process.stdin,
   output: process.stdout,
 });
 
 readline.question("? What will your project be called: ", (name) => {
-  const from = path.join(__dirname, "template");
-  const to = path.join(process.cwd(), name);
-  fs.renameSync(path.join(from, "_gitignore"), path.join(from, ".gitignore"));
-  fs.copySync(from, to, { overwrite: true });
+  const cwd = process.cwd();
+  const from = join(__dirname, "template");
+  const to = join(cwd, name);
+  renameSync(join(from, "_gitignore"), join(from, ".gitignore"));
+  copySync(from, to, { overwrite: true });
   console.log("Done!");
   console.log("Next steps:\n");
   if (name !== ".") {
