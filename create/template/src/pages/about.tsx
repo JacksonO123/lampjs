@@ -1,11 +1,12 @@
 import { Link } from "@jacksonotto/lampjs";
+import "./root.css";
 
 const About = () => {
   return (
-    <span>
+    <div class="root">
       <h1>about</h1>
       <Link href="/">home</Link>
-    </span>
+    </div>
   );
 };
 

@@ -1,4 +1,4 @@
-import { createState } from "@jacksonotto/lampjs";
+import { createState, Link } from "@jacksonotto/lampjs";
 import "./root.css";
 
 const Root = () => {
