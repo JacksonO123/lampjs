@@ -146,6 +146,8 @@ const routes = [
 
 The Router element does not replace the whole screen content, only the place where it is located. That means that you can have the Router element nested within your component tree.
 
+To link to other pages within the site, use the `Link` component. The `a` component will work, but it will make do a whole page reload every time.
+
 ## Effects
 
 Effects in LampJs are simple to create. Simply pass the state variable function into the `createEffect` function.

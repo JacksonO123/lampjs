@@ -1,4 +1,5 @@
 import { createState, Link } from "@jacksonotto/lampjs";
+import Counter from "../components/Counter";
 import "./root.css";
 
 const Root = () => {
@@ -13,7 +14,7 @@ const Root = () => {
       <img src="/lamp.svg" alt="" />
       <h1>LampJs</h1>
       <span>A powerful, lightweight JS framework</span>
-      <button onClick={handleClick}>Count is {num()}</button>
+      <Counter />
       <Link href="/about">about</Link>
     </div>
   );
