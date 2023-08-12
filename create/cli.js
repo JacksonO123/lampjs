@@ -24,8 +24,8 @@ readline.question("? What will your project be called: ", (name) => {
   console.log("Done!");
   console.log("Next steps:\n");
   if (name !== ".") {
-    console.log(`-  "cd ${name}"`);
+    console.log(`-  cd ${name}`);
   }
-  console.log('-  "npm install"\n-  "npm run dev"');
+  console.log("-  pnpm install\n-  pnpm dev");
   readline.close();
 });
