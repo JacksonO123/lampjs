@@ -181,8 +181,6 @@ export const Router = ({ routes }: RouterProps) => {
 
   currentPathname(pathname);
 
-  createEffect(() => {}, [currentPathname()]);
-
   return reactive(
     (path) => routes.find((item) => item.path === path)?.element || null,
     [currentPathname()]
