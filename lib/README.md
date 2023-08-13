@@ -1,6 +1,6 @@
 # LampJs
 
-LampJs is a lightweight js framework. Documentation coming soon.
+LampJs is a lightweight js framework. Documentation found in `docs.md` file.
 
 <br>
 
@@ -8,8 +8,16 @@ LampJs is a lightweight js framework. Documentation coming soon.
 
 To create a new LampJs project run
 
+pnpm:
+
 ```sh
 pnpm create lampjs-app
+```
+
+npm:
+
+```sh
+npx create-lampjs-app
 ```
 
 ## To note
