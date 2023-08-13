@@ -3,12 +3,6 @@ import Counter from "../components/Counter";
 import "./root.css";
 
 const Root = () => {
-  const num = createState(0);
-
-  const handleClick = () => {
-    num((prev) => prev + 1);
-  };
-
   return (
     <div class="root">
       <img src="/lamp.svg" alt="" />

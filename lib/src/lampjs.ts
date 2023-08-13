@@ -85,7 +85,7 @@ export const createState = <T>(value: T) => {
   return updateCb;
 };
 
-export type StateFactory<T> = ReturnType<typeof createState<T>>;
+export type Reactive<T> = ReturnType<typeof createState<T>>;
 
 export const createEffect = <T extends StateData<any>>(
   cb: () => void,

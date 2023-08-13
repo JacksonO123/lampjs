@@ -1,7 +1,7 @@
-import { reactive, StateFactory } from "@jacksonotto/lampjs";
+import { reactive, Reactive } from "@jacksonotto/lampjs";
 
 type TestProps = {
-  list: StateFactory<number>;
+  list: Reactive<number>;
 };
 
 const Test = ({ list }: TestProps) => {

@@ -175,3 +175,15 @@ The `onPageMount` function runs once after the dom is rendered initially. This i
 **Render Cycle and Element References**
 
 Each component function is only called once when it is mounted, and again if it gets mounted again. This means that you are free to use vanilla element query apis such as `getElementById` or `querySelectorAll` to query for your dom elements.
+
+**Types**
+
+Typesafety is handled mostly in the framework, the only type you need to manage is the `Reactive` type. This type is generic and represents a state variable of that type.
+
+A state variable for a string would look like this:
+
+```typescript
+type MyType = Reactive<string>;
+```
+
+This type is primarily useful for taking state variables as properties to a component.

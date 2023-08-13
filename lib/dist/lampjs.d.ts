@@ -12,7 +12,7 @@ export declare class StateData<T> {
 }
 export declare const onPageMount: (cb: () => void) => void;
 export declare const createState: <T>(value: T) => (newState?: T | ((val: T) => T) | undefined) => StateData<T>;
-export type StateFactory<T> = ReturnType<typeof createState<T>>;
+export type Reactive<T> = ReturnType<typeof createState<T>>;
 export declare const createEffect: <T extends StateData<any>>(cb: () => void, deps: T[]) => void;
 export type asyncCallState<T> = {
     loading: boolean;
@@ -22,7 +22,6 @@ type InnerStateFromArray<T extends readonly StateData<any>[]> = {
     [K in keyof T]: T[K] extends StateData<infer U> ? U : never;
 };
 export declare const reactive: <T extends readonly StateData<any>[]>(fn: (...val: InnerStateFromArray<T>) => JSX.Element | null, states: T) => JSX.Element | null;
-export declare const createAsyncCall: <T>(url: string, requestInit?: RequestInit) => (cb: (val: asyncCallState<T>) => void, parser?: ((...args: any[]) => any) | null | undefined) => void;
 export declare const Fragment: ({ children }: {
     children: ComponentChild;
 }) => ComponentChild;
