@@ -15,12 +15,10 @@ export const mount = (
   if (!root || !el) return;
 
   function mountEl(el: JSX.Element | JSX.Element[]) {
-    if (!root) return;
-
     if (Array.isArray(el)) {
       el.forEach((newEl) => mountEl(newEl));
     } else {
-      root.appendChild(el);
+      root!.appendChild(el);
     }
   }
 
