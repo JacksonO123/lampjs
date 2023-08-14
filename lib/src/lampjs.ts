@@ -54,10 +54,6 @@ export const onPageMount = (cb: () => void) => {
   mountEvents.push(cb);
 };
 
-const initState = <T>(value: T, addEffect: (effect: () => void) => void) => {
-  return new StateData(value, addEffect);
-};
-
 export const createState = <T>(value: T) => {
   const effects: (() => void)[] = [];
 
@@ -65,7 +61,7 @@ export const createState = <T>(value: T) => {
     effects.push(effect);
   };
 
-  let currentState = initState(value, addEffect);
+  let currentState = new StateData(value, addEffect);
 
   const updateCb = (newState?: T | ((val: T) => T)) => {
     if (newState !== undefined) {
