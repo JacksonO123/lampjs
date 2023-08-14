@@ -1,25 +1,17 @@
-import { createState, reactive, Link } from "@jacksonotto/lampjs";
-import Test from "../components/Test";
+import { createState, For } from "@jacksonotto/lampjs";
 import "./root.css";
 
 const Root = () => {
-  const num = createState(0);
+  const arr = createState([0]);
 
   const addItem = () => {
-    num((prev) => prev + 1);
+    arr((prev) => [...prev, prev[prev.length - 1] + 1]);
   };
 
   return (
     <div class="root">
-      <Link href="/about">about</Link>
       <button onClick={addItem}>Add</button>
-      <Test list={num} />
-      {reactive(
-        (val) => (
-          <div>{val}</div>
-        ),
-        [num()] as const
-      )}
+      <For each={arr()}>{(item) => item}</For>
     </div>
   );
 };

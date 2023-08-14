@@ -38,5 +38,12 @@ type LinkProps = {
     href: string;
 };
 export declare const Link: ({ children, href }: LinkProps) => JSX.Element;
+type ForItemFn<T> = (item: T, index: number) => ComponentChild;
+type ForProps<T> = {
+    each: StateData<Array<T>>;
+    children: ForItemFn<T>;
+};
+type ForElementAttributes = Omit<JSX.HTMLAttributes, "children">;
+export declare const For: <T>({ each, children, ...others }: ForProps<T> & ForElementAttributes) => JSX.Element | null;
 export declare const createElement: (tag: string | ComponentFactory, attrs: ComponentAttributes, ...children: ComponentChild[]) => JSX.Element;
 export {};

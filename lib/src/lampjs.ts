@@ -172,6 +172,34 @@ export const Link = ({ children, href }: LinkProps) => {
   return createElement("a", { onClick: handleClick, href }, children);
 };
 
+type ForItemFn<T> = (item: T, index: number) => ComponentChild;
+
+type ForProps<T> = {
+  each: StateData<Array<T>>;
+  children: ForItemFn<T>;
+};
+
+type ForElementAttributes = Omit<JSX.HTMLAttributes, "children">;
+
+export const For = <T>({
+  each,
+  children,
+  ...others
+}: ForProps<T> & ForElementAttributes) => {
+  const elFn = (children as unknown as ForItemFn<T>[])[0];
+
+  return reactive(
+    (arr) =>
+      createElement(
+        "div",
+        // @ts-ignore
+        { ...others },
+        ...arr.map((item, index) => elFn(item, index))
+      ),
+    [each]
+  );
+};
+
 const xlinkNS = "http://www.w3.org/1999/xlink";
 export const createElement = (
   tag: string | ComponentFactory,

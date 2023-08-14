@@ -100,6 +100,27 @@ return (
 );
 ```
 
+To make iterating an array reactively easier, you can use the `For` element. The `each` property is the array state variable, and the children of the component is a function that is ran for each item in the array to render it.
+
+**Possible future change:** This is based on the reactive api which depends on having one element node to replace meaning that the list is wrapped in a div (that you can style by putting more attributes on the `For` element) even though you don't specify to wrap it in a div. In the future the `For` element may manage its own children without the need for a wrapper element.
+
+Example:
+
+```tsx
+const arr = createState([1, 2, 3]);
+
+return (
+  <For each={arr()}>
+    {(item) => (
+      <div>
+        <span>{item}</span>
+        <span>something else</span>
+      </div>
+    )}
+  </For>
+);
+```
+
 The reactive function takes two parameters, the first is a callback, and the second is the list of state variables to re-render when they change. The parameters of the callback are the list of the state variables in the order they were provided (type safety is preserved).
 
 To update a state variable, call the function with a new value, or use the callback to use the current value easier.
