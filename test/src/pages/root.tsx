@@ -1,4 +1,4 @@
-import { createState, For } from "@jacksonotto/lampjs";
+import { createState, For, createEffect } from "@jacksonotto/lampjs";
 import "./root.css";
 
 const Root = () => {
@@ -7,6 +7,10 @@ const Root = () => {
   const addItem = () => {
     arr((prev) => [...prev, prev[prev.length - 1] + 1]);
   };
+
+  createEffect(() => {
+    console.log(arr().value);
+  }, [arr()]);
 
   return (
     <div class="root">

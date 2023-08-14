@@ -30,13 +30,11 @@ export const mount = (
 
 export class StateData<T> {
   isState = true;
-  addEffect: (effect: () => void) => void;
   private onStateChange: ((val: T) => void)[];
   value: T;
-  constructor(value: T, addEffect: (effect: () => void) => void) {
+  constructor(value: T) {
     this.value = value;
     this.onStateChange = [];
-    this.addEffect = addEffect;
   }
   toString() {
     return this.value;
@@ -57,11 +55,7 @@ export const onPageMount = (cb: () => void) => {
 export const createState = <T>(value: T) => {
   const effects: (() => void)[] = [];
 
-  const addEffect = (effect: () => void) => {
-    effects.push(effect);
-  };
-
-  let currentState = new StateData(value, addEffect);
+  let currentState = new StateData(value);
 
   const updateCb = (newState?: T | ((val: T) => T)) => {
     if (newState !== undefined) {
@@ -90,7 +84,7 @@ export const createEffect = <T extends StateData<any>>(
   }
 
   deps.forEach((dep) => {
-    dep.addEffect(cb);
+    dep.addStateChangeEvent(cb);
   });
 };
 
@@ -231,7 +225,7 @@ export const createElement = (
           const effect = () => {
             (element as HTMLInputElement).checked = value.value;
           };
-          value.addEffect(effect);
+          value.addStateChangeEvent(effect);
         } else if (["textarea", "input"].includes(tag) && name === "value") {
           (element as HTMLTextAreaElement | HTMLInputElement).value =
             value.value;
@@ -239,7 +233,7 @@ export const createElement = (
             (element as HTMLTextAreaElement | HTMLInputElement).value =
               value.value;
           };
-          value.addEffect(effect);
+          value.addStateChangeEvent(effect);
         } else if (
           [
             "input",
@@ -262,7 +256,7 @@ export const createElement = (
           const effect = () => {
             (element as DisableableType).disabled = value.value;
           };
-          value.addEffect(effect);
+          value.addStateChangeEvent(effect);
         }
       } else if (name.startsWith("on")) {
         if (name === "onChange") {

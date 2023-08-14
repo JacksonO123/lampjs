@@ -2,10 +2,9 @@ import type { JSX, ComponentChild, ComponentFactory, ComponentAttributes } from 
 export declare const mount: (root: HTMLElement | null, el: JSX.Element | JSX.Element[]) => void;
 export declare class StateData<T> {
     isState: boolean;
-    addEffect: (effect: () => void) => void;
     private onStateChange;
     value: T;
-    constructor(value: T, addEffect: (effect: () => void) => void);
+    constructor(value: T);
     toString(): T;
     addStateChangeEvent(event: (val: T) => void): void;
     distributeNewState(data: T): void;
