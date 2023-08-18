@@ -199,7 +199,7 @@ Each component function is only called once when it is mounted, and again if it 
 
 **Types**
 
-Typesafety is handled mostly in the framework, the only type you need to manage is the `Reactive` type. This type is generic and represents a state variable of that type.
+Typesafety is handled mostly in the framework, the only type you need to manage is the `Reactive<T>` type. This type is generic and represents a state variable of that type.
 
 A state variable for a string would look like this:
 

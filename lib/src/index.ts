@@ -34,6 +34,7 @@ import {
   Router,
   Link,
   For,
+  Reactive,
 } from "./lampjs";
 
 export const exportObj = {
@@ -47,6 +48,7 @@ export const exportObj = {
   Router,
   Link,
   For,
+  Reactive,
 };
 
 declare global {

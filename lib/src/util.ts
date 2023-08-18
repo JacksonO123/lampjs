@@ -1,5 +1,5 @@
 import { ComponentChild } from "./types";
-import { StateData } from "./lampjs";
+import { Reactive } from "./lampjs";
 
 export const isSvgTag = (tag: string) => {
   return [
@@ -80,12 +80,12 @@ export const applyChild = (element: JSX.Element, child: ComponentChild) => {
     if (
       child !== null &&
       typeof child === "object" &&
-      (child as StateData<any>).isState
+      (child as Reactive<any>).isState
     ) {
       const node = document.createTextNode(
-        (child as StateData<any>).value.toString()
+        (child as Reactive<any>).value.toString()
       );
-      (child as StateData<any>).addStateChangeEvent((val) => {
+      (child as Reactive<any>).addStateChangeEvent((val) => {
         node.textContent = val.toString();
       });
       element.appendChild(node);

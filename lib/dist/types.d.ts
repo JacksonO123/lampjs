@@ -1,4 +1,4 @@
-import type { StateData } from "./index";
+import type { Reactive } from "./index";
 
 export type { JSX };
 export declare type ComponentChild =
@@ -9,7 +9,7 @@ export declare type ComponentChild =
   | boolean
   | undefined
   | null
-  | StateData<any>;
+  | Reactive<any>;
 export declare type ComponentChildren = ComponentChild | ComponentChild[];
 export interface BaseProps {
   children?: ComponentChildren;
@@ -268,7 +268,7 @@ declare global {
       cellSpacing?: number | string;
       charSet?: string;
       challenge?: string;
-      checked?: boolean | StateData<any>;
+      checked?: boolean | Reactive<any>;
       class?: string;
       cols?: number;
       colSpan?: number;
@@ -284,7 +284,7 @@ declare global {
       default?: boolean;
       defer?: boolean;
       dir?: "auto" | "rtl" | "ltr";
-      disabled?: boolean | StateData<any>;
+      disabled?: boolean | Reactive<any>;
       disableRemotePlayback?: boolean;
       download?: string;
       draggable?: boolean;
@@ -301,7 +301,7 @@ declare global {
       hidden?: boolean;
       high?: number;
       href?: string;
-      ref?: <T>(newState?: T | ((val: T) => T)) => StateData<T>;
+      ref?: Reactive<any>;
       hrefLang?: string;
       for?: string;
       htmlFor?: string;
@@ -375,7 +375,7 @@ declare global {
       title?: string;
       type?: string;
       useMap?: string;
-      value?: string | string[] | number | StateData<any>;
+      value?: string | string[] | number | Reactive<any>;
       volume?: string | number;
       width?: number | string;
       wmode?: string;

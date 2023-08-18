@@ -1,13 +1,14 @@
+import { Reactive } from "./lampjs";
 export declare const exportObj: {
     createElement: (tag: string | import("./types").ComponentFactory, attrs: import("./types").ComponentAttributes, ...children: import("./types").ComponentChild[]) => JSX.Element;
     mount: (root: HTMLElement | null, el: JSX.Element | JSX.Element[]) => void;
-    createState: <T>(value: T) => (newState?: T | ((val: T) => T) | undefined) => import("./lampjs").StateData<T>;
-    createEffect: <T_1 extends import("./lampjs").StateData<any>>(cb: () => void, deps: T_1[]) => void;
+    createState: <T>(value: T) => (newState?: T | ((val: T) => T) | undefined) => Reactive<T>;
+    createEffect: <T_1 extends Reactive<any>>(cb: () => void, deps: T_1[]) => void;
     Fragment: ({ children }: {
         children: import("./types").ComponentChild;
     }) => import("./types").ComponentChild;
     onPageMount: (cb: () => void) => void;
-    reactive: <T_2 extends readonly import("./lampjs").StateData<any>[]>(fn: (...val: { [K in keyof T_2]: T_2[K] extends import("./lampjs").StateData<infer U> ? U : never; }) => JSX.Element | null, states: T_2) => JSX.Element | null;
+    reactive: <T_2 extends readonly Reactive<any>[]>(fn: (...val: { [K in keyof T_2]: T_2[K] extends Reactive<infer U> ? U : never; }) => JSX.Element | null, states: T_2) => JSX.Element | null;
     Router: ({ routes }: {
         routes: {
             path: string;
@@ -19,7 +20,7 @@ export declare const exportObj: {
         href: string;
     }) => JSX.Element;
     For: <T_3>({ each, children, ...others }: {
-        each: import("./lampjs").StateData<T_3[]>;
+        each: Reactive<T_3[]>;
         children: (item: T_3, index: number) => import("./types").ComponentChild;
     } & {
         pattern?: string | undefined;
@@ -49,7 +50,7 @@ export declare const exportObj: {
         cellSpacing?: string | number | undefined;
         charSet?: string | undefined;
         challenge?: string | undefined;
-        checked?: boolean | import("./lampjs").StateData<any> | undefined;
+        checked?: boolean | Reactive<any> | undefined;
         class?: string | undefined;
         cols?: number | undefined;
         colSpan?: number | undefined;
@@ -64,7 +65,7 @@ export declare const exportObj: {
         default?: boolean | undefined;
         defer?: boolean | undefined;
         dir?: "auto" | "rtl" | "ltr" | undefined;
-        disabled?: boolean | import("./lampjs").StateData<any> | undefined;
+        disabled?: boolean | Reactive<any> | undefined;
         disableRemotePlayback?: boolean | undefined;
         download?: string | undefined;
         draggable?: boolean | undefined;
@@ -79,7 +80,7 @@ export declare const exportObj: {
         headers?: string | undefined;
         hidden?: boolean | undefined;
         high?: number | undefined;
-        ref?: (<T_4>(newState?: T_4 | ((val: T_4) => T_4) | undefined) => import("./lampjs").StateData<T_4>) | undefined;
+        ref?: Reactive<any> | undefined;
         hrefLang?: string | undefined;
         for?: string | undefined;
         htmlFor?: string | undefined;
@@ -151,7 +152,7 @@ export declare const exportObj: {
         target?: string | undefined;
         type?: string | undefined;
         useMap?: string | undefined;
-        value?: string | number | import("./lampjs").StateData<any> | string[] | undefined;
+        value?: string | number | Reactive<any> | string[] | undefined;
         volume?: string | number | undefined;
         wmode?: string | undefined;
         wrap?: string | undefined;
@@ -332,6 +333,7 @@ export declare const exportObj: {
         onTransitionEnd?: JSX.TransitionEventHandler | undefined;
         onTransitionEndCapture?: JSX.TransitionEventHandler | undefined;
     }) => JSX.Element | null;
+    Reactive: typeof Reactive;
 };
 declare global {
     let LampJs: typeof exportObj;

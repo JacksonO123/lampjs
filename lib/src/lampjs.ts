@@ -28,7 +28,7 @@ export const mount = (
   mountEvents = [];
 };
 
-export class StateData<T> {
+export class Reactive<T> {
   isState = true;
   private onStateChange: ((val: T) => void)[];
   value: T;
@@ -55,7 +55,7 @@ export const onPageMount = (cb: () => void) => {
 export const createState = <T>(value: T) => {
   const effects: (() => void)[] = [];
 
-  let currentState = new StateData(value);
+  let currentState = new Reactive(value);
 
   const updateCb = (newState?: T | ((val: T) => T)) => {
     if (newState !== undefined) {
@@ -73,9 +73,7 @@ export const createState = <T>(value: T) => {
   return updateCb;
 };
 
-export type Reactive<T> = ReturnType<typeof createState<T>>;
-
-export const createEffect = <T extends StateData<any>>(
+export const createEffect = <T extends Reactive<any>>(
   cb: () => void,
   deps: T[]
 ) => {
@@ -93,11 +91,11 @@ export type asyncCallState<T> = {
   data: T | null;
 };
 
-type InnerStateFromArray<T extends readonly StateData<any>[]> = {
-  [K in keyof T]: T[K] extends StateData<infer U> ? U : never;
+type InnerStateFromArray<T extends readonly Reactive<any>[]> = {
+  [K in keyof T]: T[K] extends Reactive<infer U> ? U : never;
 };
 
-export const reactive = <T extends readonly StateData<any>[]>(
+export const reactive = <T extends readonly Reactive<any>[]>(
   fn: (...val: InnerStateFromArray<T>) => JSX.Element | null,
   states: T
 ): JSX.Element | null => {
@@ -163,7 +161,7 @@ export const Link = ({ children, href }: LinkProps) => {
 type ForItemFn<T> = (item: T, index: number) => ComponentChild;
 
 type ForProps<T> = {
-  each: StateData<Array<T>>;
+  each: Reactive<Array<T>>;
   children: ForItemFn<T>;
 };
 
@@ -212,14 +210,13 @@ export const createElement = (
     }
     for (let name of Object.keys(attrs)) {
       const value = attrs[name];
-      // @ts-ignore
       if (name === "ref") {
         // @ts-ignore
-        value(element);
+        value.distributeNewState(element);
         // @ts-ignore
       } else if (attrs[name].isState === true) {
         // @ts-ignore
-        const value = attrs[name] as StateData<any>;
+        const value = attrs[name] as Reactive<any>;
         if (tag === "input" && name === "checked") {
           (element as HTMLInputElement).checked = value.value;
           const effect = () => {
