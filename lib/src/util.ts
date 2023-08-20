@@ -77,11 +77,7 @@ export const applyChild = (element: JSX.Element, child: ComponentChild) => {
     element.appendChild(child);
   } else if (typeof child === "object") {
     // @ts-ignore
-    if (
-      child !== null &&
-      typeof child === "object" &&
-      (child as Reactive<any>).isState
-    ) {
+    if (child && child instanceof Reactive) {
       const node = document.createTextNode(
         (child as Reactive<any>).value.toString()
       );

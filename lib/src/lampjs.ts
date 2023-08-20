@@ -234,10 +234,8 @@ export const createElement = (
       if (name === "ref") {
         // @ts-ignore
         value.distributeNewState(element);
+      } else if (value instanceof Reactive) {
         // @ts-ignore
-      } else if (attrs[name].isState === true) {
-        // @ts-ignore
-        const value = attrs[name] as Reactive<any>;
         if (tag === "input" && name === "checked") {
           (element as HTMLInputElement).checked = value.value;
           const effect = () => {

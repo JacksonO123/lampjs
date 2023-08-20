@@ -1,17 +1,16 @@
-import { createState, For } from "@jacksonotto/lampjs";
+import { createState } from "@jacksonotto/lampjs";
 import "./root.css";
 
 const Root = () => {
-  const arr = createState([1]);
+  const checked = createState(true);
 
-  const addItem = () => {
-    arr((prev) => [...prev, prev[prev.length - 1] + 1]);
-  };
+  setTimeout(() => {
+    checked(false);
+  }, 1000);
 
   return (
     <div class="root">
-      <button onClick={addItem}>Add</button>
-      <For each={arr()}>{(item) => <span>{item}</span>}</For>
+      <input type="checkbox" checked={checked()} />
     </div>
   );
 };
