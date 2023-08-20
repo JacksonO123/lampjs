@@ -1,16 +1,17 @@
-import { createEffect, createState } from "@jacksonotto/lampjs";
+import { createState, For } from "@jacksonotto/lampjs";
 import "./root.css";
 
 const Root = () => {
-  const elRef = createState<HTMLDivElement | null>(null);
+  const arr = createState([1]);
 
-  createEffect(() => {
-    console.log(elRef().value);
-  }, [elRef()]);
+  const addItem = () => {
+    arr((prev) => [...prev, prev[prev.length - 1] + 1]);
+  };
 
   return (
     <div class="root">
-      <div ref={elRef()}>content</div>
+      <button onClick={addItem}>Add</button>
+      <For each={arr()}>{(item) => <span>{item}</span>}</For>
     </div>
   );
 };

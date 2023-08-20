@@ -100,9 +100,7 @@ return (
 );
 ```
 
-To make iterating an array reactively easier, you can use the `For` element. The `each` property is the array state variable, and the children of the component is a function that is ran for each item in the array to render it.
-
-**Possible future change:** This is based on the reactive api which depends on having one element node to replace meaning that the list is wrapped in a div (that you can style by putting more attributes on the `For` element) even though you don't specify to wrap it in a div. In the future the `For` element may manage its own children without the need for a wrapper element.
+To make iterating an array reactively easier, you can use the `For` element. The `each` property is the array state variable, and the children of the component is a function that is ran for each item in the array to render it. The elements are rendered in a list in the parent component.
 
 Example:
 

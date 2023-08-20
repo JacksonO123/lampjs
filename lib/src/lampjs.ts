@@ -158,32 +158,62 @@ export const Link = ({ children, href }: LinkProps) => {
   return createElement("a", { onClick: handleClick, href }, children);
 };
 
-type ForItemFn<T> = (item: T, index: number) => ComponentChild;
+type ForItemFn<T> = (item: T, index: number) => JSX.Element;
 
 type ForProps<T> = {
-  each: Reactive<Array<T>>;
+  each: Reactive<T[]>;
   children: ForItemFn<T>;
 };
 
-type ForElementAttributes = Omit<JSX.HTMLAttributes, "children">;
-
-export const For = <T>({
-  each,
-  children,
-  ...others
-}: ForProps<T> & ForElementAttributes) => {
+export const For = <T>({ each, children }: ForProps<T>) => {
   const elFn = (children as unknown as ForItemFn<T>[])[0];
 
-  return reactive(
-    (arr) =>
-      createElement(
-        "div",
-        // @ts-ignore
-        { ...others },
-        ...arr.map((item, index) => elFn(item, index))
-      ),
-    [each]
-  );
+  /*
+   * all references to dom nodes of array elements
+   * when array is empty, a placeholder div will
+   * keep the place of where array elements should go
+   * childReferences should never be empty
+   */
+  const childReferences: JSX.Element[] =
+    each.value.length === 0 ? [createElement("div", {})] : [];
+
+  each.addStateChangeEvent((val: T[]) => {
+    while (childReferences.length > 1) {
+      childReferences[1].remove();
+      childReferences.splice(1, 1);
+    }
+
+    const firstItem = childReferences[0];
+
+    val.forEach((item, index) => {
+      const el = elFn(item, index);
+
+      childReferences.push(el);
+
+      firstItem.after(el);
+    });
+
+    if (val.length === 0) {
+      const placeholder = createElement("div", {});
+
+      firstItem.after(placeholder);
+
+      childReferences.push(placeholder);
+    }
+
+    firstItem.remove();
+    childReferences.splice(0, 1);
+  });
+
+  const initialChildren = each.value.map((item, index) => {
+    const ref = elFn(item, index);
+    childReferences.push(ref);
+    return ref;
+  });
+
+  return Fragment({
+    children: initialChildren.length > 0 ? initialChildren : childReferences[0],
+  }) as JSX.Element;
 };
 
 const xlinkNS = "http://www.w3.org/1999/xlink";

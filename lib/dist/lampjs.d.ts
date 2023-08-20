@@ -36,12 +36,11 @@ type LinkProps = {
     href: string;
 };
 export declare const Link: ({ children, href }: LinkProps) => JSX.Element;
-type ForItemFn<T> = (item: T, index: number) => ComponentChild;
+type ForItemFn<T> = (item: T, index: number) => JSX.Element;
 type ForProps<T> = {
-    each: Reactive<Array<T>>;
+    each: Reactive<T[]>;
     children: ForItemFn<T>;
 };
-type ForElementAttributes = Omit<JSX.HTMLAttributes, "children">;
-export declare const For: <T>({ each, children, ...others }: ForProps<T> & ForElementAttributes) => JSX.Element | null;
+export declare const For: <T>({ each, children }: ForProps<T>) => JSX.Element;
 export declare const createElement: (tag: string | ComponentFactory, attrs: ComponentAttributes, ...children: ComponentChild[]) => JSX.Element;
 export {};
