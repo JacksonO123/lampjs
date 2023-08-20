@@ -170,12 +170,12 @@ export const For = <T>({ each, children }: ForProps<T>) => {
     each.value.length === 0 ? [createElement("div", {})] : [];
 
   each.addStateChangeEvent((val: T[]) => {
-    while (childReferences.length > 1) {
-      childReferences[1].remove();
-      childReferences.splice(1, 1);
-    }
+    const firstItem = childReferences.shift()!;
 
-    const firstItem = childReferences[0];
+    while (childReferences.length > 0) {
+      const el = childReferences.pop()!;
+      el.remove();
+    }
 
     val.forEach((item, index) => {
       const el = elFn(item, index);
@@ -194,7 +194,6 @@ export const For = <T>({ each, children }: ForProps<T>) => {
     }
 
     firstItem.remove();
-    childReferences.splice(0, 1);
   });
 
   const initialChildren = each.value.map((item, index) => {

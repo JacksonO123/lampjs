@@ -12,10 +12,6 @@ export declare class Reactive<T> {
 export declare const onPageMount: (cb: () => void) => void;
 export declare const createState: <T>(value: T) => (newState?: T | ((val: T) => T) | undefined) => Reactive<T>;
 export declare const createEffect: <T extends Reactive<any>>(cb: () => void, deps: T[]) => void;
-export type asyncCallState<T> = {
-    loading: boolean;
-    data: T | null;
-};
 type InnerStateFromArray<T extends readonly Reactive<any>[]> = {
     [K in keyof T]: T[K] extends Reactive<infer U> ? U : never;
 };

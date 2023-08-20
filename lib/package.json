@@ -5,7 +5,7 @@
   "types": "dist/index.d.ts",
   "description": "A lightweight front-end JavaScript framework",
   "author": "Jackson Otto",
-  "version": "3.4.13",
+  "version": "3.4.14",
   "scripts": {
     "build": "npx tsc",
     "dev": "npx nodemon -e ts --watch src --exec npx tsc"
