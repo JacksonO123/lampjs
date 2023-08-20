@@ -53,8 +53,6 @@ export const onPageMount = (cb: () => void) => {
 };
 
 export const createState = <T>(value: T) => {
-  const effects: (() => void)[] = [];
-
   let currentState = new Reactive(value);
 
   const updateCb = (newState?: T | ((val: T) => T)) => {
@@ -64,7 +62,6 @@ export const createState = <T>(value: T) => {
           ? (newState as (val: T) => T)(currentState.value)
           : newState;
       currentState.distributeNewState(newStateVal);
-      effects.forEach((effect) => effect());
     }
 
     return currentState;
