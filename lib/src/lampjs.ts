@@ -83,11 +83,6 @@ export const createEffect = <T extends Reactive<any>>(
   });
 };
 
-export type asyncCallState<T> = {
-  loading: boolean;
-  data: T | null;
-};
-
 type InnerStateFromArray<T extends readonly Reactive<any>[]> = {
   [K in keyof T]: T[K] extends Reactive<infer U> ? U : never;
 };
