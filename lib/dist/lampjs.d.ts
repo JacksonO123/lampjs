@@ -1,7 +1,6 @@
 import type { JSX, ComponentChild, ComponentFactory, ComponentAttributes } from "./types";
 export declare const mount: (root: HTMLElement | null, el: JSX.Element | JSX.Element[]) => void;
 export declare class Reactive<T> {
-    isState: boolean;
     private onStateChange;
     value: T;
     constructor(value: T);

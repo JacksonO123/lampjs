@@ -29,7 +29,6 @@ export const mount = (
 };
 
 export class Reactive<T> {
-  isState = true;
   private onStateChange: ((val: T) => void)[];
   value: T;
   constructor(value: T) {
