@@ -176,23 +176,25 @@ export const For = <T>({ each, children }: ForProps<T>) => {
       el.remove();
     }
 
-    val.forEach((item, index) => {
-      const el = elFn(item, index);
+    for (let i = val.length - 1; i >= 0; i--) {
+      const el = elFn(val[i], i);
 
       childReferences.push(el);
 
-      firstItem.after(el);
-    });
+      if (i === 0) {
+        firstItem.replaceWith(el);
+      } else {
+        firstItem.after(el);
+      }
+    }
 
     if (val.length === 0) {
       const placeholder = createElement("div", {});
 
-      firstItem.after(placeholder);
+      firstItem.replaceWith(placeholder);
 
       childReferences.push(placeholder);
     }
-
-    firstItem.remove();
   });
 
   const initialChildren = each.value.map((item, index) => {
