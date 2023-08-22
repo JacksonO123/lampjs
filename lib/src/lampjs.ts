@@ -233,10 +233,8 @@ export const createElement = (
     for (let name of Object.keys(attrs)) {
       const value = attrs[name];
       if (name === "ref") {
-        // @ts-ignore
-        value.distributeNewState(element);
+        (value as unknown as Reactive<any>).distributeNewState(element);
       } else if (value instanceof Reactive) {
-        // @ts-ignore
         if (tag === "input" && name === "checked") {
           (element as HTMLInputElement).checked = value.value;
           const effect = () => {
