@@ -235,44 +235,13 @@ export const createElement = (
       if (name === "ref") {
         (value as unknown as Reactive<any>).distributeNewState(element);
       } else if (value instanceof Reactive) {
-        if (tag === "input" && name === "checked") {
-          (element as HTMLInputElement).checked = value.value;
-          const effect = () => {
-            (element as HTMLInputElement).checked = value.value;
-          };
-          value.addStateChangeEvent(effect);
-        } else if (["textarea", "input"].includes(tag) && name === "value") {
-          (element as HTMLTextAreaElement | HTMLInputElement).value =
-            value.value;
-          const effect = () => {
-            (element as HTMLTextAreaElement | HTMLInputElement).value =
-              value.value;
-          };
-          value.addStateChangeEvent(effect);
-        } else if (
-          [
-            "input",
-            "button",
-            "optgroup",
-            "option",
-            "select",
-            "textarea",
-          ].includes(tag) &&
-          name === "disabled"
-        ) {
-          type DisableableType =
-            | HTMLInputElement
-            | HTMLButtonElement
-            | HTMLOptGroupElement
-            | HTMLOptionElement
-            | HTMLSelectElement
-            | HTMLTextAreaElement;
-          (element as DisableableType).disabled = value.value;
-          const effect = () => {
-            (element as DisableableType).disabled = value.value;
-          };
-          value.addStateChangeEvent(effect);
-        }
+        // @ts-ignore
+        element[name] = value.value;
+        const effect = () => {
+          // @ts-ignore
+          element[name] = value.value;
+        };
+        value.addStateChangeEvent(effect);
       } else if (name.startsWith("on")) {
         if (name === "onChange") {
           name = "onInput";
