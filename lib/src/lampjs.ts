@@ -235,8 +235,7 @@ export const createElement = (
       if (name === "ref") {
         (value as unknown as Reactive<any>).distributeNewState(element);
       } else if (value instanceof Reactive) {
-        // @ts-ignore
-        element[name] = value.value;
+        element.setAttribute(name, value.value);
         const effect = () => {
           // @ts-ignore
           element[name] = value.value;
