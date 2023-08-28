@@ -236,9 +236,8 @@ export const createElement = (
         (value as unknown as Reactive<any>).distributeNewState(element);
       } else if (value instanceof Reactive) {
         element.setAttribute(name, value.value);
-        const effect = () => {
-          // @ts-ignore
-          element[name] = value.value;
+        const effect = (newVal: any) => {
+          element.setAttribute(name, newVal);
         };
         value.addStateChangeEvent(effect);
       } else if (name.startsWith("on")) {
