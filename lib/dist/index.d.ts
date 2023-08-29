@@ -23,6 +23,11 @@ export declare const exportObj: {
         each: Reactive<T_3[]>;
         children: (item: T_3, index: number) => JSX.Element;
     }) => JSX.Element;
+    If: ({ condition, then, else: elseBranch }: {
+        condition: Reactive<boolean>;
+        then: JSX.Element;
+        else: JSX.Element;
+    }) => JSX.Element;
     Reactive: typeof Reactive;
 };
 declare global {

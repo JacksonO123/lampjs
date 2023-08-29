@@ -34,6 +34,7 @@ import {
   Router,
   Link,
   For,
+  If,
   Reactive,
 } from "./lampjs";
 
@@ -48,6 +49,7 @@ export const exportObj = {
   Router,
   Link,
   For,
+  If,
   Reactive,
 };
 

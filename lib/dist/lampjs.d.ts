@@ -32,6 +32,12 @@ type LinkProps = {
     href: string;
 };
 export declare const Link: ({ children, href }: LinkProps) => JSX.Element;
+type IfProps = {
+    condition: Reactive<boolean>;
+    then: JSX.Element;
+    else: JSX.Element;
+};
+export declare const If: ({ condition, then, else: elseBranch }: IfProps) => JSX.Element;
 type ForItemFn<T> = (item: T, index: number) => JSX.Element;
 type ForProps<T> = {
     each: Reactive<T[]>;

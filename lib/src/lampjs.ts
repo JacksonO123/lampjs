@@ -151,6 +151,62 @@ export const Link = ({ children, href }: LinkProps) => {
   return createElement("a", { onClick: handleClick, href }, children);
 };
 
+type IfProps = {
+  condition: Reactive<boolean>;
+  then: JSX.Element;
+  else: JSX.Element;
+};
+
+/**
+ * replaces first with second
+ * either can be arrays or single elements
+ */
+const ifReplace = (
+  first: JSX.Element | JSX.Element[],
+  second: JSX.Element | JSX.Element[]
+) => {
+  if (Array.isArray(first)) {
+    if (Array.isArray(second)) {
+      for (let i = 1; i < first.length; i++) {
+        first[i].remove();
+      }
+
+      first[0].replaceWith(second[0]);
+
+      for (let i = second.length - 1; i > 0; i--) {
+        second[0].after(second[i]);
+      }
+    } else {
+      for (let i = 1; i < first.length; i++) {
+        first[i].remove();
+      }
+
+      first[0].replaceWith(second);
+    }
+  } else {
+    if (Array.isArray(second)) {
+      first.replaceWith(second[0]);
+      for (let i = second.length - 1; i > 0; i--) {
+        second[0].after(second[i]);
+      }
+    } else {
+      first.replaceWith(second);
+    }
+  }
+};
+
+export const If = ({ condition, then, else: elseBranch }: IfProps) => {
+  condition.addStateChangeEvent((show) => {
+    if (show) {
+      ifReplace(elseBranch, then);
+    } else {
+      ifReplace(then, elseBranch);
+    }
+  });
+
+  return condition.value ? then : elseBranch;
+};
+
 type ForItemFn<T> = (item: T, index: number) => JSX.Element;
 
 type ForProps<T> = {
