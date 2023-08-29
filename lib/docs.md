@@ -197,12 +197,18 @@ Each component function is only called once when it is mounted, and again if it 
 
 **Types**
 
-Typesafety is handled mostly in the framework, the only type you need to manage is the `Reactive<T>` type. This type is generic and represents a state variable of that type.
+Typesafety is handled mostly in the framework, the only type you need to manage is the `State<T>` type. This type is generic and represents a state variable of that type.
 
 A state variable for a string would look like this:
 
 ```typescript
-type MyType = Reactive<string>;
+type MyType = State<string>;
 ```
 
 This type is primarily useful for taking state variables as properties to a component.
+
+**Import Aliases**
+
+Import aliases specified by adding them in the `aliases.ts` file in the root project directory. This file exports an object where the key is the new alias and the value is the relative path to the directory. Before the alias is computed a `@` is placed before so a key that is "test" would be aliased as "@test".
+
+The `@` alias is available by default pointing to the `src` directory
