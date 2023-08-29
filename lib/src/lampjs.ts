@@ -130,6 +130,11 @@ export const Router = ({ routes }: RouterProps) => {
 
   currentPathname(pathname);
 
+  window.addEventListener("popstate", (e) => {
+    const newPath = (e.currentTarget as typeof window).location.pathname;
+    currentPathname(newPath);
+  });
+
   return reactive(
     (path) => routes.find((item) => item.path === path)?.element || null,
     [currentPathname()]
