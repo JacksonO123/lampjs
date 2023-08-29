@@ -16,7 +16,10 @@
     "noImplicitReturns": true,
     "skipLibCheck": true,
     "jsxFactory": "LampJs.createElement",
-    "jsxFragmentFactory": "LampJs.Fragment"
+    "jsxFragmentFactory": "LampJs.Fragment",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src"]
 }

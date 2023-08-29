@@ -1,4 +1,4 @@
-import { createState, Link } from "@jacksonotto/lampjs";
+import { Link } from "@jacksonotto/lampjs";
 import Counter from "../components/Counter";
 import "./root.css";
 

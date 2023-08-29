@@ -9,7 +9,8 @@
   },
   "devDependencies": {
     "typescript": "latest",
-    "vite": "latest"
+    "vite": "latest",
+    "@types/node": "latest"
   },
   "dependencies": {
     "@jacksonotto/lampjs": "latest"
