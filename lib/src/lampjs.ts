@@ -3,6 +3,7 @@ import type {
   ComponentChild,
   ComponentFactory,
   ComponentAttributes,
+  BaseProps,
 } from "./types";
 import { isSvgTag, applyChildren, setElementStyle } from "./util";
 
@@ -271,30 +272,23 @@ export const For = <T>({ each, children }: ForProps<T>) => {
   }) as JSX.Element;
 };
 
-const xlinkNS = "http://www.w3.org/1999/xlink";
 export const createElement = (
   tag: string | ComponentFactory,
   attrs: ComponentAttributes,
   ...children: ComponentChild[]
 ) => {
   if (typeof tag === "function")
-    return tag(Object.assign(Object.assign({}, attrs), { children }));
+    return tag({ ...attrs, ...children } as BaseProps);
   const isSvg = isSvgTag(tag);
   const element = isSvg
     ? document.createElementNS("http://www.w3.org/2000/svg", tag)
     : document.createElement(tag);
   if (attrs) {
-    if (
-      attrs.style &&
-      typeof attrs.style !== "string" &&
-      typeof attrs.style !== "number" &&
-      typeof attrs.style !== "boolean"
-    ) {
+    if (attrs.style && typeof attrs.style === "object") {
       setElementStyle(element, attrs.style as Partial<CSSStyleDeclaration>);
       delete attrs.style;
     }
-    for (let name of Object.keys(attrs)) {
-      const value = attrs[name];
+    for (let [name, value] of Object.entries(attrs)) {
       if (name === "ref") {
         (value as unknown as Reactive<any>).distributeNewState(element);
       } else if (value instanceof Reactive) {
@@ -304,27 +298,16 @@ export const createElement = (
         };
         value.addStateChangeEvent(effect);
       } else if (name.startsWith("on")) {
-        if (name === "onChange") {
-          name = "onInput";
-        }
+        if (name === "onChange") name = "onInput";
         const finalName = name.replace(/Capture$/, "");
         const useCapture = name !== finalName;
         const eventName = finalName.toLowerCase().substring(2);
-        if (
-          value &&
-          typeof value !== "string" &&
-          typeof value !== "number" &&
-          typeof value !== "boolean"
-        ) {
+        if (value && typeof value === "function") {
           element.addEventListener(
             eventName,
             value as EventListenerOrEventListenerObject,
             useCapture
           );
-        }
-      } else if (isSvg && name.startsWith("xlink:")) {
-        if (value && typeof value !== "number" && typeof value !== "boolean") {
-          element.setAttributeNS(xlinkNS, name, value as string);
         }
       } else if (value === true) {
         element.setAttribute(name, name);
