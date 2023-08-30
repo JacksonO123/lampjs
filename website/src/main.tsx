@@ -1,5 +1,5 @@
 import "./style.css";
 import Root from "./pages/root";
-import "@jacksonotto/lampjs";
+import { mount } from "@jacksonotto/lampjs";
 
-LampJs.mount(document.body, <Root />);
+mount(document.body, <Root />);

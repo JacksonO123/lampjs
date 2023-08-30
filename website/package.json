@@ -1,17 +1,18 @@
 {
+  "name": "new-lampjs-app",
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 8080",
+    "dev": "vite --port 3000",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
-    "@vercel/node": "^2.9.12",
-    "typescript": "^4.9.3",
-    "vite": "^4.1.0"
+    "typescript": "latest",
+    "vite": "latest",
+    "@types/node": "latest"
   },
   "dependencies": {
-    "@jacksonotto/lampjs": "^3.1.0"
+    "@jacksonotto/lampjs": "latest"
   }
 }
