@@ -74,9 +74,26 @@ const state = createState(0);
 const currentState = state().value;
 ```
 
+To update a state variable, call the function with a new value, or use the callback to use the current value easier.
+
+```typescript
+const state = createState(0);
+
+// set state to 1
+state(1);
+
+// increment state
+state(state().value + 1);
+
+// increment state again
+state((prev) => prev + 1);
+```
+
 LampJs state is based on signals to be as efficient as possible. The function is lightweight so don't feel bad if you use it a lot.
 
-Because LampJs has less of a reliance on a compiler, it is not able to split reactivity into properties of a state variable if it is an object, or indexes if its an array. For that reason there is a reactive api for rendering those types of data. The reactive api is also used for conditional rendering.
+The `createState` function in LampJs in unique because it is not bound to a component, meaning that you can initialize state wherever you want. You can create a state variable in a new file and export it, and it can be imported into any component you want, effectively creating a context.
+
+The `reactive` api can be used to render a chunk of jsx when a state variable changes.
 
 Example:
 
@@ -100,7 +117,9 @@ return (
 );
 ```
 
-To make iterating an array reactively easier, you can use the `For` element. The `each` property is the array state variable, and the children of the component is a function that is ran for each item in the array to render it. The elements are rendered in a list in the parent component.
+The reactive function takes two parameters, the first is a callback, and the second is the list of state variables to re-render when they change. The parameters of the callback are the list of the state variables in the order they were provided (type safety is preserved).
+
+To make iterating a reactive array easier, you can use the `For` element. The `each` property is the array state variable, and the children of the component is a function that is ran for each item in the array to render it. The elements are rendered in a list in the parent component.
 
 Example:
 
@@ -119,26 +138,23 @@ return (
 );
 ```
 
-The reactive function takes two parameters, the first is a callback, and the second is the list of state variables to re-render when they change. The parameters of the callback are the list of the state variables in the order they were provided (type safety is preserved).
-
-To update a state variable, call the function with a new value, or use the callback to use the current value easier.
+To make rendering conditional content easier, you can use the `If` component.
 
 Example:
 
-```typescript
-const state = createState(0);
+```tsx
+const bool = createState(true);
 
-// set state to 1
-state(1);
-
-// increment state
-state(state().value + 1);
-
-// increment state again
-state((prev) => prev + 1);
+return (
+  <If
+    condition={bool()}
+    then={<span>Showing!</span>}
+    else={<span>Not showing :(</span>}
+  />
+);
 ```
 
-The `createState` function in LampJs in unique because it is not bound to a component, meaning that you can initialize state wherever you want. You can create a state variable in a new file and export it, and it can be imported into any component you want, effectively creating a context.
+The `If` component has three properties, the `condition` prop is the state variable to track, the `then` prop is the content to show when the value is true, and the `else` prop is what to show when the content is false.
 
 ## Router
 
