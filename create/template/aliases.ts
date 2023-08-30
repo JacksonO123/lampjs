@@ -4,6 +4,6 @@
  *
  * value: path to directory relative to this directory
  */
-const aliases: { [key: string]: string } = {};
+const aliases: Record<string, string> = {};
 
 export default aliases;
