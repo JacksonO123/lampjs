@@ -278,7 +278,7 @@ export const createElement = (
   ...children: ComponentChild[]
 ) => {
   if (typeof tag === "function")
-    return tag({ ...attrs, ...children } as BaseProps);
+    return tag({ ...attrs, children } as BaseProps);
   const isSvg = isSvgTag(tag);
   const element = isSvg
     ? document.createElementNS("http://www.w3.org/2000/svg", tag)

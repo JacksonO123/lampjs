@@ -4,4 +4,4 @@ declare global {
     let FragmentLampJs: typeof Fragment;
 }
 export * from "./lampjs";
-export type { ChangeEvent } from "./types";
+export type { ChangeEvent, ComponentChild } from "./types";

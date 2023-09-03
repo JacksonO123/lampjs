@@ -31,4 +31,4 @@ declare global {
 }
 
 export * from "./lampjs";
-export type { ChangeEvent } from "./types";
+export type { ChangeEvent, ComponentChild } from "./types";
