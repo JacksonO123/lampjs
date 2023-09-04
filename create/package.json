@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "create-lampjs-app",
-  "version": "1.17.2",
+  "version": "1.17.3",
   "description": "A lightweight JS framework",
   "engines": {
     "node": "^14.18.0 || >=16.0.0"
