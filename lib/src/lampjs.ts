@@ -85,6 +85,10 @@ export const createEffect = <T extends Reactive<any>>(
   });
 };
 
+export const isState = <T>(val: T | State<T>) => {
+  return val instanceof Function ? val() instanceof Reactive : false;
+};
+
 type InnerStateFromArray<T extends readonly Reactive<any>[]> = {
   [K in keyof T]: T[K] extends Reactive<infer U> ? U : never;
 };
@@ -202,6 +206,14 @@ const ifReplace = (
 };
 
 export const If = ({ condition, then, else: elseBranch }: IfProps) => {
+  if (Array.isArray(then) && then.length === 0) {
+    then = createElement("div", {});
+  }
+
+  if (Array.isArray(elseBranch) && elseBranch.length === 0) {
+    elseBranch = createElement("div", {});
+  }
+
   condition.addStateChangeEvent((show) => {
     if (show) {
       ifReplace(elseBranch, then);

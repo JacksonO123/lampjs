@@ -213,7 +213,7 @@ Each component function is only called once when it is mounted, and again if it 
 
 **Types**
 
-Typesafety is handled mostly in the framework, the only type you need to manage is the `State<T>` type. This type is generic and represents a state variable of that type.
+Typesafety is handled mostly in the framework, There are only a few types you will have to manage yourself.
 
 A state variable for a string would look like this:
 
@@ -221,7 +221,21 @@ A state variable for a string would look like this:
 type MyType = State<string>;
 ```
 
-This type is primarily useful for taking state variables as properties to a component.
+This type is primarily useful for taking state variables as properties to a component, and would look like this to use.
+
+```tsx
+<Component prop={state} />
+```
+
+You are also able to use the `Reactive` class type to specify a reactive variable, the difference is you must call the state function for it to be valid:
+
+```tsx
+<Component prop={state()} />
+```
+
+The difference between the two is where in the `State` method, you pass the function to the state so it can be updated using that api, in the `Reactive` one, you would be required to use the lower level state apis.
+
+If you are developing a library that takes state variables, prefer to use `Reactive` rather than `State` for consistency.
 
 **Import Aliases**
 
