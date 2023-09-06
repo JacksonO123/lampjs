@@ -5,7 +5,7 @@ import "./root.css";
 const Root = () => {
   return (
     <div class="root">
-      <img src="/lamp.svg" alt="" />
+      <img src="/lamp.svg" alt="LampJs Icon" />
       <h1>LampJs</h1>
       <span>A powerful, lightweight JS framework</span>
       <Counter />
