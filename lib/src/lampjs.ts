@@ -1,18 +1,9 @@
-import type {
-  JSX,
-  ComponentChild,
-  ComponentFactory,
-  ComponentAttributes,
-  BaseProps,
-} from "./types";
-import { isSvgTag, applyChildren, setElementStyle } from "./util";
+import type { JSX, ComponentChild, ComponentFactory, ComponentAttributes, BaseProps } from './types';
+import { isSvgTag, applyChildren, setElementStyle } from './util';
 
 let mountEvents: (() => void)[] = [];
 
-export const mount = (
-  root: HTMLElement | null,
-  el: JSX.Element | JSX.Element[]
-) => {
+export const mount = (root: HTMLElement | null, el: JSX.Element | JSX.Element[]) => {
   if (!root || !el) return;
 
   function mountEl(el: JSX.Element | JSX.Element[]) {
@@ -58,9 +49,7 @@ export const createState = <T>(value: T) => {
   const updateCb = (newState?: T | ((val: T) => T)) => {
     if (newState !== undefined) {
       const newStateVal =
-        newState instanceof Function
-          ? (newState as (val: T) => T)(currentState.value)
-          : newState;
+        newState instanceof Function ? (newState as (val: T) => T)(currentState.value) : newState;
       currentState.distributeNewState(newStateVal);
     }
 
@@ -72,10 +61,7 @@ export const createState = <T>(value: T) => {
 
 export type State<T> = ReturnType<typeof createState<T>>;
 
-export const createEffect = <T extends Reactive<any>>(
-  cb: () => void,
-  deps: T[]
-) => {
+export const createEffect = <T extends Reactive<any>>(cb: () => void, deps: T[]) => {
   if (deps.length === 0) {
     mountEvents.push(cb);
   }
@@ -128,22 +114,19 @@ type RouterProps = {
   routes: RoutesType;
 };
 
-const currentPathname = createState("/");
+const currentPathname = createState('/');
 
 export const Router = ({ routes }: RouterProps) => {
   const pathname = location.pathname;
 
   currentPathname(pathname);
 
-  window.addEventListener("popstate", (e) => {
+  window.addEventListener('popstate', (e) => {
     const newPath = (e.currentTarget as typeof window).location.pathname;
     currentPathname(newPath);
   });
 
-  return reactive(
-    (path) => routes.find((item) => item.path === path)?.element || null,
-    [currentPathname()]
-  );
+  return reactive((path) => routes.find((item) => item.path === path)?.element || null, [currentPathname()]);
 };
 
 type LinkProps = {
@@ -155,10 +138,10 @@ export const Link = ({ children, href }: LinkProps) => {
   const handleClick = (e: any) => {
     e.preventDefault();
     currentPathname(href);
-    window.history.pushState({}, "", href);
+    window.history.pushState({}, '', href);
   };
 
-  return createElement("a", { onClick: handleClick, href }, children);
+  return createElement('a', { onClick: handleClick, href }, children);
 };
 
 type IfProps = {
@@ -171,10 +154,7 @@ type IfProps = {
  * replaces first with second
  * either can be arrays or single elements
  */
-const ifReplace = (
-  first: JSX.Element | JSX.Element[],
-  second: JSX.Element | JSX.Element[]
-) => {
+const elementReplace = (first: JSX.Element | JSX.Element[], second: JSX.Element | JSX.Element[]) => {
   if (Array.isArray(first)) {
     if (Array.isArray(second)) {
       for (let i = 1; i < first.length; i++) {
@@ -207,25 +187,25 @@ const ifReplace = (
 
 export const If = ({ condition, then, else: elseBranch }: IfProps) => {
   if (Array.isArray(then) && then.length === 0) {
-    then = createElement("div", {});
+    then = createElement('div', {});
   }
 
   if (Array.isArray(elseBranch) && elseBranch.length === 0) {
-    elseBranch = createElement("div", {});
+    elseBranch = createElement('div', {});
   }
 
   condition.addStateChangeEvent((show) => {
     if (show) {
-      ifReplace(elseBranch, then);
+      elementReplace(elseBranch, then);
     } else {
-      ifReplace(then, elseBranch);
+      elementReplace(then, elseBranch);
     }
   });
 
   return condition.value ? then : elseBranch;
 };
 
-type ForItemFn<T> = (item: T, index: number) => JSX.Element;
+type ForItemFn<T> = (item: State<T>, index: State<number>) => ComponentChild;
 
 type ForProps<T> = {
   each: Reactive<T[]>;
@@ -234,54 +214,78 @@ type ForProps<T> = {
 
 export const For = <T>({ each, children }: ForProps<T>) => {
   const elFn = (children as unknown as ForItemFn<T>[])[0];
+  let info: [JSX.Element | Text | SVGElement, State<T> | null, State<number> | null][] = [];
 
-  /*
-   * all references to dom nodes of array elements
-   * when array is empty, a placeholder div will
-   * keep the place of where array elements should go
-   * childReferences should never be empty
-   */
-  const childReferences: JSX.Element[] =
-    each.value.length === 0 ? [createElement("div", {})] : [];
+  function valueToElement(val: ComponentChild) {
+    if (val instanceof HTMLElement) return val;
+    const text = document.createElement('span');
+    text.innerText = val?.toString();
+    return text;
+  }
 
-  each.addStateChangeEvent((val: T[]) => {
-    const firstItem = childReferences.shift()!;
+  for (let i = 0; i < each.value.length; i++) {
+    const item = each.value[i];
 
-    while (childReferences.length > 0) {
-      const el = childReferences.pop()!;
-      el.remove();
-    }
+    const indexState = createState(i);
+    const itemState = createState(item);
+    const res = elFn(itemState, indexState);
+    const el = valueToElement(res);
+    info.push([el, itemState, indexState]);
+  }
 
-    for (let i = val.length - 1; i >= 0; i--) {
-      const el = elFn(val[i], i);
+  if (each.value.length === 0) {
+    info.push([document.createElement('div'), null, null]);
+  }
 
-      childReferences.push(el);
-
-      if (i === 0) {
-        firstItem.replaceWith(el);
-      } else {
-        firstItem.after(el);
-      }
-    }
-
+  each.addStateChangeEvent((val) => {
     if (val.length === 0) {
-      const placeholder = createElement("div", {});
+      const el = document.createElement('div');
 
-      firstItem.replaceWith(placeholder);
+      while (info.length > 1) {
+        const el = info.pop();
+        if (el) el[0].remove();
+      }
 
-      childReferences.push(placeholder);
+      (info[0] as unknown as HTMLElement).replaceWith(el);
+      info[0] = [el, null, null];
+
+      return;
+    }
+
+    for (let i = 0; i < val.length; i++) {
+      if (i < info.length) {
+        const valState = info[i][1];
+        const indexState = info[i][2];
+
+        if (valState !== null && indexState !== null) {
+          valState(val[i]);
+          indexState(i);
+          continue;
+        }
+
+        const newIndexState = createState(i);
+        const newValState = createState(val[i]);
+        const el = valueToElement(elFn(newValState, newIndexState));
+        info[i][0].replaceWith(el);
+        info[i] = [el, newValState, newIndexState];
+
+        continue;
+      }
+
+      const newIndexState = createState(i);
+      const newValState = createState(val[i]);
+      const el = valueToElement(elFn(newValState, newIndexState));
+      info[i - 1][0].after(el);
+      info.push([el, newValState, newIndexState]);
+    }
+
+    while (info.length > val.length) {
+      const elInfo = info.pop()!;
+      elInfo[0].remove();
     }
   });
 
-  const initialChildren = each.value.map((item, index) => {
-    const ref = elFn(item, index);
-    childReferences.push(ref);
-    return ref;
-  });
-
-  return Fragment({
-    children: initialChildren.length > 0 ? initialChildren : childReferences[0],
-  }) as JSX.Element;
+  return info.map((item) => item[0]) as unknown as JSX.Element;
 };
 
 export const createElement = (
@@ -289,19 +293,18 @@ export const createElement = (
   attrs: ComponentAttributes,
   ...children: ComponentChild[]
 ) => {
-  if (typeof tag === "function")
-    return tag({ ...attrs, children } as BaseProps);
+  if (typeof tag === 'function') return tag({ ...attrs, children } as BaseProps);
   const isSvg = isSvgTag(tag);
   const element = isSvg
-    ? document.createElementNS("http://www.w3.org/2000/svg", tag)
+    ? document.createElementNS('http://www.w3.org/2000/svg', tag)
     : document.createElement(tag);
   if (attrs) {
-    if (attrs.style && typeof attrs.style === "object") {
+    if (attrs.style && typeof attrs.style === 'object') {
       setElementStyle(element, attrs.style as Partial<CSSStyleDeclaration>);
       delete attrs.style;
     }
     for (let [name, value] of Object.entries(attrs)) {
-      if (name === "ref") {
+      if (name === 'ref') {
         (value as unknown as Reactive<any>).distributeNewState(element);
       } else if (value instanceof Reactive) {
         element.setAttribute(name, value.value);
@@ -309,17 +312,13 @@ export const createElement = (
           element.setAttribute(name, newVal);
         };
         value.addStateChangeEvent(effect);
-      } else if (name.startsWith("on")) {
-        if (name === "onChange") name = "onInput";
-        const finalName = name.replace(/Capture$/, "");
+      } else if (name.startsWith('on')) {
+        if (name === 'onChange') name = 'onInput';
+        const finalName = name.replace(/Capture$/, '');
         const useCapture = name !== finalName;
         const eventName = finalName.toLowerCase().substring(2);
-        if (value && typeof value === "function") {
-          element.addEventListener(
-            eventName,
-            value as EventListenerOrEventListenerObject,
-            useCapture
-          );
+        if (value && typeof value === 'function') {
+          element.addEventListener(eventName, value as EventListenerOrEventListenerObject, useCapture);
         }
       } else if (value === true) {
         element.setAttribute(name, name);

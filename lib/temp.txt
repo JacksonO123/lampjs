@@ -1,0 +1,140 @@
+For element with reference keeping (sorta working)
+Removed because there isnt a trivial way to diff inner content of elements to preserve
+animation / other element stuff per index every render
+Best i got it to be was to preserve the element reference, not the index position
+Keeping this here just in case, this was a pain to write
+
+export const For = <T>({ each, children }: ForProps<T>) => {
+  const elFn = (children as unknown as ForItemFn<T>[])[0];
+  let childRefs: (JSX.Element | Text | SVGElement)[] = [];
+  let cache: [T | undefined, JSX.Element | Text | SVGElement, State<number>][] = [];
+
+  function valueToElement(val: ComponentChild) {
+    if (val instanceof HTMLElement) return val;
+    const text = document.createElement('span');
+    text.innerText = val?.toString();
+    return text;
+  }
+
+  for (let i = 0; i < each.value.length; i++) {
+    const item = each.value[i];
+
+    const indexState = createState(i);
+    const res = elFn(item, indexState);
+    const el = valueToElement(res);
+    cache.push([item, el, indexState]);
+    childRefs.push(el);
+  }
+
+  if (each.value.length === 0) {
+    cache.push([undefined, document.createElement('div'), createState(0)]);
+  }
+
+  each.addStateChangeEvent((val) => {
+    if (val.length === 0) {
+      const el = document.createElement('div');
+      cache = [[undefined, el, createState(0)]];
+
+      while (childRefs.length > 1) {
+        const el = childRefs.pop();
+        if (el) el.remove();
+      }
+
+      childRefs[0].replaceWith(el);
+      childRefs[0] = el;
+
+      return;
+    }
+
+    const newCache: typeof cache = [];
+    const newElements: typeof childRefs = [];
+    outer: for (let i = 0; i < val.length; i++) {
+      for (let j = 0; j < cache.length; j++) {
+        if (val[i] === cache[j][0]) {
+          cache[j][2](i);
+          newCache.push(cache[j]);
+          newElements.push(cache[j][1]);
+          cache.splice(j, 1);
+          continue outer;
+        }
+      }
+
+      const indexState = createState(i);
+      const newEl = valueToElement(elFn(val[i], indexState));
+      newCache.push([val[i], newEl, indexState]);
+      newElements.push(newEl);
+    }
+
+    cache = newCache;
+
+    // if there is only 1 child in the list
+    // replace it if it does not exist in new elements
+    if (childRefs.length === 0) {
+      if (!elementsInclude(newElements, childRefs[0])) {
+        childRefs[0].replaceWith(newElements[0]);
+        childRefs[0] = newElements[0];
+      }
+    }
+
+    // remove unused elements
+    for (let i = 0; i < childRefs.length; i++) {
+      if (!elementsInclude(newElements, childRefs[i])) {
+        childRefs[i].remove();
+        childRefs.splice(i, 1);
+        i--;
+      }
+    }
+
+    // reorder the new and old elements
+    let amountSkipped = 0;
+    let j = 0;
+    for (let i = 0; i < newElements.length; i++) {
+      if (!elementsInclude(childRefs, newElements[i])) {
+        amountSkipped++;
+        continue;
+      }
+
+      let needsReorder = false;
+      while (j < childRefs.length && newElements[i] !== childRefs[j]) {
+        needsReorder = true;
+        j++;
+      }
+
+      if (needsReorder) {
+        const diff = j - (i - amountSkipped);
+        childRefs[j - diff].before(childRefs[j]);
+        const el = childRefs.splice(j, 1)[0];
+        childRefs.splice(j - diff, 0, el);
+        j -= diff;
+      }
+
+      j++;
+    }
+
+    for (let i = 0; i < newElements.length; i++) {
+      if (i === 0) {
+        if (newElements[0] !== childRefs[0]) {
+          childRefs[0].before(newElements[0]);
+          childRefs.unshift(newElements[0]);
+          i--;
+          continue;
+        }
+        continue;
+      }
+
+      if (i > childRefs.length - 1) {
+        childRefs[i - 1].after(newElements[i]);
+        childRefs.push(newElements[i]);
+        continue;
+      }
+
+      if (newElements[i] !== childRefs[i]) {
+        childRefs[i - 1].after(newElements[i]);
+        childRefs.splice(i, 0, newElements[i]);
+        i--;
+      }
+    }
+  });
+
+  return childRefs as unknown as JSX.Element;
+};

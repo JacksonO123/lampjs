@@ -1,4 +1,4 @@
-import type { JSX, ComponentChild, ComponentFactory, ComponentAttributes } from "./types";
+import type { JSX, ComponentChild, ComponentFactory, ComponentAttributes } from './types';
 export declare const mount: (root: HTMLElement | null, el: JSX.Element | JSX.Element[]) => void;
 export declare class Reactive<T> {
     private onStateChange;
@@ -39,7 +39,7 @@ type IfProps = {
     else: JSX.Element;
 };
 export declare const If: ({ condition, then, else: elseBranch }: IfProps) => JSX.Element;
-type ForItemFn<T> = (item: T, index: number) => JSX.Element;
+type ForItemFn<T> = (item: State<T>, index: State<number>) => ComponentChild;
 type ForProps<T> = {
     each: Reactive<T[]>;
     children: ForItemFn<T>;
