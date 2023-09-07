@@ -79,7 +79,25 @@ type InnerStateFromArray<T extends readonly Reactive<any>[]> = {
   [K in keyof T]: T[K] extends Reactive<infer U> ? U : never;
 };
 
-export const reactive = <T extends readonly Reactive<any>[]>(
+export const reactive = <T extends readonly Reactive<any>[], K>(
+  fn: (...val: InnerStateFromArray<T>) => K,
+  states: T
+) => {
+  const values = states.map((s) => s.value);
+  const res = createState(fn(...(values as InnerStateFromArray<T>)));
+
+  states.forEach((state, index) => {
+    state.addStateChangeEvent((val) => {
+      values[index] = val;
+      const newValue = fn(...(values as InnerStateFromArray<T>));
+      res(newValue);
+    });
+  });
+
+  return res;
+};
+
+export const reactiveElement = <T extends readonly Reactive<any>[]>(
   fn: (...val: InnerStateFromArray<T>) => JSX.Element | null,
   states: T
 ): JSX.Element | null => {
@@ -126,7 +144,10 @@ export const Router = ({ routes }: RouterProps) => {
     currentPathname(newPath);
   });
 
-  return reactive((path) => routes.find((item) => item.path === path)?.element || null, [currentPathname()]);
+  return reactiveElement(
+    (path) => routes.find((item) => item.path === path)?.element || null,
+    [currentPathname()]
+  );
 };
 
 type LinkProps = {
