@@ -76,17 +76,19 @@ export const isState = <T>(val: T | State<T>) => {
 };
 
 type InnerStateFromArray<T extends readonly Reactive<any>[]> = {
-  [K in keyof T]: T[K] extends Reactive<infer U> ? U : never;
+  [K in keyof T]: T[K] extends Reactive<infer U> ? U : Exclude<T[K], Reactive<any>>;
 };
 
-export const reactive = <T extends readonly Reactive<any>[], K>(
+export const reactive = <T extends readonly (Reactive<any> | any)[], K>(
   fn: (...val: InnerStateFromArray<T>) => K,
   states: T
 ) => {
-  const values = states.map((s) => s.value);
+  const values = states.map((s) => (s instanceof Reactive ? s.value : s));
   const res = createState(fn(...(values as InnerStateFromArray<T>)));
 
   states.forEach((state, index) => {
+    if (!(state instanceof Reactive)) return;
+
     state.addStateChangeEvent((val) => {
       values[index] = val;
       const newValue = fn(...(values as InnerStateFromArray<T>));
@@ -321,7 +323,15 @@ export const createElement = (
     : document.createElement(tag);
   if (attrs) {
     if (attrs.style && typeof attrs.style === 'object') {
-      setElementStyle(element, attrs.style as Partial<CSSStyleDeclaration>);
+      if (attrs.style instanceof Reactive) {
+        const reactiveObj = attrs.style;
+        reactiveObj.addStateChangeEvent((newVal) => {
+          setElementStyle(element, newVal as Partial<CSSStyleDeclaration>);
+        });
+        setElementStyle(element, (attrs.style as Reactive<any>).value as Partial<CSSStyleDeclaration>);
+      } else {
+        setElementStyle(element, attrs.style as Partial<CSSStyleDeclaration>);
+      }
       delete attrs.style;
     }
     for (let [name, value] of Object.entries(attrs)) {

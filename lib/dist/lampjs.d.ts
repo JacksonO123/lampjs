@@ -14,9 +14,9 @@ export type State<T> = ReturnType<typeof createState<T>>;
 export declare const createEffect: <T extends Reactive<any>>(cb: () => void, deps: T[]) => void;
 export declare const isState: <T>(val: T | ((newState?: T | ((val: T) => T) | undefined) => Reactive<T>)) => boolean;
 type InnerStateFromArray<T extends readonly Reactive<any>[]> = {
-    [K in keyof T]: T[K] extends Reactive<infer U> ? U : never;
+    [K in keyof T]: T[K] extends Reactive<infer U> ? U : Exclude<T[K], Reactive<any>>;
 };
-export declare const reactive: <T extends readonly Reactive<any>[], K>(fn: (...val: InnerStateFromArray<T>) => K, states: T) => (newState?: K | ((val: K) => K) | undefined) => Reactive<K>;
+export declare const reactive: <T extends readonly any[], K>(fn: (...val: InnerStateFromArray<T>) => K, states: T) => (newState?: K | ((val: K) => K) | undefined) => Reactive<K>;
 export declare const reactiveElement: <T extends readonly Reactive<any>[]>(fn: (...val: InnerStateFromArray<T>) => JSX.Element | null, states: T) => JSX.Element | null;
 export declare const Fragment: ({ children }: {
     children: ComponentChild;
