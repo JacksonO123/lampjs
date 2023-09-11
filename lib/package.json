@@ -1,11 +1,11 @@
 {
   "name": "@jacksonotto/lampjs",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "description": "A lightweight front-end JavaScript framework",
   "author": "Jackson Otto",
-  "version": "3.10.0",
+  "version": "4.0.0",
   "scripts": {
     "build": "npx tsc",
     "dev": "npx nodemon -e ts --watch src --exec npx tsc"
@@ -14,6 +14,10 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./jsx-runtime": {
+      "types": "./dist/jsx-runtime.d.ts",
+      "import": "./dist/jsx-runtime.js"
     }
   },
   "devDependencies": {
