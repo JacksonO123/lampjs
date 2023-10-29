@@ -100,25 +100,37 @@ export const reactive = <T extends readonly (Reactive<any> | any)[], K>(
 };
 
 export const reactiveElement = <T extends readonly Reactive<any>[]>(
-  fn: (...val: InnerStateFromArray<T>) => JSX.Element | null,
+  fn: (...val: InnerStateFromArray<T>) => ComponentChild,
   states: T
 ): JSX.Element | null => {
   const values = states.map((s) => s.value);
-  let res = fn(...(values as InnerStateFromArray<T>));
+  let res: ComponentChild = fn(...(values as InnerStateFromArray<T>));
+
+  if (!(res instanceof HTMLElement) && !(res instanceof SVGElement) && !(res instanceof Text)) {
+    res = document.createTextNode(res + '');
+  }
 
   const onStateChange = (val: unknown, index: number) => {
     values[index] = val;
     const newNode = fn(...(values as InnerStateFromArray<T>));
     if (!res || !newNode) return;
-    res.replaceWith(newNode);
-    res = newNode;
+    if (res instanceof Text) {
+      if (newNode instanceof HTMLElement || newNode instanceof SVGElement || newNode instanceof Text) {
+        res.replaceWith(newNode);
+      } else {
+        res.data = newNode + '';
+      }
+    } else {
+      (res as JSX.Element).replaceWith(newNode as JSX.Element);
+      res = newNode;
+    }
   };
 
   states.forEach((state, index) => {
     state.addStateChangeEvent((val) => onStateChange(val, index));
   });
 
-  return res;
+  return res as JSX.Element;
 };
 
 export const Fragment = ({ children }: { children: ComponentChild }) => {
@@ -265,11 +277,11 @@ export const For = <T>({ each, children }: ForProps<T>) => {
       const el = document.createElement('div');
 
       while (info.length > 1) {
-        const el = info.pop();
-        if (el) el[0].remove();
+        const el = info.pop()!;
+        el[0].remove();
       }
 
-      (info[0] as unknown as HTMLElement).replaceWith(el);
+      (info[0][0] as unknown as HTMLElement).replaceWith(el);
       info[0] = [el, null, null];
 
       return;
@@ -358,6 +370,8 @@ export const createElement = (
       }
     }
   }
+
   applyChildren(element, children);
+
   return element;
 };

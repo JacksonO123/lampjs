@@ -1,4 +1,4 @@
-import type { Reactive } from "./index";
+import type { Reactive } from './index';
 
 export type { JSX };
 export declare type ComponentChild =
@@ -49,7 +49,7 @@ export declare interface ChangeEvent<T = Element> extends SyntheticEvent<T> {
 }
 declare global {
   namespace JSX {
-    type Element = HTMLElement | SVGElement;
+    type Element = HTMLElement | SVGElement | Text;
 
     interface ArrayElement extends Array<Element> {}
 
@@ -63,10 +63,7 @@ declare global {
     interface ElementChildrenAttribute {
       children: any;
     }
-    type EventHandler<TEvent extends Event> = (
-      this: HTMLElement,
-      ev: TEvent
-    ) => void;
+    type EventHandler<TEvent extends Event> = (this: HTMLElement, ev: TEvent) => void;
     type ClipboardEventHandler = EventHandler<ClipboardEvent>;
     type CompositionEventHandler = EventHandler<CompositionEvent>;
     type DragEventHandler = EventHandler<DragEvent>;
@@ -283,7 +280,7 @@ declare global {
       dateTime?: string | Reactive<string>;
       default?: boolean | Reactive<boolean>;
       defer?: boolean | Reactive<boolean>;
-      dir?: "auto" | "rtl" | "ltr" | Reactive<"auto" | "rtl" | "ltr">;
+      dir?: 'auto' | 'rtl' | 'ltr' | Reactive<'auto' | 'rtl' | 'ltr'>;
       disabled?: boolean | Reactive<boolean>;
       disableRemotePlayback?: boolean | Reactive<boolean>;
       download?: string | Reactive<string>;
@@ -317,7 +314,7 @@ declare global {
       label?: string | Reactive<string>;
       lang?: string | Reactive<string>;
       list?: string | Reactive<string>;
-      loading?: "eager" | "lazy" | Reactive<"eager" | "lazy">;
+      loading?: 'eager' | 'lazy' | Reactive<'eager' | 'lazy'>;
       loop?: boolean | Reactive<boolean>;
       low?: number | Reactive<number>;
       manifest?: string | Reactive<string>;
@@ -368,10 +365,7 @@ declare global {
       srcSet?: string | Reactive<string>;
       start?: number | Reactive<number>;
       step?: number | string | Reactive<number | string>;
-      style?:
-        | string
-        | Partial<CSSStyleDeclaration>
-        | Reactive<string | Partial<CSSStyleDeclaration>>;
+      style?: string | Partial<CSSStyleDeclaration> | Reactive<string | Partial<CSSStyleDeclaration>>;
       summary?: string | Reactive<string>;
       tabIndex?: number | Reactive<number>;
       target?: string | Reactive<string>;
