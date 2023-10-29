@@ -293,8 +293,8 @@ export const For = <T>({ each, children }: ForProps<T>) => {
         const indexState = info[i][2];
 
         if (valState !== null && indexState !== null) {
-          valState(val[i]);
-          indexState(i);
+          if (valState().value !== val[i]) valState(val[i]);
+          if (indexState().value !== i) indexState(i);
           continue;
         }
 
