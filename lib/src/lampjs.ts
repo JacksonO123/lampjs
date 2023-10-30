@@ -252,53 +252,6 @@ export const If = ({ condition, then, else: elseBranch }: IfProps) => {
   return condition.value ? then : elseBranch;
 };
 
-function compareForKeys(keys: string[], obj1: object, obj2: object): boolean {
-  for (let i = 0; i < keys.length; i++) {
-    if (typeof obj1[keys[i] as keyof object] !== typeof obj2[keys[i] as keyof object]) {
-      return false;
-    }
-
-    if (typeof obj1[keys[i] as keyof object] === 'object') {
-      return compare(obj1[keys[i] as keyof object], obj2[keys[i] as keyof object]);
-    }
-
-    if (obj1[keys[i] as keyof object] !== obj2[keys[i] as keyof object]) {
-      return false;
-    }
-  }
-  return true;
-}
-
-function compare(val1: any, val2: any): boolean {
-  const nullUndefArr = [null, undefined];
-  if (nullUndefArr.includes(val1) || nullUndefArr.includes(val2)) {
-    if (val1 === val2) return true;
-    return false;
-  }
-
-  if (typeof val1 !== typeof val2) return false;
-
-  if (Array.isArray(val1) && Array.isArray(val2)) {
-    for (let i = 0; i < Math.max(val1.length, val2.length); i++) {
-      if (!compare(val1[i], val2[i])) return false;
-    }
-    return true;
-  } else if (Array.isArray(val1) || Array.isArray(val2)) return false;
-
-  if (typeof val1 === 'object' && typeof val2 === 'object') {
-    const obj1Keys = Object.keys(val1);
-    const obj2Keys = Object.keys(val2);
-
-    const key1Result = compareForKeys(obj1Keys, val1, val2);
-    const key2Result = compareForKeys(obj2Keys, val1, val2);
-
-    if (key1Result && key2Result) return true;
-    return false;
-  }
-
-  return val1 === val2;
-}
-
 type ForItemFn<T> = (
   item: State<T>,
   index: State<number>,
