@@ -23,9 +23,11 @@ export const mount = (root: HTMLElement | null, el: JSX.Element | JSX.Element[])
 export class Reactive<T> {
   private onStateChange: ((val: T) => void)[];
   value: T;
+  onTerminate: null | (() => void);
   constructor(value: T) {
     this.value = value;
     this.onStateChange = [];
+    this.onTerminate = null;
   }
   toString() {
     return this.value;
@@ -36,6 +38,10 @@ export class Reactive<T> {
   distributeNewState(data: T) {
     this.value = data;
     this.onStateChange.forEach((fn) => fn(data));
+  }
+  terminate() {
+    this.onTerminate?.();
+    this.onStateChange = [];
   }
 }
 
@@ -95,6 +101,12 @@ export const reactive = <T extends readonly (Reactive<any> | any)[], K>(
       res(newValue);
     });
   });
+
+  res().onTerminate = () => {
+    states.forEach((state) => {
+      state.terminate();
+    });
+  };
 
   return res;
 };
@@ -240,7 +252,11 @@ export const If = ({ condition, then, else: elseBranch }: IfProps) => {
   return condition.value ? then : elseBranch;
 };
 
-type ForItemFn<T> = (item: State<T>, index: State<number>) => ComponentChild;
+type ForItemFn<T> = (
+  item: State<T>,
+  index: State<number>,
+  cleanup: (...args: Reactive<any>[]) => void
+) => ComponentChild;
 
 type ForProps<T> = {
   each: Reactive<T[]>;
@@ -250,6 +266,16 @@ type ForProps<T> = {
 export const For = <T>({ each, children }: ForProps<T>) => {
   const elFn = (children as unknown as ForItemFn<T>[])[0];
   let info: [JSX.Element | Text | SVGElement, State<T> | null, State<number> | null][] = [];
+  let toTerminate: Record<number, Reactive<any>[]> = {};
+
+  const collectCleanupSignals = (index: number, ...args: Reactive<any>[]) => {
+    const terminators = toTerminate[index];
+    if (terminators === undefined) {
+      toTerminate[index] = [...args];
+    } else {
+      terminators.push(...args);
+    }
+  };
 
   function valueToElement(val: ComponentChild) {
     if (val instanceof HTMLElement) return val;
@@ -263,7 +289,7 @@ export const For = <T>({ each, children }: ForProps<T>) => {
 
     const indexState = createState(i);
     const itemState = createState(item);
-    const res = elFn(itemState, indexState);
+    const res = elFn(itemState, indexState, (...args: Reactive<any>[]) => collectCleanupSignals(i, ...args));
     const el = valueToElement(res);
     info.push([el, itemState, indexState]);
   }
@@ -276,9 +302,17 @@ export const For = <T>({ each, children }: ForProps<T>) => {
     if (val.length === 0) {
       const el = document.createElement('div');
 
+      Object.values(toTerminate).forEach((terminators) => {
+        terminators.forEach((terminator) => terminator.terminate());
+      });
+
+      toTerminate = {};
+
       while (info.length > 1) {
         const el = info.pop()!;
         el[0].remove();
+        el[1]!().terminate();
+        el[1]!().terminate();
       }
 
       (info[0][0] as unknown as HTMLElement).replaceWith(el);
@@ -300,7 +334,9 @@ export const For = <T>({ each, children }: ForProps<T>) => {
 
         const newIndexState = createState(i);
         const newValState = createState(val[i]);
-        const el = valueToElement(elFn(newValState, newIndexState));
+        const el = valueToElement(
+          elFn(newValState, newIndexState, (...args: Reactive<any>[]) => collectCleanupSignals(i, ...args))
+        );
         info[i][0].replaceWith(el);
         info[i] = [el, newValState, newIndexState];
 
@@ -309,14 +345,20 @@ export const For = <T>({ each, children }: ForProps<T>) => {
 
       const newIndexState = createState(i);
       const newValState = createState(val[i]);
-      const el = valueToElement(elFn(newValState, newIndexState));
+      const el = valueToElement(
+        elFn(newValState, newIndexState, (...args: Reactive<any>[]) => collectCleanupSignals(i, ...args))
+      );
       info[i - 1][0].after(el);
       info.push([el, newValState, newIndexState]);
     }
 
     while (info.length > val.length) {
+      const index = info.length - 1;
       const elInfo = info.pop()!;
+      elInfo[1]!().terminate();
+      elInfo[2]!().terminate();
       elInfo[0].remove();
+      toTerminate[index].forEach((terminator) => terminator.terminate());
     }
   });
 

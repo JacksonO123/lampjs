@@ -3,10 +3,12 @@ export declare const mount: (root: HTMLElement | null, el: JSX.Element | JSX.Ele
 export declare class Reactive<T> {
     private onStateChange;
     value: T;
+    onTerminate: null | (() => void);
     constructor(value: T);
     toString(): T;
     addStateChangeEvent(event: (val: T) => void): void;
     distributeNewState(data: T): void;
+    terminate(): void;
 }
 export declare const onPageMount: (cb: () => void) => void;
 export declare const createState: <T>(value: T) => (newState?: T | ((val: T) => T) | undefined) => Reactive<T>;
@@ -40,7 +42,7 @@ type IfProps = {
     else: JSX.Element;
 };
 export declare const If: ({ condition, then, else: elseBranch }: IfProps) => JSX.Element;
-type ForItemFn<T> = (item: State<T>, index: State<number>) => ComponentChild;
+type ForItemFn<T> = (item: State<T>, index: State<number>, cleanup: (...args: Reactive<any>[]) => void) => ComponentChild;
 type ForProps<T> = {
     each: Reactive<T[]>;
     children: ForItemFn<T>;
