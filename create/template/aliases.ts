@@ -1,6 +1,12 @@
 /*
  * key: name of alias, how it will be imported.
- *      example: the name 'components' will be used as '@components/blah'
+ *      example:
+ *
+ *      aliases = {
+ *        pages: 'src/pages'
+ *      }
+ *
+ *      can be used as: '@pages/{ ... }'
  *
  * value: path to directory relative to this directory
  */
