@@ -111,6 +111,10 @@ export const reactive = <T extends readonly (Reactive<any> | any)[], K>(
   return res;
 };
 
+const isElement = (element: ComponentChild) => {
+  return element instanceof HTMLElement || element instanceof SVGElement || element instanceof Text;
+};
+
 export const reactiveElement = <T extends readonly Reactive<any>[]>(
   fn: (...val: InnerStateFromArray<T>) => ComponentChild,
   states: T
@@ -118,7 +122,10 @@ export const reactiveElement = <T extends readonly Reactive<any>[]>(
   const values = states.map((s) => s.value);
   let res: ComponentChild = fn(...(values as InnerStateFromArray<T>));
 
-  if (!(res instanceof HTMLElement) && !(res instanceof SVGElement) && !(res instanceof Text)) {
+  if (
+    (Array.isArray(res) && !res.reduce((acc, curr) => acc && isElement(curr), true)) ||
+    (!Array.isArray(res) && !isElement(res))
+  ) {
     res = document.createTextNode(res + '');
   }
 
@@ -133,7 +140,7 @@ export const reactiveElement = <T extends readonly Reactive<any>[]>(
         res.data = newNode + '';
       }
     } else {
-      (res as JSX.Element).replaceWith(newNode as JSX.Element);
+      elementReplace(res as JSX.Element, newNode as JSX.Element);
       res = newNode;
     }
   };
@@ -365,6 +372,63 @@ export const For = <T>({ each, children }: ForProps<T>) => {
   return info.map((item) => item[0]) as unknown as JSX.Element;
 };
 
+class CaseData<T> {
+  readonly value: T | undefined;
+  readonly children: JSX.Element;
+  readonly isDefault: boolean;
+  constructor(value: T | undefined, children: JSX.Element, isDefault: boolean) {
+    this.value = value;
+    this.children = children;
+    this.isDefault = isDefault;
+  }
+}
+
+type SwitchProps<T> = {
+  // to make jsx type happy this is the type
+  // this is actually CaseData<T> | CaseData<T>[]
+  children: JSX.Element | JSX.Element[];
+  condition: Reactive<T>;
+};
+
+export const Switch = <T>({ condition, children }: SwitchProps<T>) => {
+  const effect = (val: T) => {
+    if (Array.isArray(children)) {
+      let defaultIndex = -1;
+
+      for (let i = 0; i < children.length; i++) {
+        if ((children[i] as unknown as CaseData<T>).isDefault) defaultIndex = i;
+        if ((children[i] as unknown as CaseData<T>).value === val) {
+          return (children[i] as unknown as CaseData<T>).children;
+        }
+      }
+
+      if (defaultIndex >= 0) {
+        return (children[defaultIndex] as unknown as CaseData<T>).children;
+      } else {
+        throw new Error('Switch case not met, expected Default element');
+      }
+    } else {
+      if ((children as unknown as CaseData<T>).isDefault) {
+        return (children as unknown as CaseData<T>).children;
+      } else {
+        throw new Error('Expected default element for single child Switch element');
+      }
+    }
+  };
+
+  return reactiveElement((val) => effect(val), [condition]);
+};
+
+type CaseProps<T> = {
+  value?: T;
+  children: JSX.Element;
+  isDefault?: boolean;
+};
+
+export const Case = <T>({ value, children, isDefault = false }: CaseProps<T>) => {
+  return new CaseData<T>(value, children, isDefault) as unknown as JSX.Element;
+};
+
 export const createElement = (
   tag: string | ComponentFactory,
   attrs: ComponentAttributes,
@@ -382,7 +446,7 @@ export const createElement = (
         reactiveObj.addStateChangeEvent((newVal) => {
           setElementStyle(element, newVal as Partial<CSSStyleDeclaration>);
         });
-        setElementStyle(element, (attrs.style as Reactive<any>).value as Partial<CSSStyleDeclaration>);
+        setElementStyle(element, (attrs.style as Reactive<Partial<CSSStyleDeclaration>>).value);
       } else {
         setElementStyle(element, attrs.style as Partial<CSSStyleDeclaration>);
       }

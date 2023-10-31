@@ -48,5 +48,16 @@ type ForProps<T> = {
     children: ForItemFn<T>;
 };
 export declare const For: <T>({ each, children }: ForProps<T>) => JSX.Element;
+type SwitchProps<T> = {
+    children: JSX.Element | JSX.Element[];
+    condition: Reactive<T>;
+};
+export declare const Switch: <T>({ condition, children }: SwitchProps<T>) => JSX.Element | null;
+type CaseProps<T> = {
+    value?: T;
+    children: JSX.Element;
+    isDefault?: boolean;
+};
+export declare const Case: <T>({ value, children, isDefault }: CaseProps<T>) => JSX.Element;
 export declare const createElement: (tag: string | ComponentFactory, attrs: ComponentAttributes, ...children: ComponentChild[]) => JSX.Element;
 export {};
