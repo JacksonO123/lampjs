@@ -1,10 +1,10 @@
 # LampJs Documentation
 
-LampJs is a lightweight framework meant to simplify the process of building a highly efficient reactive frontend.
+LampJs is a lightweight framework meant to simplify the process of building a highly efficient and performant reactive frontend.
 
 ## When to use LampJs
 
-LampJs is made for developers who want a lightweight, efficient, and flexible framework.
+LampJs is made for developers who want a lightweight, efficient, performance focused, and flexible framework.
 
 ## Getting Started
 
@@ -36,7 +36,7 @@ Continue by following the instructions in the cli
     - Place to keep all components
   - `pages`
     - For organizing the page components for the app
-    - Not for client side routing (shown later)
+    - Contains router element
   - `main.tsx`
     - Main entry point for the app
 - `index.html`
@@ -61,14 +61,17 @@ const Counter = () => {
 
 For simplicity and the fact that not much else is needed, there is only one utility function for managing state: `createState`.
 
-The `createState` function returns a function that returns a "state object" with all the necessary tools to manage the state and effects yourself if you need to.
+The `createState` function returns a function that returns a "state object" with all the necessary tools to manage the state and effects yourself if you need to. Most of the state object utilities are abstracted on by other features of the framework meaning you will only need to interact with the `value` property on state objects.
 
-When calling the function returned by `createState` in the UI (for example in the counter): `{num()}`, LampJs will make a reactive node on the page that updates when the state updates.
+When calling the function returned by `createState` in the JSX (for example in the counter): `{num()}`, LampJs will make a reactive node on the page that updates when the state updates.
 
 To get the current value of the state in the javascript, call the function and get the value property
 
 ```typescript
 const state = createState(0);
+// createState<T>(T) -> State<T>
+// State<T> -> (T | ((T) => void) | undefined) -> Reactive<T>
+// Reactive<T> : { ..., value: T }
 const currentState = state().value;
 ```
 
@@ -89,9 +92,9 @@ state((prev) => prev + 1);
 
 LampJs state is based on signals to be as efficient as possible. The function is lightweight so don't feel bad if you use it a lot.
 
-The `createState` function in LampJs in unique because it is not bound to a component, meaning that you can initialize state wherever you want. You can create a state variable in a new file and export it, and it can be imported into any component you want, effectively creating a context.
+The `createState` function in LampJs is not bound to a component, meaning that you can initialize state wherever you want. You can create a state variable in a new file and export it, and it can be imported into any component you want, this is the pattern of creating a context.
 
-The `reactiveElement` api can be used to render a chunk of jsx when a state variable changes.
+The `reactiveElement` api can be used to render a chunk of jsx, or a value, when a state variable changes.
 
 Example:
 
@@ -103,37 +106,40 @@ const obj = createState({
 
 return (
   <div>
-    {reactiveElement(
-      (obj) => (
-        <span>
-          {obj.name}&nbsp;{obj.age}
-        </span>
-      ),
-      [obj()]
-    )}
+    <span>
+      {reactiveElement((obj) => obj.name, [obj()])}
+      <br />
+      {reactiveElement((obj) => obj.age, [obj()])}
+    </span>
   </div>
 );
 ```
 
-The `reactiveElement` function takes two parameters, the first is a callback, and the second is the list of state variables to re-render when they change. The parameters of the callback are the list of the state variables in the order they were provided (type safety is preserved). The return value must be a jsx element and cannot be a fragment so it can be updated as an individual node.
+This example only works using `reactiveElement` because LampJs does not use a compiler, this is only transpiled from jsx to js and that is all. This means that by taking a property from the value of a reactive state, LampJs will not be able to tell that it should watch for changes, because it won't see the use of the signal. You must use `reactiveElement` to watch for updates on the signal and return the property you want.
 
-In some cases you may want to use reactive variables within attributes. To make this easier, you can use the `reactive` api.
+The `reactiveElement` function takes two parameters, the first is a callback, and the second is the list of state variables to re-render when they change. The parameters of the callback are the list of the state variables in the order they were provided (type safety is preserved).
+
+The `reactiveElement` api will always return an html element or text node with the up to date value. But in some cases you may want to use reactive variables within new value. To make this easier, you can use the `reactive` api.
 
 Example:
 
 ```tsx
 const borderRadius = createState(5);
 
+const borderStyle = reactive((radius) => ({ borderRadius: radius }), [borderRadius()]);
+
 return (
-  <div style={reactive((radius) => ({ borderRadius: radius }), [borderRadius()])}>
+  <div style={borderStyle()}>
     <h1>Content</h1>
   </div>
 );
 ```
 
+This is similar to the `reactiveElement` api, but it returns a signal for the return value.
+
 Similar to `reactiveElement`, `reactive` function takes two parameters, the first is a callback, and the second is the list of state variables to update the value with when they change. The parameters of the callback are the list of the state variables in the order they were provided (type safety is preserved). The return can be whatever value you want.
 
-To make iterating a reactive array easier, you can use the `For` element. The `each` property is the array state variable, and the children of the component is a function that is ran for each item in the array to render it. The elements are rendered in a list in the parent component. The for element has one property `each` which is a state variable of the array to loop reactively. You must also provide a callback as the child of the component to tell the framework how to render each element. The callback has two parameters, the first is the item as a state variable generated by LampJs, and the other is the index that is also a state variable generated by LampJs.
+To make iterating a reactive array easier, you can use the `For` element. The `each` property is the array state variable, and the `children` of the component is a function that is ran for each item in the array to render it. The elements are rendered in a list in the parent component. You must provide a callback as the child of the component to tell the framework how to render each element. The callback has two parameters, the first is the item as a state variable generated by LampJs, and the other is the index that is also a state variable generated by LampJs.
 
 Example:
 
@@ -142,7 +148,7 @@ const arr = createState([1, 2, 3]);
 
 return (
   <For each={arr()}>
-    {(item, index) => (
+    {(item, index, cleanup) => (
       <div>
         <span>
           {item()} - {index()}
@@ -150,6 +156,36 @@ return (
         <span>something else</span>
       </div>
     )}
+  </For>
+);
+```
+
+There is a possibility for a memory leak when using the `For` component, so here is how it happens and how to avoid it. This leak is created when you create a signal within the callback for the `For` componenet, and us it in a property of the jsx within the callback. The leak occurs when items are added, then removed. This is a memory leak because the reactive property utilities insert references to callbacks into the signal, preventing garbage collection on the signal once the item of the `For` list is popped. To prevent this, the references to effects inserted into the signal must be removed to enable garbage collection. This is no fun, so a utility cleanup function is provided in the `For` component to make this trivial.
+
+example using cleanup:
+
+```tsx
+const arr = createState([1, 2, 3]);
+
+return (
+  <For each={arr()}>
+    {(item, index, cleanup) => {
+      // create signal using reactive api
+      const className = reactive((num) => `item ${num}`, [item()]);
+
+      // queue numState to be terminated when this item in the list is removed
+      cleanup(className());
+
+      return (
+        <div>
+          {/* use signal in jsx property */}
+          <span class={className()}>
+            {item()} - {index()}
+          </span>
+          <span>something else</span>
+        </div>
+      );
+    }}
   </For>
 );
 ```
@@ -172,30 +208,84 @@ return (
 
 The `If` component has three properties, the `condition` prop is the state variable to track, the `then` prop is the content to show when the value is true, and the `else` prop is what to show when the content is false.
 
-## Router
-
-A framework wouldn't be complete without a router. The LampJs router is similar to the one in vue, import the Router element and provide it with an object describing the route structure.
+Use Switch Case to make having multiple conditions easy
 
 Example:
 
 ```tsx
-// define the routes
-const routes = [
-  {
-    path: '/',
-    element: <Root />
-  },
-  {
-    path: '/about',
-    element: <About />
-  }
-];
+const num = createState(10);
 
-// use Router element
-<Router routes={routes} />;
+return (
+  <div class="root">
+    <Switch condition={num()}>
+      <Case value={1}>
+        <h1>Value is 1</h1>
+      </Case>
+      <Case value={5}>
+        <h1>Value is 5</h1>
+      </Case>
+      <Case value={10}>
+        <h1>Value is 10</h1>
+      </Case>
+      <Case isDefault>
+        <h1>None of the above</h1>
+      </Case>
+    </Switch>
+  </div>
+);
 ```
 
-The Router element does not replace the whole screen content, only the place where it is located. That means that you can have the Router element nested within your component tree.
+## Router
+
+A framework wouldn't be complete without a router. The structure of routes can be described using `Router`, and `Route` components.
+
+Example:
+
+```tsx
+const PageRouter = () => {
+  return (
+    <Router>
+      <Route path="/">
+        {/* page data for this route */}
+        <h1>root</h1>
+        <Link href="/test">Test</Link>
+
+        {/* nested routes */}
+        <Route path="/te*">
+          {/*
+            no page data is provided, ony nested routes,
+            so this page would be 404 error
+          */}
+
+          {/* nested routes */}
+          <Route path="/test">
+            <h1>Test</h1>
+          </Route>
+          <Route path="/tent">
+            <h1>Tent</h1>
+          </Route>
+        </Route>
+        <Route path="/tp">
+          <h1>Tp</h1>
+        </Route>
+      </Route>
+    </Router>
+  );
+};
+
+export default PageRouter;
+```
+
+This structure would match paths in this structure:
+
+- `/`
+  - `/te*`
+    - `*` matches any text, when following some text, it narrows down the match, in this case, it matches all paths that start with `/te`
+    - `/test`
+    - `/tent`
+  - `/tp`
+
+The Router element does not replace the whole screen content, only the place where it is located. That means that you can have the Router element nested within your component tree to update a smaller section of the page.
 
 To link to other pages within the site, use the `Link` component. The `a` component will work, but it will make do a whole page reload every time.
 
@@ -231,22 +321,47 @@ Each component function is only called once when it is mounted, and again if it 
 
 Typesafety is handled mostly in the framework, There are only a few types you will have to manage yourself.
 
+```typescript
+// Reactive<T> type
+export declare class Reactive<T> {
+  ... (other properties that are not important to know)
+  value: T;
+}
+
+// State<T> type
+type State<T> = (newState?: T | ((val: T) => T) | undefined) => Reactive<T>;
+
+// createState<T> type
+export declare const createState: <T>(value: T) => State<T>;
+```
+
 A state variable for a string would look like this:
 
 ```typescript
 type MyType = State<string>;
+
+const state = createState('thing');
+//    ^ State<string>
 ```
 
 This type is primarily useful for taking state variables as properties to a component, and would look like this to use.
 
 ```tsx
-<Component prop={state} />
+type ComponentProps<T> = {
+  prop: State<T>;
+};
+
+<Component prop={state} />;
 ```
 
 You are also able to use the `Reactive` class type to specify a reactive variable, the difference is you must call the state function for it to be valid:
 
 ```tsx
-<Component prop={state()} />
+type ComponentProps<T> = {
+  prop: Reactive<T>;
+};
+
+<Component prop={state()} />;
 ```
 
 The difference between the two is where in the `State` method, you pass the function to the state so it can be updated using that api, in the `Reactive` one, you would be required to use the lower level state apis.
