@@ -156,18 +156,71 @@ export const Fragment = ({ children }: { children: ComponentChild }) => {
   return children;
 };
 
-type RoutesType = {
-  path: string;
-  element: JSX.Element;
-}[];
+class RouteData {
+  readonly path: string;
+  readonly element: ComponentChild;
+  readonly nested: RouteData[];
+  constructor(path: string, element: ComponentChild, nested: RouteData[]) {
+    this.path = path;
+    this.element = element;
+    this.nested = nested;
+  }
+}
 
 type RouterProps = {
-  routes: RoutesType;
+  // to make jsx type happy this is the type
+  // this is actually RouteType | RouteType[]
+  children: JSX.Element | JSX.Element[];
+};
+
+const page404 = () => {
+  return createElement('span', {}, ['404 page not found']);
+};
+
+const trimPath = (path: string) => {
+  return path.trim().replace(/^\/*/, '').replace(/\/*$/g, '');
+};
+
+const getRouteElement = (path: string, pathAcc: string, data: RouteData): ComponentChild => {
+  const dataPath = trimPath(data.path);
+
+  const currentPath = pathAcc + (pathAcc === '/' ? '' : '/') + dataPath;
+
+  if (path === currentPath) {
+    return data.element;
+  }
+
+  if (dataPath.endsWith('*')) {
+    const tempPath = path.replace(pathAcc, '');
+    const pathParts = tempPath.split('/');
+    const pathPart = pathParts[0];
+    const newMatch = dataPath.substring(0, dataPath.length - 1);
+
+    if (pathPart.startsWith(newMatch)) {
+      for (let i = 0; i < data.nested.length; i++) {
+        const el = getRouteElement(path, pathAcc, data.nested[i]);
+        if (el !== null) return el;
+      }
+
+      return data.element;
+    }
+
+    return null;
+  }
+
+  if (path.startsWith(currentPath)) {
+    for (let i = 0; i < data.nested.length; i++) {
+      const el = getRouteElement(path, currentPath, data.nested[i]);
+      if (el !== null) return el;
+    }
+  }
+
+  return null;
 };
 
 const currentPathname = createState('/');
 
-export const Router = ({ routes }: RouterProps) => {
+export const Router = ({ children }: RouterProps) => {
   const pathname = location.pathname;
 
   currentPathname(pathname);
@@ -178,9 +231,47 @@ export const Router = ({ routes }: RouterProps) => {
   });
 
   return reactiveElement(
-    (path) => routes.find((item) => item.path === path)?.element || null,
+    (path) => {
+      if (Array.isArray(children)) {
+        for (let i = 0; i < children.length; i++) {
+          const el = getRouteElement(path, '/', children[i] as unknown as RouteData);
+          if (el !== null) return el;
+        }
+
+        return page404();
+      }
+
+      return document.createElement('div');
+    },
     [currentPathname()]
   );
+};
+
+type RouteProps = {
+  path: string;
+  children: ComponentChild;
+};
+
+export const Route = ({ path, children }: RouteProps) => {
+  const nested: RouteData[] = [];
+
+  if (Array.isArray(children)) {
+    children = children.filter((child) => {
+      if (child instanceof RouteData) {
+        nested.push(child);
+        return false;
+      }
+
+      return true;
+    });
+  } else {
+    if (children instanceof RouteData) {
+      nested.push(children);
+    }
+    children = [];
+  }
+
+  return new RouteData(path, children, nested) as unknown as JSX.Element;
 };
 
 type LinkProps = {
@@ -372,16 +463,11 @@ export const For = <T>({ each, children }: ForProps<T>) => {
   return info.map((item) => item[0]) as unknown as JSX.Element;
 };
 
-class CaseData<T> {
-  readonly value: T | undefined;
-  readonly children: JSX.Element;
-  readonly isDefault: boolean;
-  constructor(value: T | undefined, children: JSX.Element, isDefault: boolean) {
-    this.value = value;
-    this.children = children;
-    this.isDefault = isDefault;
-  }
-}
+type CaseData<T> = {
+  value?: T | undefined;
+  children: JSX.Element;
+  isDefault: boolean;
+};
 
 type SwitchProps<T> = {
   // to make jsx type happy this is the type
@@ -426,7 +512,11 @@ type CaseProps<T> = {
 };
 
 export const Case = <T>({ value, children, isDefault = false }: CaseProps<T>) => {
-  return new CaseData<T>(value, children, isDefault) as unknown as JSX.Element;
+  return {
+    value,
+    children,
+    isDefault
+  } as unknown as JSX.Element;
 };
 
 export const createElement = (

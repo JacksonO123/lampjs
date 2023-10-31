@@ -23,14 +23,15 @@ export declare const reactiveElement: <T extends readonly Reactive<any>[]>(fn: (
 export declare const Fragment: ({ children }: {
     children: ComponentChild;
 }) => ComponentChild;
-type RoutesType = {
-    path: string;
-    element: JSX.Element;
-}[];
 type RouterProps = {
-    routes: RoutesType;
+    children: JSX.Element | JSX.Element[];
 };
-export declare const Router: ({ routes }: RouterProps) => JSX.Element | null;
+export declare const Router: ({ children }: RouterProps) => JSX.Element | null;
+type RouteProps = {
+    path: string;
+    children: ComponentChild;
+};
+export declare const Route: ({ path, children }: RouteProps) => JSX.Element;
 type LinkProps = {
     children: ComponentChild;
     href: string;
