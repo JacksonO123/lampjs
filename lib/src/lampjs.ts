@@ -198,7 +198,7 @@ const getRouteElement = (path: string, pathAcc: string, data: RouteData): Compon
 
     if (pathPart.startsWith(newMatch)) {
       for (let i = 0; i < data.nested.length; i++) {
-        const el = getRouteElement(path, pathAcc, data.nested[i]);
+        const el = getRouteElement(path, pathAcc + (pathAcc === '/' ? '' : '/') + pathPart, data.nested[i]);
         if (el !== null) return el;
       }
 
@@ -235,7 +235,7 @@ export const Router = ({ children }: RouterProps) => {
       if (Array.isArray(children)) {
         for (let i = 0; i < children.length; i++) {
           const el = getRouteElement(path, '/', children[i] as unknown as RouteData);
-          if (el !== null) return el;
+          if (!Array.isArray(el) && el !== null && Array.isArray(el) && el.length === 0) return el;
         }
 
         return page404();
