@@ -181,6 +181,10 @@ const trimPath = (path: string) => {
   return path.trim().replace(/^\/*/, '').replace(/\/*$/g, '');
 };
 
+const validChild = (child: ComponentChild) => {
+  return (!Array.isArray(child) && child !== null) || (Array.isArray(child) && child.length !== 0);
+};
+
 const getRouteElement = (path: string, pathAcc: string, data: RouteData): ComponentChild => {
   const dataPath = trimPath(data.path);
 
@@ -199,7 +203,7 @@ const getRouteElement = (path: string, pathAcc: string, data: RouteData): Compon
     if (pathPart.startsWith(newMatch)) {
       for (let i = 0; i < data.nested.length; i++) {
         const el = getRouteElement(path, pathAcc + (pathAcc === '/' ? '' : '/') + pathPart, data.nested[i]);
-        if (el !== null) return el;
+        if (validChild(el)) return el;
       }
 
       return data.element;
@@ -235,10 +239,13 @@ export const Router = ({ children }: RouterProps) => {
       if (Array.isArray(children)) {
         for (let i = 0; i < children.length; i++) {
           const el = getRouteElement(path, '/', children[i] as unknown as RouteData);
-          if (!Array.isArray(el) && el !== null && Array.isArray(el) && el.length === 0) return el;
+          if (validChild(el)) return el;
         }
 
         return page404();
+      } else {
+        const el = getRouteElement(path, '/', children as unknown as RouteData);
+        if (validChild(el)) return el;
       }
 
       return document.createElement('div');
