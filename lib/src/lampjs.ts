@@ -460,10 +460,11 @@ export const For = <T>({ each, children }: ForProps<T>) => {
     while (info.length > val.length) {
       const index = info.length - 1;
       const elInfo = info.pop()!;
+      elInfo[0].remove();
       elInfo[1]!().terminate();
       elInfo[2]!().terminate();
-      elInfo[0].remove();
       toTerminate[index].forEach((terminator) => terminator.terminate());
+      toTerminate[index] = [];
     }
   });
 
