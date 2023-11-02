@@ -417,7 +417,7 @@ export const For = <T>({ each, children }: ForProps<T>) => {
         const el = info.pop()!;
         el[0].remove();
         el[1]!().terminate();
-        el[1]!().terminate();
+        el[2]!().terminate();
       }
 
       (info[0][0] as unknown as HTMLElement).replaceWith(el);
