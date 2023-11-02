@@ -206,7 +206,10 @@ const getRouteElement = (path: string, pathAcc: string, data: RouteData): Compon
         if (validChild(el)) return el;
       }
 
-      return data.element;
+      const followingPath = path.replace(pathAcc, '');
+      if (followingPath.split('/').length === 1) {
+        return data.element;
+      }
     }
 
     return null;
