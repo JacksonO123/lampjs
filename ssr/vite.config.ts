@@ -1,18 +1,18 @@
-import { defineConfig } from "vite";
+import { defineConfig } from 'vite';
 
 export default defineConfig({
   build: {
     rollupOptions: {
-      input: "src/main.tsx",
+      input: 'src/main.tsx',
       output: {
-        entryFileNames: "index.js",
-      },
+        entryFileNames: 'index.js'
+      }
     },
-    ssr: true,
+    ssr: true
   },
   esbuild: {
-    jsxFactory: "createElement",
-    jsxFragment: "Fragment",
-    jsxInject: 'import { createElement, Fragment } from "@jacksonotto/lampjs"',
-  },
+    jsxFactory: 'createElement',
+    jsxFragment: 'Fragment',
+    jsxInject: 'import { createElement, Fragment } from "@jacksonotto/lampjs"'
+  }
 });
