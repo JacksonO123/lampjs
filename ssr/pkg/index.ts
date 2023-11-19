@@ -82,7 +82,11 @@ export const toHtmlString = (structure: DOMStructure | string, options: HtmlOpti
   return `${first}>${childrenHtml}${structure.tag === 'head' ? options.headInject : ''}</${structure.tag}>`;
 };
 
-export const mountSSR = (target: HTMLElement, newDom: JSX.Element) => {
+export const mountSSR = async (target: HTMLElement, newDom: JSX.Element) => {
+  if (newDom instanceof Promise) {
+    newDom = await newDom;
+  }
+
   newDom.childNodes.forEach((node) => {
     if (node.nodeName === 'BODY') {
       target.replaceWith(node);

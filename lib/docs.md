@@ -45,7 +45,7 @@ Continue by following the instructions in the cli
 
 ## Components
 
-Components in LampJs are similar to components in React or SolidJs. It is a function that returns jsx.
+Components in LampJs are similar to components in React or SolidJs. It is a function that returns JSX.
 
 Example:
 
@@ -57,23 +57,69 @@ const Counter = () => {
 };
 ```
 
-Components can technically be asynchronous, meaning that they return a `Promise`. This is a new feature that is catering towards the _upcoming_ ssr functionality. The use case behind this feature is that if you truly **CANNOT** render a component without having some asynchronous action first, then you can await some asynchronous action before mounting the component.
+Components can be asynchronous, meaning that they return a `Promise`. This is a new feature that is catering towards the **_upcoming_** ssr functionality.
 
-This case is super niche and as a result, waiting for promises to complete before mounting them is not supported by the `createElement` out of the box to keep the mounting process as efficient as possible. As a result, to mount an async component, you must use a helper function `wait(/* promise */)`.
+Waiting for promises to complete before mounting them is not supported by the `createElement` out of the box to keep the mounting process as efficient as possible. To mount an async component, use the `Suspense` component.
 
 Example:
 
 ```tsx
-const Test = async () => {
-  const res = await fetch('http://localhost:3001');
-  const data = await res.json();
-  console.log(data);
+const Async = async () => {
+  // component must wait for fetch
+  const res = await fetch('some_endpoint');
 
-  return <span>this is test</span>;
+  return <span>from async</span>;
 };
 
 const Root = () => {
-  return <div class="root">{wait(<Test />)}</div>;
+  return (
+    <div class="root">
+      <Suspense fallback={<span>not here</span>}>
+        <Async />
+      </Suspense>
+    </div>
+  );
+};
+```
+
+In this case the promise is a component that returns JSX, so the value can just be set to the component. Other times the promise will return data in which case you must specify how to render the result in the `Suspense`
+
+```ts
+// Suspense props type
+type SuspenseProps<T> = {
+  // what to render while waiting
+  fallback: Element | Element[];
+  // a way to handle promise result with custom logic
+  decoder?: (res: ResponseData<T>) => any;
+  // specify how to render result
+  render?: (value: T) => Element | Element[];
+  // async component or promise
+  children: T | Element;
+};
+```
+
+Example:
+
+```tsx
+const Root = () => {
+  // create promise with fetch
+  // response is string instead of an object
+  // this type cannot be parsed by json parser
+  const res: FetchResponse<string> = fetch('http://localhost:3001');
+
+  return (
+    <div class="root">
+      <Suspense
+        fallback={<span>waiting</span>}
+        // use the text decoder to decode the result
+        decoder={(res) => res.text()}
+        // specify a way to render the result
+        render={(value) => <span>The value is: {value}</span>}
+      >
+        {val}
+      </Suspense>
+    </div>
+  );
 };
 ```
 
@@ -114,7 +160,7 @@ LampJs state is based on signals to be as efficient as possible. The function is
 
 The `createState` function in LampJs is not bound to a component, meaning that you can initialize state wherever you want. You can create a state variable in a new file and export it, and it can be imported into any component you want, this is the pattern of creating a context.
 
-The `reactiveElement` api can be used to render a chunk of jsx, or a value, when a state variable changes.
+The `reactiveElement` api can be used to render a chunk of JSX, or a value, when a state variable changes.
 
 Example:
 
@@ -135,7 +181,7 @@ return (
 );
 ```
 
-This example only works using `reactiveElement` because LampJs does not use a compiler, this is only transpiled from jsx to js and that is all. This means that by taking a property from the value of a reactive state, LampJs will not be able to tell that it should watch for changes, because it won't see the use of the signal. You must use `reactiveElement` to watch for updates on the signal and return the property you want.
+This example only works using `reactiveElement` because LampJs does not use a compiler, this is only transpiled from JSX to js and that is all. This means that by taking a property from the value of a reactive state, LampJs will not be able to tell that it should watch for changes, because it won't see the use of the signal. You must use `reactiveElement` to watch for updates on the signal and return the property you want.
 
 The `reactiveElement` function takes two parameters, the first is a callback, and the second is the list of state variables to re-render when they change. The parameters of the callback are the list of the state variables in the order they were provided (type safety is preserved).
 
@@ -180,7 +226,7 @@ return (
 );
 ```
 
-There is a possibility for a memory leak when using the `For` component, so here is how it happens and how to avoid it. This leak is created when you create a signal within the callback for the `For` componenet, and us it in a property of the jsx within the callback. The leak occurs when items are added, then removed. This is a memory leak because the reactive property utilities insert references to callbacks into the signal, preventing garbage collection on the signal once the item of the `For` list is popped. To prevent this, the references to effects inserted into the signal must be removed to enable garbage collection. This is no fun, so a utility cleanup function is provided in the `For` component to make this trivial.
+There is a possibility for a memory leak when using the `For` component, so here is how it happens and how to avoid it. This leak is created when you create a signal within the callback for the `For` componenet, and us it in a property of the JSX within the callback. The leak occurs when items are added, then removed. This is a memory leak because the reactive property utilities insert references to callbacks into the signal, preventing garbage collection on the signal once the item of the `For` list is popped. To prevent this, the references to effects inserted into the signal must be removed to enable garbage collection. This is no fun, so a utility cleanup function is provided in the `For` component to make this trivial.
 
 example using cleanup:
 
@@ -198,7 +244,7 @@ return (
 
       return (
         <div>
-          {/* use signal in jsx property */}
+          {/* use signal in JSX property */}
           <span class={className()}>
             {item()} - {index()}
           </span>
@@ -387,6 +433,18 @@ type ComponentProps<T> = {
 The difference between the two is where in the `State` method, you pass the function to the state so it can be updated using that api, in the `Reactive` one, you would be required to use the lower level state apis.
 
 If you are developing a library that takes state variables, prefer to use `Reactive` rather than `State` for consistency.
+
+LampJs also provides a way to enhance typesafety of fetch requests using the `FetchResponse<T>` type.
+
+```ts
+type FetchResponse<T> = Promise<ResponseData<T>>;
+
+interface ResponseData<T> extends Response {
+  json(): Promise<T>;
+}
+```
+
+`ResponseData<T>` is a type that overrides the json decoding type on the fetch Response type so that decoding the result will give the type without unmanageable typing.
 
 **Import Aliases**
 
