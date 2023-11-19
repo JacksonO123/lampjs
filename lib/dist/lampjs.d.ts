@@ -19,19 +19,19 @@ type InnerStateFromArray<T extends readonly Reactive<any>[]> = {
     [K in keyof T]: T[K] extends Reactive<infer U> ? U : Exclude<T[K], Reactive<any>>;
 };
 export declare const reactive: <T extends readonly any[], K>(fn: (...val: InnerStateFromArray<T>) => K, states: T) => (newState?: K | ((val: K) => K) | undefined) => Reactive<K>;
-export declare const reactiveElement: <T extends readonly Reactive<any>[]>(fn: (...val: InnerStateFromArray<T>) => ComponentChild, states: T) => JSX.Element | null;
+export declare const reactiveElement: <T extends readonly Reactive<any>[]>(fn: (...val: InnerStateFromArray<T>) => ComponentChild, states: T) => JSX.SyncElement | null;
 export declare const Fragment: ({ children }: {
     children: ComponentChild;
 }) => ComponentChild;
 type RouterProps = {
     children: JSX.Element | JSX.Element[];
 };
-export declare const Router: ({ children }: RouterProps) => JSX.Element | null;
+export declare const Router: ({ children }: RouterProps) => JSX.SyncElement | null;
 type RouteProps = {
     path: string;
     children: ComponentChild;
 };
-export declare const Route: ({ path, children }: RouteProps) => JSX.Element;
+export declare const Route: ({ path, children }: RouteProps) => JSX.SyncElement;
 type LinkProps = {
     children: ComponentChild;
     href: string;
@@ -39,26 +39,27 @@ type LinkProps = {
 export declare const Link: ({ children, href }: LinkProps) => JSX.Element;
 type IfProps = {
     condition: Reactive<boolean>;
-    then: JSX.Element;
-    else: JSX.Element;
+    then: JSX.SyncElement;
+    else: JSX.SyncElement;
 };
-export declare const If: ({ condition, then, else: elseBranch }: IfProps) => JSX.Element;
+export declare const If: ({ condition, then, else: elseBranch }: IfProps) => Promise<JSX.SyncElement>;
 type ForItemFn<T> = (item: State<T>, index: State<number>, cleanup: (...args: Reactive<any>[]) => void) => ComponentChild;
 type ForProps<T> = {
     each: Reactive<T[]>;
     children: ForItemFn<T>;
 };
-export declare const For: <T>({ each, children }: ForProps<T>) => JSX.Element;
+export declare const For: <T>({ each, children }: ForProps<T>) => JSX.SyncElement;
 type SwitchProps<T> = {
-    children: JSX.Element | JSX.Element[];
+    children: JSX.SyncElement | JSX.SyncElement[];
     condition: Reactive<T>;
 };
-export declare const Switch: <T>({ condition, children }: SwitchProps<T>) => JSX.Element | null;
+export declare const Switch: <T>({ condition, children }: SwitchProps<T>) => JSX.SyncElement | null;
 type CaseProps<T> = {
     value?: T;
-    children: JSX.Element;
+    children: JSX.SyncElement;
     isDefault?: boolean;
 };
-export declare const Case: <T>({ value, children, isDefault }: CaseProps<T>) => JSX.Element;
+export declare const Case: <T>({ value, children, isDefault }: CaseProps<T>) => JSX.SyncElement;
+export declare const wait: (el: JSX.Element) => HTMLDivElement;
 export declare const createElement: (tag: string | ComponentFactory, attrs: ComponentAttributes, ...children: ComponentChild[]) => JSX.Element;
 export {};

@@ -69,7 +69,7 @@ export const setElementStyle = (element: JSX.Element, style: Partial<CSSStyleDec
   }
 };
 
-export const applyChild = (element: JSX.Element, child: ComponentChild) => {
+export const applyChild = (element: JSX.SyncElement, child: ComponentChild) => {
   if (child instanceof HTMLElement || child instanceof Text) {
     element.appendChild(child);
   } else if (typeof child === 'object') {
@@ -87,7 +87,7 @@ export const applyChild = (element: JSX.Element, child: ComponentChild) => {
   }
 };
 
-export const applyChildren = (element: JSX.Element, children: ComponentChild[]) => {
+export const applyChildren = (element: JSX.SyncElement, children: ComponentChild[]) => {
   for (const child of children) {
     if (!child && child !== 0) continue;
 

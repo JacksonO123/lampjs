@@ -9,7 +9,8 @@ export declare type ComponentChild =
   | boolean
   | undefined
   | null
-  | Reactive<any>;
+  | Reactive<any>
+  | Promise<any>;
 export declare type ComponentChildren = ComponentChild | ComponentChild[];
 export interface BaseProps {
   children?: ComponentChildren;
@@ -49,7 +50,8 @@ export declare interface ChangeEvent<T = Element> extends SyntheticEvent<T> {
 }
 declare global {
   namespace JSX {
-    type Element = HTMLElement | SVGElement | Text;
+    type Element = HTMLElement | SVGElement | Text | Promise<HTMLElement | SVGElement | Text>;
+    type SyncElement = Exclude<JSX.Element, Promise<any>>;
 
     interface ArrayElement extends Array<Element> {}
 

@@ -1,20 +1,16 @@
 import type { JSX, ComponentChild, ComponentFactory, ComponentAttributes, BaseProps } from './types';
-import { isSvgTag, applyChildren, setElementStyle } from './util';
+import { isSvgTag, applyChildren, setElementStyle, applyChild } from './util';
 
 let mountEvents: (() => void)[] = [];
 
 export const mount = (root: HTMLElement | null, el: JSX.Element | JSX.Element[]) => {
   if (!root || !el) return;
 
-  function mountEl(el: JSX.Element | JSX.Element[]) {
-    if (Array.isArray(el)) {
-      el.forEach((newEl) => mountEl(newEl));
-    } else {
-      root!.appendChild(el);
-    }
+  if (Array.isArray(el)) {
+    applyChildren(root, el);
+  } else {
+    applyChild(root, el);
   }
-
-  mountEl(el);
 
   mountEvents.forEach((event) => event());
   mountEvents = [];
@@ -118,7 +114,7 @@ const isElement = (element: ComponentChild) => {
 export const reactiveElement = <T extends readonly Reactive<any>[]>(
   fn: (...val: InnerStateFromArray<T>) => ComponentChild,
   states: T
-): JSX.Element | null => {
+): JSX.SyncElement | null => {
   const values = states.map((s) => s.value);
   let res: ComponentChild = fn(...(values as InnerStateFromArray<T>));
 
@@ -140,7 +136,7 @@ export const reactiveElement = <T extends readonly Reactive<any>[]>(
         res.data = newNode + '';
       }
     } else {
-      elementReplace(res as JSX.Element, newNode as JSX.Element);
+      elementReplace(res as JSX.SyncElement, newNode as JSX.SyncElement);
       res = newNode;
     }
   };
@@ -149,7 +145,7 @@ export const reactiveElement = <T extends readonly Reactive<any>[]>(
     state.addStateChangeEvent((val) => onStateChange(val, index));
   });
 
-  return res as JSX.Element;
+  return res as JSX.SyncElement;
 };
 
 export const Fragment = ({ children }: { children: ComponentChild }) => {
@@ -281,7 +277,7 @@ export const Route = ({ path, children }: RouteProps) => {
     children = [];
   }
 
-  return new RouteData(path, children, nested) as unknown as JSX.Element;
+  return new RouteData(path, children, nested) as unknown as JSX.SyncElement;
 };
 
 type LinkProps = {
@@ -301,15 +297,18 @@ export const Link = ({ children, href }: LinkProps) => {
 
 type IfProps = {
   condition: Reactive<boolean>;
-  then: JSX.Element;
-  else: JSX.Element;
+  then: JSX.SyncElement;
+  else: JSX.SyncElement;
 };
 
 /**
  * replaces first with second
  * either can be arrays or single elements
  */
-const elementReplace = (first: JSX.Element | JSX.Element[], second: JSX.Element | JSX.Element[]) => {
+const elementReplace = (
+  first: JSX.SyncElement | JSX.SyncElement[],
+  second: JSX.SyncElement | JSX.SyncElement[]
+) => {
   if (Array.isArray(first)) {
     if (Array.isArray(second)) {
       for (let i = 1; i < first.length; i++) {
@@ -340,13 +339,13 @@ const elementReplace = (first: JSX.Element | JSX.Element[], second: JSX.Element 
   }
 };
 
-export const If = ({ condition, then, else: elseBranch }: IfProps) => {
+export const If = async ({ condition, then, else: elseBranch }: IfProps) => {
   if (Array.isArray(then) && then.length === 0) {
-    then = createElement('div', {});
+    then = await createElement('div', {});
   }
 
   if (Array.isArray(elseBranch) && elseBranch.length === 0) {
-    elseBranch = createElement('div', {});
+    elseBranch = await createElement('div', {});
   }
 
   condition.addStateChangeEvent((show) => {
@@ -373,7 +372,7 @@ type ForProps<T> = {
 
 export const For = <T>({ each, children }: ForProps<T>) => {
   const elFn = (children as unknown as ForItemFn<T>[])[0];
-  let info: [JSX.Element | Text | SVGElement, State<T> | null, State<number> | null][] = [];
+  let info: [JSX.SyncElement | Text | SVGElement, State<T> | null, State<number> | null][] = [];
   let toTerminate: Record<number, Reactive<any>[]> = {};
 
   const collectCleanupSignals = (index: number, ...args: Reactive<any>[]) => {
@@ -471,19 +470,19 @@ export const For = <T>({ each, children }: ForProps<T>) => {
     }
   });
 
-  return info.map((item) => item[0]) as unknown as JSX.Element;
+  return info.map((item) => item[0]) as unknown as JSX.SyncElement;
 };
 
 type CaseData<T> = {
   value?: T | undefined;
-  children: JSX.Element;
+  children: JSX.SyncElement;
   isDefault: boolean;
 };
 
 type SwitchProps<T> = {
   // to make jsx type happy this is the type
   // this is actually CaseData<T> | CaseData<T>[]
-  children: JSX.Element | JSX.Element[];
+  children: JSX.SyncElement | JSX.SyncElement[];
   condition: Reactive<T>;
 };
 
@@ -518,7 +517,7 @@ export const Switch = <T>({ condition, children }: SwitchProps<T>) => {
 
 type CaseProps<T> = {
   value?: T;
-  children: JSX.Element;
+  children: JSX.SyncElement;
   isDefault?: boolean;
 };
 
@@ -527,7 +526,18 @@ export const Case = <T>({ value, children, isDefault = false }: CaseProps<T>) =>
     value,
     children,
     isDefault
-  } as unknown as JSX.Element;
+  } as unknown as JSX.SyncElement;
+};
+
+export const wait = (el: JSX.Element) => {
+  const placeholder = document.createElement('div');
+
+  (async () => {
+    const res = await el;
+    placeholder.replaceWith(res);
+  })();
+
+  return placeholder;
 };
 
 export const createElement = (

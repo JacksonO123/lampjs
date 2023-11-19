@@ -57,6 +57,26 @@ const Counter = () => {
 };
 ```
 
+Components can technically be asynchronous, meaning that they return a `Promise`. This is a new feature that is catering towards the _upcoming_ ssr functionality. The use case behind this feature is that if you truly **CANNOT** render a component without having some asynchronous action first, then you can await some asynchronous action before mounting the component.
+
+This case is super niche and as a result, waiting for promises to complete before mounting them is not supported by the `createElement` out of the box to keep the mounting process as efficient as possible. As a result, to mount an async component, you must use a helper function `wait(/* promise */)`.
+
+Example:
+
+```tsx
+const Test = async () => {
+  const res = await fetch('http://localhost:3001');
+  const data = await res.json();
+  console.log(data);
+
+  return <span>this is test</span>;
+};
+
+const Root = () => {
+  return <div class="root">{wait(<Test />)}</div>;
+};
+```
+
 ## State
 
 For simplicity and the fact that not much else is needed, there is only one utility function for managing state: `createState`.
