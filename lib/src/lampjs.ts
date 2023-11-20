@@ -1,4 +1,14 @@
-import type { JSX, ComponentChild, ComponentFactory, ComponentAttributes, BaseProps } from './types';
+import type {
+  JSX,
+  ComponentChild,
+  ComponentFactory,
+  ComponentAttributes,
+  BaseProps,
+  SuspenseFn,
+  FetchResponse,
+  ResponseData,
+  ValueFromResponse
+} from './types';
 import { isSvgTag, applyChildren, setElementStyle, applyChild } from './util';
 
 let mountEvents: (() => void)[] = [];
@@ -540,34 +550,18 @@ export const wait = (el: JSX.Element) => {
   return placeholder;
 };
 
-interface ResponseData<T> extends Response {
-  json(): Promise<T>;
-}
-
-export type FetchResponse<T> = Promise<ResponseData<T>>;
-
-type ValueFromResponse<T extends FetchResponse<any> | Promise<any>> = T extends FetchResponse<infer R>
-  ? R
-  : T extends Promise<infer R>
-    ? R
-    : never;
-
-type SuspenseFn<T extends FetchResponse<any> | Promise<any>> = (current: ValueFromResponse<T>) => JSX.Element;
-
 type SuspenseProps<T extends FetchResponse<any> | Promise<any>> = {
   children: T | JSX.Element;
   fallback: JSX.Element;
   render?: SuspenseFn<T>;
   decoder?: (value: ResponseData<ValueFromResponse<T>>) => any;
-  blockServer?: boolean;
 };
 
 export const Suspense = <T extends FetchResponse<any> | Promise<any>>({
   children,
   render,
   fallback,
-  decoder,
-  blockServer: _ = false
+  decoder
 }: SuspenseProps<T>) => {
   (children as unknown as readonly [T | Exclude<JSX.Element, HTMLElement | SVGElement | Text>])[0]
     .then((current) => {
@@ -579,16 +573,13 @@ export const Suspense = <T extends FetchResponse<any> | Promise<any>>({
       let newValue: any = val;
 
       if (render !== undefined) {
-        console.log('here');
         newValue = render(val);
-        console.log('after', newValue);
       }
 
       if (!(newValue instanceof Node) && !Array.isArray(newValue)) {
         newValue = document.createTextNode(val + '');
       }
 
-      console.log(newValue);
       elementReplace(fallback as JSX.SyncElement, newValue);
     });
 

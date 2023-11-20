@@ -3,6 +3,8 @@ import { toHtmlString, createElementSSR } from './index';
 import App from '../src/App';
 import { createServer as createViteServer } from 'vite';
 
+import.meta.env.SSR = true;
+
 // @ts-ignore
 globalThis.createElement = createElementSSR;
 
@@ -18,16 +20,18 @@ export const viteServer = await createViteServer({
 
 app.use(viteServer.middlewares);
 
-app.use('*', (req, res) => {
+app.use('*', async (req, res) => {
   const url = req.url;
+
+  const clientJs = '<script type="module" src="./src/main.tsx"></script>';
+  const viteJs = '<script type="module" src="/@vite/client"></script>';
 
   const html =
     '<!DOCTYPE html>' +
-    toHtmlString(createElement(App, null), {
-      headInject:
-        '<script type="module" src="./src/main.tsx"></script><script type="module" src="/@vite/client"></script>',
+    (await toHtmlString(createElement(App, null), {
+      headInject: clientJs + viteJs,
       route: url
-    });
+    }));
 
   res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
 });

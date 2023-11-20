@@ -1,4 +1,4 @@
-import type { JSX, ComponentChild, ComponentFactory, ComponentAttributes } from './types';
+import type { JSX, ComponentChild, ComponentFactory, ComponentAttributes, SuspenseFn, FetchResponse, ResponseData, ValueFromResponse } from './types';
 export declare const mount: (root: HTMLElement | null, el: JSX.Element | JSX.Element[]) => void;
 export declare class Reactive<T> {
     private onStateChange;
@@ -61,19 +61,12 @@ type CaseProps<T> = {
 };
 export declare const Case: <T>({ value, children, isDefault }: CaseProps<T>) => JSX.SyncElement;
 export declare const wait: (el: JSX.Element) => HTMLDivElement;
-interface ResponseData<T> extends Response {
-    json(): Promise<T>;
-}
-export type FetchResponse<T> = Promise<ResponseData<T>>;
-type ValueFromResponse<T extends FetchResponse<any> | Promise<any>> = T extends FetchResponse<infer R> ? R : T extends Promise<infer R> ? R : never;
-type SuspenseFn<T extends FetchResponse<any> | Promise<any>> = (current: ValueFromResponse<T>) => JSX.Element;
 type SuspenseProps<T extends FetchResponse<any> | Promise<any>> = {
     children: T | JSX.Element;
     fallback: JSX.Element;
     render?: SuspenseFn<T>;
     decoder?: (value: ResponseData<ValueFromResponse<T>>) => any;
-    blockServer?: boolean;
 };
-export declare const Suspense: <T extends Promise<any> | FetchResponse<any>>({ children, render, fallback, decoder, blockServer: _ }: SuspenseProps<T>) => JSX.Element;
+export declare const Suspense: <T extends Promise<any> | FetchResponse<any>>({ children, render, fallback, decoder }: SuspenseProps<T>) => JSX.Element;
 export declare const createElement: (tag: string | ComponentFactory, attrs: ComponentAttributes, ...children: ComponentChild[]) => JSX.Element;
 export {};

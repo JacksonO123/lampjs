@@ -1,22 +1,30 @@
-import { ComponentFactory, ComponentAttributes, ComponentChild } from '@jacksonotto/lampjs/dist/types';
-import { Reactive } from '@jacksonotto/lampjs';
+import {
+  ComponentFactory,
+  ComponentAttributes,
+  ComponentChild,
+  SuspenseFn,
+  ResponseData,
+  ValueFromResponse
+} from '@jacksonotto/lampjs/dist/types';
+import { FetchResponse, Reactive, Suspense, createElement as createElementClient } from '@jacksonotto/lampjs';
 
 export type DOMStructure = {
   readonly tag: string | ComponentFactory;
   readonly attrs: ComponentAttributes | null;
-  readonly children: ComponentChild[];
+  children: ComponentChild[];
 };
 
 export const createElementSSR = (
   tag: string | ComponentFactory,
   attrs: ComponentAttributes | null,
   ...children: ComponentChild[]
-): DOMStructure =>
-  ({
+): DOMStructure => {
+  return {
     tag,
     attrs,
     children
-  }) as const;
+  } as const;
+};
 
 const formatAttr = (attr: string) => {
   if (attr.startsWith('on')) {
@@ -52,7 +60,10 @@ type HtmlOptions = {
   headInject: string;
 };
 
-export const toHtmlString = (structure: DOMStructure | string, options: HtmlOptions): string => {
+export const toHtmlString = async (
+  structure: DOMStructure | string,
+  options: HtmlOptions
+): Promise<string> => {
   if (structure instanceof Reactive) {
     return structure.value.toString();
   } else if (typeof structure === 'string') {
@@ -60,15 +71,26 @@ export const toHtmlString = (structure: DOMStructure | string, options: HtmlOpti
   }
 
   if (structure.tag instanceof Function) {
-    const res = structure.tag(structure.attrs || {}) as unknown as DOMStructure;
-    return toHtmlString(res, options);
+    const props = {
+      ...(structure.attrs || {}),
+      children: structure.children
+    };
+    const res = (await structure.tag(props)) as unknown as DOMStructure | string[];
+
+    if (Array.isArray(res)) {
+      return res.join('');
+    }
+
+    return await toHtmlString(res, options);
   }
 
   let childrenHtml = '';
   if (structure.children !== undefined) {
-    structure.children.forEach((child) => {
-      childrenHtml += toHtmlString(child as unknown as DOMStructure, options);
-    });
+    const newChildren = await Promise.all(
+      structure.children.map(async (child) => await toHtmlString(child as unknown as DOMStructure, options))
+    );
+
+    childrenHtml = newChildren.join('');
   }
 
   const attrString = attrsToString(structure.attrs || {});
@@ -103,11 +125,42 @@ export const mountSSR = async (target: HTMLElement, newDom: JSX.Element) => {
 
         document.addEventListener('DOMContentLoaded', function () {
           document.head.replaceWith(node);
-          console.log(devScript, viteScript);
           document.head.appendChild(devScript);
           document.head.appendChild(viteScript);
         });
       }
     }
   });
+};
+
+type SuspenseProps<T extends FetchResponse<any> | Promise<any>> = {
+  // children is actually type DOMStructure
+  children: T | JSX.Element;
+  fallback: JSX.Element;
+  render?: SuspenseFn<T>;
+  decoder?: (value: ResponseData<ValueFromResponse<T>>) => any;
+  waitServer?: boolean;
+};
+
+export const ServerSuspense = <T extends FetchResponse<any> | Promise<any>>({
+  children,
+  fallback,
+  decoder,
+  render,
+  waitServer
+}: SuspenseProps<T>) => {
+  if (import.meta.env.SSR) {
+    if (waitServer) {
+      return Promise.all(
+        (children as unknown as DOMStructure[]).map((item) =>
+          toHtmlString(item, { headInject: '', route: '/' })
+        )
+      ) as unknown as JSX.Element;
+    }
+
+    return fallback;
+  }
+
+  // @ts-ignore
+  return createElementClient(Suspense, { fallback, render, decoder }, ...children);
 };

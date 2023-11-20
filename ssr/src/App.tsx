@@ -1,4 +1,6 @@
 import Test from './Test';
+import Async from './Async';
+import { ServerSuspense } from '../pkg';
 
 const App = () => {
   const handleClick = () => {
@@ -18,6 +20,9 @@ const App = () => {
         in body pt2.3
         <br />
         <Test onClick={handleClick} />
+        <ServerSuspense fallback={<span>waiting</span>}>
+          <Async />
+        </ServerSuspense>
       </body>
     </html>
   );

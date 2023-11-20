@@ -1,5 +1,21 @@
 import type { Reactive } from './index';
 
+export interface ResponseData<T> extends Response {
+  json(): Promise<T>;
+}
+
+export type FetchResponse<T> = Promise<ResponseData<T>>;
+
+export type ValueFromResponse<T extends FetchResponse<any> | Promise<any>> = T extends FetchResponse<infer R>
+  ? R
+  : T extends Promise<infer R>
+    ? R
+    : never;
+
+export type SuspenseFn<T extends FetchResponse<any> | Promise<any>> = (
+  current: ValueFromResponse<T>
+) => JSX.Element;
+
 export type { JSX };
 export declare type ComponentChild =
   | ComponentChild[]
