@@ -1,5 +1,5 @@
 import { ComponentChild } from './types';
-import { Reactive } from './lampjs';
+import { Reactive, elementIsNode } from './lampjs';
 
 export const isSvgTag = (tag: string) => {
   return [
@@ -71,17 +71,24 @@ export const setElementStyle = (element: JSX.Element, style: Partial<CSSStyleDec
 
 export const applyChild = (element: JSX.SyncElement, child: ComponentChild) => {
   if (child instanceof HTMLElement || child instanceof Text) {
-    element.appendChild(child);
+    if (elementIsNode(element, child)) {
+      (element as JSX.NodeElements).appendChild(child as JSX.NodeElements);
+    }
   } else if (typeof child === 'object') {
     if (child && child instanceof Reactive) {
       const node = document.createTextNode((child as Reactive<any>).value.toString());
       (child as Reactive<any>).addStateChangeEvent((val) => {
         node.textContent = val.toString();
       });
-      element.appendChild(node);
+
+      if (elementIsNode(element)) {
+        (element as JSX.NodeElements).appendChild(node);
+      }
     }
   } else if (typeof child === 'string' || typeof child === 'number' || typeof child === 'boolean') {
-    element.appendChild(document.createTextNode(child.toString()));
+    if (elementIsNode(element)) {
+      (element as JSX.NodeElements).appendChild(document.createTextNode(child.toString()));
+    }
   } else {
     console.warn('Unknown type to append: ', child);
   }

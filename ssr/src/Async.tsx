@@ -1,5 +1,5 @@
 const Async = async () => {
-  const res = await fetch('http://localhost:3001');
+  const res = await fetch<{ hello: 'world' }>('http://localhost:3001');
   const data = await res.json();
   console.log(data);
 

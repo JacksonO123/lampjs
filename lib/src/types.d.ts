@@ -1,4 +1,4 @@
-import type { Reactive } from './index';
+import { type Reactive, RouteData, type CaseData } from './index';
 
 export interface ResponseData<T> extends Response {
   json(): Promise<T>;
@@ -64,10 +64,13 @@ interface SyntheticEvent<T = Element, E = Event>
 export declare interface ChangeEvent<T = Element> extends SyntheticEvent<T> {
   target: EventTarget & T;
 }
+
 declare global {
   namespace JSX {
-    type Element = HTMLElement | SVGElement | Text | Promise<HTMLElement | SVGElement | Text>;
-    type SyncElement = Exclude<JSX.Element, Promise<any>>;
+    type NodeElements = HTMLElement | SVGElement | Text;
+    type NonNodeElements = RouteData | CaseData<any>;
+    type SyncElement = NodeElements | NonNodeElements;
+    type Element = SyncElement | Promise<SyncElement>;
 
     interface ArrayElement extends Array<Element> {}
 

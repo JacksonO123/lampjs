@@ -3,9 +3,10 @@ import { toHtmlString, createElementSSR } from './index';
 import App from '../src/App';
 import { createServer as createViteServer } from 'vite';
 
+const PORT = 3000;
+
 import.meta.env.SSR = true;
 
-// @ts-ignore
 globalThis.createElement = createElementSSR;
 
 export const app = express();
@@ -26,14 +27,21 @@ app.use('*', async (req, res) => {
   const clientJs = '<script type="module" src="./src/main.tsx"></script>';
   const viteJs = '<script type="module" src="/@vite/client"></script>';
 
-  const html =
-    '<!DOCTYPE html>' +
-    (await toHtmlString(createElement(App, null), {
-      headInject: clientJs + viteJs,
-      route: url
-    }));
+  const options = {
+    headInject: clientJs + viteJs,
+    route: url
+  };
+
+  const promiseCache: Record<string, any> = {};
+
+  let html = '<!DOCTYPE html>' + (await toHtmlString(createElement(App, null), options, promiseCache));
+
+  html = html.replace(
+    '<!-- lampjs_cache_insert -->',
+    `<script id="_LAMPJS_DATA_" type="application/json">${JSON.stringify(promiseCache)}</script>`
+  );
 
   res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
 });
 
-app.listen(3000);
+app.listen(PORT);

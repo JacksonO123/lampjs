@@ -55,14 +55,15 @@ const isSingleTag = (tag: string) => {
   return ['br'].includes(tag);
 };
 
-type HtmlOptions = {
+export type HtmlOptions = {
   route: string;
   headInject: string;
 };
 
 export const toHtmlString = async (
   structure: DOMStructure | string,
-  options: HtmlOptions
+  options: HtmlOptions,
+  cache: Record<string, any>
 ): Promise<string> => {
   if (structure instanceof Reactive) {
     return structure.value.toString();
@@ -72,22 +73,34 @@ export const toHtmlString = async (
 
   if (structure.tag instanceof Function) {
     const props = {
-      ...(structure.attrs || {}),
+      ...structure.attrs,
       children: structure.children
     };
-    const res = (await structure.tag(props)) as unknown as DOMStructure | string[];
+
+    const promise =
+      // @ts-ignore
+      structure.tag === ServerSuspense ? structure.tag(props, options, cache) : structure.tag(props);
+
+    // @ts-ignore
+    let id: string | null = promise._lampjsSuspenseId !== undefined ? promise._lampjsSuspenseId : null;
+
+    const res = (await promise) as unknown as DOMStructure | string[];
+
+    if (id) cache[id] = res;
 
     if (Array.isArray(res)) {
       return res.join('');
     }
 
-    return await toHtmlString(res, options);
+    return await toHtmlString(res, options, cache);
   }
 
   let childrenHtml = '';
   if (structure.children !== undefined) {
     const newChildren = await Promise.all(
-      structure.children.map(async (child) => await toHtmlString(child as unknown as DOMStructure, options))
+      structure.children.map(
+        async (child) => await toHtmlString(child as unknown as DOMStructure, options, cache)
+      )
     );
 
     childrenHtml = newChildren.join('');
@@ -101,7 +114,9 @@ export const toHtmlString = async (
     return `${first} />`;
   }
 
-  return `${first}>${childrenHtml}${structure.tag === 'head' ? options.headInject : ''}</${structure.tag}>`;
+  return `${first}>${childrenHtml}${structure.tag === 'head' ? options.headInject : ''}${
+    structure.tag === 'body' ? '<!-- lampjs_cache_insert -->' : ''
+  }</${structure.tag}>`;
 };
 
 export const mountSSR = async (target: HTMLElement, newDom: JSX.Element) => {
@@ -109,7 +124,7 @@ export const mountSSR = async (target: HTMLElement, newDom: JSX.Element) => {
     newDom = await newDom;
   }
 
-  newDom.childNodes.forEach((node) => {
+  (newDom as JSX.NodeElements).childNodes.forEach((node) => {
     if (node.nodeName === 'BODY') {
       target.replaceWith(node);
     }
@@ -123,7 +138,7 @@ export const mountSSR = async (target: HTMLElement, newDom: JSX.Element) => {
         viteScript.src = '/@vite/client';
         viteScript.type = 'module';
 
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', () => {
           document.head.replaceWith(node);
           document.head.appendChild(devScript);
           document.head.appendChild(viteScript);
@@ -133,34 +148,39 @@ export const mountSSR = async (target: HTMLElement, newDom: JSX.Element) => {
   });
 };
 
-type SuspenseProps<T extends FetchResponse<any> | Promise<any>> = {
+type SuspenseProps<T extends FetchResponse<any> | Promise<any>, K extends boolean> = {
   // children is actually type DOMStructure
   children: T | JSX.Element;
   fallback: JSX.Element;
   render?: SuspenseFn<T>;
   decoder?: (value: ResponseData<ValueFromResponse<T>>) => any;
-  waitServer?: boolean;
-};
+  waitServer?: K;
+} & (K extends true
+  ? {
+      suspenseId: string;
+    }
+  : { suspenseId?: string });
 
-export const ServerSuspense = <T extends FetchResponse<any> | Promise<any>>({
-  children,
-  fallback,
-  decoder,
-  render,
-  waitServer
-}: SuspenseProps<T>) => {
+export const ServerSuspense = <T extends FetchResponse<any> | Promise<any>, K extends boolean>(
+  { children, fallback, decoder, render, waitServer, suspenseId }: SuspenseProps<T, K>,
+  options: HtmlOptions,
+  cache: Record<string, any>
+) => {
   if (import.meta.env.SSR) {
     if (waitServer) {
-      return Promise.all(
-        (children as unknown as DOMStructure[]).map((item) =>
-          toHtmlString(item, { headInject: '', route: '/' })
-        )
+      const res = Promise.all(
+        (children as unknown as DOMStructure[]).map((item) => toHtmlString(item, options, cache))
       ) as unknown as JSX.Element;
+
+      // @ts-ignore
+      res._lampjsSuspenseId = suspenseId;
+
+      return res;
     }
 
     return fallback;
   }
 
   // @ts-ignore
-  return createElementClient(Suspense, { fallback, render, decoder }, ...children);
+  return createElementClient(Suspense, { fallback, render, decoder }, children);
 };
