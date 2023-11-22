@@ -74,12 +74,17 @@ type CaseProps<T> = {
 export declare const Case: <T>({ value, children, isDefault }: CaseProps<T>) => CaseData<T>;
 export declare const elementIsNode: (...el: ComponentChild[]) => ComponentChild;
 export declare const wait: (el: JSX.Element) => HTMLDivElement;
-type SuspenseProps<T extends FetchResponse<any> | Promise<any>> = {
+type SuspenseProps<T extends FetchResponse<any> | Promise<any>, K extends boolean> = {
     children: T | Promise<any>;
     fallback: JSX.Element;
     render?: SuspenseFn<T>;
     decoder?: (value: ResponseData<ValueFromResponse<T>>) => any;
-};
-export declare const Suspense: <T extends Promise<any> | FetchResponse<any>>({ children, render, fallback, decoder }: SuspenseProps<T>) => JSX.Element;
+    fromServer?: K;
+} & (K extends true ? {
+    suspenseId: string;
+} : {
+    suspenseId?: string;
+});
+export declare const Suspense: <T extends Promise<any> | FetchResponse<any>, K extends boolean>({ children, render, fallback, decoder, fromServer, suspenseId }: SuspenseProps<T, K>) => JSX.Element | HTMLElement[];
 export declare const createElement: (tag: string | ComponentFactory, attrs: ComponentAttributes, ...children: ComponentChild[]) => JSX.Element;
 export {};

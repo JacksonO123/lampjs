@@ -581,38 +581,56 @@ export const wait = (el: JSX.Element) => {
   return placeholder;
 };
 
-type SuspenseProps<T extends FetchResponse<any> | Promise<any>> = {
+type SuspenseProps<T extends FetchResponse<any> | Promise<any>, K extends boolean> = {
   children: T | Promise<any>;
   fallback: JSX.Element;
   render?: SuspenseFn<T>;
   decoder?: (value: ResponseData<ValueFromResponse<T>>) => any;
-};
+  fromServer?: K;
+} & (K extends true
+  ? {
+      suspenseId: string;
+    }
+  : {
+      suspenseId?: string;
+    });
 
-export const Suspense = <T extends FetchResponse<any> | Promise<any>>({
+export const Suspense = <T extends FetchResponse<any> | Promise<any>, K extends boolean>({
   children,
   render,
   fallback,
-  decoder
-}: SuspenseProps<T>) => {
-  children
-    .then((current) => {
-      if (decoder) return decoder(current);
-      if (current instanceof Response) return current.json();
-      return Promise.resolve(current);
-    })
-    .then(async (val: ValueFromResponse<T>) => {
-      let newValue: any = val;
+  decoder,
+  fromServer,
+  suspenseId
+}: SuspenseProps<T, K>) => {
+  if (fromServer) {
+    const ssrCache = document.getElementById('_LAMPJS_DATA_');
+    if (ssrCache) {
+      const data: Record<string, string[]> = JSON.parse(ssrCache.innerHTML);
 
-      if (render !== undefined) {
-        newValue = render(val);
+      if (suspenseId && data[suspenseId]) {
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = data[suspenseId].join('');
+        return Array.from(wrapper.childNodes) as HTMLElement[];
       }
+    }
+  } else {
+    children
+      .then((current) => {
+        if (decoder) return decoder(current);
+        if (current instanceof Response) return current.json();
+        return Promise.resolve(current);
+      })
+      .then(async (val: ValueFromResponse<T>) => {
+        const el = render
+          ? render(val)
+          : !((val as any) instanceof Node)
+            ? document.createTextNode(val + '')
+            : (val as JSX.NodeElements);
 
-      if (!(newValue instanceof Node) && !Array.isArray(newValue)) {
-        newValue = document.createTextNode(val + '');
-      }
-
-      elementReplace(fallback as JSX.NodeElements, newValue);
-    });
+        elementReplace(fallback as JSX.NodeElements, el);
+      });
+  }
 
   return fallback;
 };

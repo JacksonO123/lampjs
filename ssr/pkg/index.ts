@@ -124,8 +124,11 @@ export const mountSSR = async (target: HTMLElement, newDom: JSX.Element) => {
 
   (newDom as JSX.NodeElements).childNodes.forEach((node) => {
     if (node.nodeName === 'BODY') {
+      const cacheData = document.getElementById('_LAMPJS_DATA_');
       target.replaceWith(node);
+      if (cacheData) document.body.appendChild(cacheData);
     }
+
     if (import.meta.env.DEV) {
       if (node.nodeName === 'HEAD') {
         const devScript = document.createElement('script');
@@ -180,5 +183,5 @@ export function ServerSuspense<T extends FetchResponse<any> | Promise<any>, K ex
   }
 
   // @ts-ignore
-  return createElementClient(Suspense, { fallback, render, decoder }, children);
+  return createElementClient(Suspense, { fallback, render, decoder, fromServer: true, suspenseId }, children);
 }

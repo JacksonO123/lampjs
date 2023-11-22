@@ -14,7 +14,7 @@ export type ValueFromResponse<T extends FetchResponse<any> | Promise<any>> = T e
 
 export type SuspenseFn<T extends FetchResponse<any> | Promise<any>> = (
   current: ValueFromResponse<T>
-) => JSX.Element;
+) => JSX.NodeElements;
 
 export type { JSX };
 export declare type ComponentChild =
