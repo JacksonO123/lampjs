@@ -7,12 +7,10 @@ import {
   ValueFromResponse
 } from '@jacksonotto/lampjs/dist/types';
 import { FetchResponse, Reactive, Suspense, createElement as createElementClient } from '@jacksonotto/lampjs';
+import { BuiltinServerComp, DOMStructure, HtmlOptions } from './types';
 
-export type DOMStructure = {
-  readonly tag: string | ComponentFactory;
-  readonly attrs: ComponentAttributes | null;
-  children: ComponentChild[];
-};
+const SINGLE_TAGS = ['br'];
+const BUILTIN_SERVER_COMPS: Function[] = [ServerSuspense];
 
 export const createElementSSR = (
   tag: string | ComponentFactory,
@@ -52,12 +50,11 @@ const attrsToString = (attrs: ComponentAttributes) => {
 };
 
 const isSingleTag = (tag: string) => {
-  return ['br'].includes(tag);
+  return SINGLE_TAGS.includes(tag);
 };
 
-export type HtmlOptions = {
-  route: string;
-  headInject: string;
+const isBuiltinServerComp = (tag: Function) => {
+  return BUILTIN_SERVER_COMPS.includes(tag);
 };
 
 export const toHtmlString = async (
@@ -72,14 +69,15 @@ export const toHtmlString = async (
   }
 
   if (structure.tag instanceof Function) {
-    const props = {
+    const props: ComponentAttributes = {
       ...structure.attrs,
+      // @ts-ignore
       children: structure.children
     };
 
-    const promise =
-      // @ts-ignore
-      structure.tag === ServerSuspense ? structure.tag(props, options, cache) : structure.tag(props);
+    const promise = isBuiltinServerComp(structure.tag)
+      ? (structure.tag as BuiltinServerComp)(props, options, cache)
+      : structure.tag(props);
 
     // @ts-ignore
     let id: string | null = promise._lampjsSuspenseId !== undefined ? promise._lampjsSuspenseId : null;
@@ -161,11 +159,11 @@ type SuspenseProps<T extends FetchResponse<any> | Promise<any>, K extends boolea
     }
   : { suspenseId?: string });
 
-export const ServerSuspense = <T extends FetchResponse<any> | Promise<any>, K extends boolean>(
+export function ServerSuspense<T extends FetchResponse<any> | Promise<any>, K extends boolean>(
   { children, fallback, decoder, render, waitServer, suspenseId }: SuspenseProps<T, K>,
   options: HtmlOptions,
   cache: Record<string, any>
-) => {
+) {
   if (import.meta.env.SSR) {
     if (waitServer) {
       const res = Promise.all(
@@ -183,4 +181,4 @@ export const ServerSuspense = <T extends FetchResponse<any> | Promise<any>, K ex
 
   // @ts-ignore
   return createElementClient(Suspense, { fallback, render, decoder }, children);
-};
+}
