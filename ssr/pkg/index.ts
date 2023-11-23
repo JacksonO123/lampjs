@@ -183,5 +183,5 @@ export function ServerSuspense<T extends FetchResponse<any> | Promise<any>, K ex
   }
 
   // @ts-ignore
-  return createElementClient(Suspense, { fallback, render, decoder, fromServer: true, suspenseId }, children);
+  return createElementClient(Suspense, { fallback, render, decoder, suspenseId }, children);
 }

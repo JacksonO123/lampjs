@@ -23,6 +23,12 @@ app.use(viteServer.middlewares);
 
 app.use('*', async (req, res) => {
   const url = req.url;
+  const params: Record<string, string> = req.params;
+
+  if (params['0'] !== url) {
+    res.end();
+    return;
+  }
 
   const clientJs = '<script type="module" src="./src/main.tsx"></script>';
   const viteJs = '<script type="module" src="/@vite/client"></script>';

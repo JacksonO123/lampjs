@@ -581,34 +581,27 @@ export const wait = (el: JSX.Element) => {
   return placeholder;
 };
 
-type SuspenseProps<T extends FetchResponse<any> | Promise<any>, K extends boolean> = {
+type SuspenseProps<T extends FetchResponse<any> | Promise<any>> = {
   children: T | Promise<any>;
   fallback: JSX.Element;
   render?: SuspenseFn<T>;
   decoder?: (value: ResponseData<ValueFromResponse<T>>) => any;
-  fromServer?: K;
-} & (K extends true
-  ? {
-      suspenseId: string;
-    }
-  : {
-      suspenseId?: string;
-    });
+  suspenseId?: string;
+};
 
-export const Suspense = <T extends FetchResponse<any> | Promise<any>, K extends boolean>({
+export const Suspense = <T extends FetchResponse<any> | Promise<any>>({
   children,
   render,
   fallback,
   decoder,
-  fromServer,
   suspenseId
-}: SuspenseProps<T, K>) => {
-  if (fromServer) {
+}: SuspenseProps<T>) => {
+  if (suspenseId) {
     const ssrCache = document.getElementById('_LAMPJS_DATA_');
     if (ssrCache) {
       const data: Record<string, string[]> = JSON.parse(ssrCache.innerHTML);
 
-      if (suspenseId && data[suspenseId]) {
+      if (data[suspenseId]) {
         const wrapper = document.createElement('div');
         wrapper.innerHTML = data[suspenseId].join('');
         return Array.from(wrapper.childNodes) as HTMLElement[];
