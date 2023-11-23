@@ -9,9 +9,9 @@ import.meta.env.SSR = true;
 
 globalThis.createElement = createElementSSR;
 
-export const app = express();
+const app = express();
 
-export const viteServer = await createViteServer({
+const viteServer = await createViteServer({
   server: {
     middlewareMode: true,
     hmr: true
