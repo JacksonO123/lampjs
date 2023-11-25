@@ -596,6 +596,24 @@ export const Suspense = <T extends FetchResponse<any> | Promise<any>>({
   decoder,
   suspenseId
 }: SuspenseProps<T>) => {
+  let elToReplace: JSX.Element | JSX.Element[] = fallback;
+
+  children
+    .then((current) => {
+      if (decoder) return decoder(current);
+      if (current instanceof Response) return current.json();
+      return Promise.resolve(current);
+    })
+    .then(async (val: ValueFromResponse<T>) => {
+      const el = render
+        ? render(val)
+        : !((val as any) instanceof Node)
+          ? document.createTextNode(val + '')
+          : (val as JSX.NodeElements);
+
+      elementReplace(elToReplace as JSX.NodeElements, el);
+    });
+
   if (suspenseId) {
     const ssrCache = document.getElementById('_LAMPJS_DATA_');
     if (ssrCache) {
@@ -604,28 +622,13 @@ export const Suspense = <T extends FetchResponse<any> | Promise<any>>({
       if (data[suspenseId]) {
         const wrapper = document.createElement('div');
         wrapper.innerHTML = data[suspenseId].join('');
-        return Array.from(wrapper.childNodes) as HTMLElement[];
+        const cachedEl = Array.from(wrapper.childNodes) as HTMLElement[];
+        elToReplace = cachedEl;
       }
     }
-  } else {
-    children
-      .then((current) => {
-        if (decoder) return decoder(current);
-        if (current instanceof Response) return current.json();
-        return Promise.resolve(current);
-      })
-      .then(async (val: ValueFromResponse<T>) => {
-        const el = render
-          ? render(val)
-          : !((val as any) instanceof Node)
-            ? document.createTextNode(val + '')
-            : (val as JSX.NodeElements);
-
-        elementReplace(fallback as JSX.NodeElements, el);
-      });
   }
 
-  return fallback;
+  return elToReplace;
 };
 
 export const createElement = (
