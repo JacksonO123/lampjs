@@ -1,8 +1,8 @@
 import { ComponentAttributes, ComponentChild, ComponentFactory } from '@jacksonotto/lampjs/dist/types';
 
-export type DOMStructure = {
+export type DOMStructure<T = ComponentAttributes> = {
   readonly tag: string | ComponentFactory;
-  readonly attrs: ComponentAttributes | null;
+  readonly attrs: T | null;
   children: ComponentChild[];
 };
 
@@ -16,3 +16,5 @@ export type BuiltinServerComp = (
   options: HtmlOptions,
   cache: Record<string, any>
 ) => JSX.Element;
+
+export type CacheType = Record<string, any>;

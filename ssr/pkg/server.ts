@@ -2,6 +2,7 @@ import express from 'express';
 import { toHtmlString, createElementSSR } from './index';
 import App from '../src/App';
 import { createServer as createViteServer } from 'vite';
+import { CacheType } from './types';
 
 const PORT = 3000;
 
@@ -22,23 +23,17 @@ const viteServer = await createViteServer({
 app.use(viteServer.middlewares);
 
 app.use('*', async (req, res) => {
-  const url = req.url;
   const params: Record<string, string> = req.params;
-
-  if (params['0'] !== url) {
-    res.end();
-    return;
-  }
 
   const clientJs = '<script type="module" src="./src/main.tsx"></script>';
   const viteJs = '<script type="module" src="/@vite/client"></script>';
 
   const options = {
     headInject: clientJs + viteJs,
-    route: url
+    route: params[0]
   };
 
-  const promiseCache: Record<string, any> = {};
+  const promiseCache: CacheType = {};
 
   let html = '<!DOCTYPE html>' + (await toHtmlString(createElement(App, null), options, promiseCache));
 

@@ -118,7 +118,12 @@ export const reactive = <T extends readonly (Reactive<any> | any)[], K>(
 };
 
 const compChildIsEl = (element: ComponentChild) => {
-  return element instanceof HTMLElement || element instanceof SVGElement || element instanceof Text;
+  return (
+    element instanceof HTMLElement ||
+    element instanceof SVGElement ||
+    element instanceof Text ||
+    typeof element === 'string'
+  );
 };
 
 export const reactiveElement = <T extends readonly Reactive<any>[]>(
@@ -172,11 +177,15 @@ const trimPath = (path: string) => {
   return path.trim().replace(/^\/*/, '').replace(/\/*$/g, '');
 };
 
-const validChild = (child: ComponentChild) => {
+const validChild = (child: any) => {
   return (!Array.isArray(child) && child !== null) || (Array.isArray(child) && child.length !== 0);
 };
 
-const getRouteElement = (path: string, pathAcc: string, data: RouteData): ComponentChild => {
+export const getRouteElement = <T = ComponentChild>(
+  path: string,
+  pathAcc: string,
+  data: RouteData<T>
+): T | T[] | null => {
   const dataPath = trimPath(data.path);
 
   const currentPath = pathAcc + (pathAcc === '/' ? '' : '/') + dataPath;
@@ -193,7 +202,11 @@ const getRouteElement = (path: string, pathAcc: string, data: RouteData): Compon
 
     if (pathPart.startsWith(newMatch)) {
       for (let i = 0; i < data.nested.length; i++) {
-        const el = getRouteElement(path, pathAcc + (pathAcc === '/' ? '' : '/') + pathPart, data.nested[i]);
+        const el = getRouteElement<T>(
+          path,
+          pathAcc + (pathAcc === '/' ? '' : '/') + pathPart,
+          data.nested[i]
+        );
         if (validChild(el)) return el;
       }
 
@@ -208,7 +221,7 @@ const getRouteElement = (path: string, pathAcc: string, data: RouteData): Compon
 
   if (path.startsWith(currentPath)) {
     for (let i = 0; i < data.nested.length; i++) {
-      const el = getRouteElement(path, currentPath, data.nested[i]);
+      const el = getRouteElement<T>(path, currentPath, data.nested[i]);
       if (el !== null) return el;
     }
   }
@@ -218,11 +231,11 @@ const getRouteElement = (path: string, pathAcc: string, data: RouteData): Compon
 
 const currentPathname = createState('/');
 
-export class RouteData {
+export class RouteData<T = ComponentChild> {
   readonly path: string;
-  readonly element: ComponentChild;
-  readonly nested: RouteData[];
-  constructor(path: string, element: ComponentChild, nested: RouteData[]) {
+  readonly element: T;
+  readonly nested: RouteData<T>[];
+  constructor(path: string, element: T, nested: RouteData<T>[]) {
     this.path = path;
     this.element = element;
     this.nested = nested;
@@ -259,14 +272,14 @@ export const Router = (props: RouterPropsJSX) => {
         }
 
         return page404();
-      } else {
-        if (children instanceof RouteData) {
-          const el = getRouteElement(path, '/', children);
-          if (validChild(el)) return el;
-        }
       }
 
-      return document.createElement('div');
+      if (children instanceof RouteData) {
+        const el = getRouteElement(path, '/', children);
+        if (validChild(el)) return el;
+      }
+
+      return page404();
     },
     [currentPathname()]
   );
@@ -292,8 +305,8 @@ export const Route = ({ path, children }: RouteProps) => {
   } else {
     if (children instanceof RouteData) {
       nested.push(children);
+      children = [];
     }
-    children = [];
   }
 
   return new RouteData(path, children, nested);

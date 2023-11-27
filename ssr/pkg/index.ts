@@ -6,11 +6,19 @@ import {
   ResponseData,
   ValueFromResponse
 } from '@jacksonotto/lampjs/dist/types';
-import { FetchResponse, Reactive, Suspense, createElement as createElementClient } from '@jacksonotto/lampjs';
-import { BuiltinServerComp, DOMStructure, HtmlOptions } from './types';
+import {
+  FetchResponse,
+  Reactive,
+  RouteData,
+  Suspense,
+  createElement as createElementClient,
+  getRouteElement,
+  Router
+} from '@jacksonotto/lampjs';
+import { BuiltinServerComp, CacheType, DOMStructure, HtmlOptions } from './types';
 
 const SINGLE_TAGS = ['br'];
-const BUILTIN_SERVER_COMPS: Function[] = [ServerSuspense];
+const BUILTIN_SERVER_COMPS: Function[] = [ServerSuspense, ServerRouter];
 
 export const createElementSSR = (
   tag: string | ComponentFactory,
@@ -42,7 +50,7 @@ const attrsToString = (attrs: ComponentAttributes) => {
   if (attrs === null) return [];
 
   return Object.entries(attrs).reduce((acc, [key, value]) => {
-    if (value instanceof Function || value === null || value === undefined) return acc;
+    if (typeof value === 'function' || value === null || value === undefined) return acc;
 
     acc.push(`${formatAttr(key)}="${sanitizeQuotes(value.toString())}"`);
     return acc;
@@ -60,7 +68,7 @@ const isBuiltinServerComp = (tag: Function) => {
 export const toHtmlString = async (
   structure: DOMStructure | string,
   options: HtmlOptions,
-  cache: Record<string, any>
+  cache: CacheType
 ): Promise<string> => {
   if (structure instanceof Reactive) {
     return structure.value.toString();
@@ -68,7 +76,7 @@ export const toHtmlString = async (
     return structure;
   }
 
-  if (structure.tag instanceof Function) {
+  if (typeof structure.tag === 'function') {
     const props: ComponentAttributes = {
       ...structure.attrs,
       // @ts-ignore
@@ -165,7 +173,7 @@ type SuspenseProps<T extends FetchResponse<any> | Promise<any>, K extends boolea
 export function ServerSuspense<T extends FetchResponse<any> | Promise<any>, K extends boolean>(
   { children, fallback, decoder, render, waitServer, suspenseId }: SuspenseProps<T, K>,
   options: HtmlOptions,
-  cache: Record<string, any>
+  cache: CacheType
 ) {
   if (import.meta.env.SSR) {
     if (waitServer) {
@@ -184,4 +192,61 @@ export function ServerSuspense<T extends FetchResponse<any> | Promise<any>, K ex
 
   // @ts-ignore
   return createElementClient(Suspense, { fallback, render, decoder, suspenseId }, children);
+}
+
+type ServerRouterPropsJSX = {
+  children: JSX.Element | JSX.Element[];
+};
+
+type ServerRouterProps = {
+  children: DOMStructure[];
+};
+
+export function ServerRouter(props: ServerRouterPropsJSX, options: HtmlOptions, cache: CacheType) {
+  const { children } = props as unknown as ServerRouterProps;
+
+  if (import.meta.env.SSR) {
+    const handleChildRoute = (child: DOMStructure) => {
+      if (typeof child.tag === 'function') {
+        const routeData = child.tag({
+          ...child.attrs,
+          children: child.children
+        }) as unknown as RouteData<DOMStructure>;
+        const el = getRouteElement<DOMStructure>(options.route, '/', routeData);
+
+        if (Array.isArray(el)) {
+          return el.map((item) => toHtmlString(item, options, cache));
+        } else if (el !== null) {
+          return [toHtmlString(el, options, cache)];
+        }
+      }
+
+      return null;
+    };
+
+    let res: Promise<string | string[]>;
+
+    if (Array.isArray(children)) {
+      res = Promise.all(
+        children
+          .reduce((acc, curr) => {
+            const temp = handleChildRoute(curr);
+
+            if (temp) {
+              acc.push(temp);
+            }
+
+            return acc;
+          }, [] as Promise<string>[][])
+          .flat()
+      );
+    } else {
+      res = Promise.all(handleChildRoute(children) || '');
+    }
+
+    return res as unknown as JSX.Element;
+  } else {
+    // @ts-ignore
+    return createElementClient(Router, null, ...children);
+  }
 }

@@ -23,11 +23,12 @@ export declare const reactiveElement: <T extends readonly Reactive<any>[]>(fn: (
 export declare const Fragment: ({ children }: {
     children: ComponentChild;
 }) => ComponentChild;
-export declare class RouteData {
+export declare const getRouteElement: <T = ComponentChild>(path: string, pathAcc: string, data: RouteData<T>) => T | T[] | null;
+export declare class RouteData<T = ComponentChild> {
     readonly path: string;
-    readonly element: ComponentChild;
-    readonly nested: RouteData[];
-    constructor(path: string, element: ComponentChild, nested: RouteData[]);
+    readonly element: T;
+    readonly nested: RouteData<T>[];
+    constructor(path: string, element: T, nested: RouteData<T>[]);
 }
 type RouterPropsJSX = {
     children: JSX.Element | JSX.Element[];
@@ -37,7 +38,7 @@ type RouteProps = {
     path: string;
     children: ComponentChild;
 };
-export declare const Route: ({ path, children }: RouteProps) => RouteData;
+export declare const Route: ({ path, children }: RouteProps) => RouteData<string | number | boolean | JSX.Element | ComponentChild[] | Reactive<any> | Promise<any> | null | undefined>;
 type LinkProps = {
     children: ComponentChild;
     href: string;
