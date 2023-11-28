@@ -4,10 +4,10 @@ import {
   ComponentChild,
   SuspenseFn,
   ResponseData,
-  ValueFromResponse
-} from '@jacksonotto/lampjs/dist/types';
+  ValueFromResponse,
+  FetchResponse
+} from '@jacksonotto/lampjs/types';
 import {
-  FetchResponse,
   Reactive,
   RouteData,
   Suspense,
@@ -15,7 +15,7 @@ import {
   getRouteElement,
   Router
 } from '@jacksonotto/lampjs';
-import { BuiltinServerComp, CacheType, DOMStructure, HtmlOptions } from './types';
+import { BuiltinServerComp, CacheType, DOMStructure, HtmlOptions } from './types.js';
 
 const SINGLE_TAGS = ['br'];
 const BUILTIN_SERVER_COMPS: Function[] = [ServerSuspense, ServerRouter];
@@ -137,7 +137,8 @@ export const mountSSR = async (target: HTMLElement, newDom: JSX.Element) => {
       if (cacheData) document.body.appendChild(cacheData);
     }
 
-    if (import.meta.env.DEV) {
+    // if (import.meta.env.DEV) {
+    if (true) {
       if (node.nodeName === 'HEAD') {
         const devScript = document.createElement('script');
         devScript.src = './src/main.tsx';
@@ -205,6 +206,7 @@ type ServerRouterProps = {
 export function ServerRouter(props: ServerRouterPropsJSX, options: HtmlOptions, cache: CacheType) {
   const { children } = props as unknown as ServerRouterProps;
 
+  console.log(children);
   if (import.meta.env.SSR) {
     const handleChildRoute = (child: DOMStructure) => {
       if (typeof child.tag === 'function') {

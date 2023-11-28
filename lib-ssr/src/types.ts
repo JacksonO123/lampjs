@@ -1,4 +1,4 @@
-import { ComponentAttributes, ComponentChild, ComponentFactory } from '@jacksonotto/lampjs/dist/types';
+import { ComponentAttributes, ComponentChild, ComponentFactory } from '@jacksonotto/lampjs/types';
 
 export type DOMStructure<T = ComponentAttributes> = {
   readonly tag: string | ComponentFactory;

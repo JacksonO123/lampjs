@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 import { HtmlOptions, createElementSSR } from './index';
 
 declare global {
