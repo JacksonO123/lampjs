@@ -1,5 +1,5 @@
-// import { startServer } from '/Users/jacksonotto/code/lampjs/lib-ssr/dist/server.js';
+// import { startServer } from '@jacksonotto/lampjs-ssr/dist/server';
 import { startServer } from '@jacksonotto/lampjs-ssr/server';
-import App from './src/App.js';
+import App from './src/App';
 
 startServer(App);

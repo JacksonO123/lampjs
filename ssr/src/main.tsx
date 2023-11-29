@@ -1,5 +1,4 @@
 import { mountSSR } from '@jacksonotto/lampjs-ssr';
-// import { mountSSR } from '../pkg';
-import App from './App.js';
+import App from './App';
 
 mountSSR(document.body, <App />);

@@ -24,7 +24,10 @@
       "import": "./dist/server.js",
       "types": "./dist/server.d.ts"
     },
-    "./package.json": "./package.json"
+    "./dist/server": {
+      "import": "./dist/server.js",
+      "types": "./dist/server.d.ts"
+    }
   },
   "devDependencies": {
     "@types/express": "^4.17.21",

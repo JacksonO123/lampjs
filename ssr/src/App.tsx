@@ -1,7 +1,6 @@
 import { ServerSuspense } from '@jacksonotto/lampjs-ssr';
-// import { ServerSuspense } from '../pkg';
-import Test from './Test.js';
-import Async from './Async.js';
+import Test from './Test';
+import Async from './Async';
 
 const App = () => {
   const handleClick = () => {

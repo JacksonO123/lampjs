@@ -1,4 +1,4 @@
-import Test from './Test.js';
+import Test from './Test';
 
 const Async = async () => {
   const res = await fetch<{ hello: 'world' }>('http://localhost:3001');
