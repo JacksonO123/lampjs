@@ -5,6 +5,7 @@ import { CacheType } from './types.js';
 import { ComponentFactory } from '@jacksonotto/lampjs/types';
 import { readFileSync, readdirSync } from 'fs';
 import { resolve } from 'path';
+import chokidar from 'chokidar';
 
 const getStyleTags = () => {
   let res = '';
@@ -20,12 +21,37 @@ const getStyleTags = () => {
   return res;
 };
 
-export const startServer = async (App: ComponentFactory, prod: boolean, port = 3000) => {
+function clearModuleCache(moduleName: string) {
+  delete require.cache[require.resolve(moduleName)];
+}
+
+export const startServer = async (prod: boolean, port = 3000) => {
   // @ts-ignore
   if (!import.meta.env) import.meta.env = {};
   import.meta.env.SSR = true;
 
   globalThis.createElement = createElementSSR;
+
+  const cwd = process.cwd();
+  let App = (await import(cwd + '/src/main')).default as ComponentFactory;
+  const watcher = chokidar.watch(resolve(cwd, 'src'));
+  let canWatch = false;
+
+  setTimeout(() => {
+    canWatch = true;
+  }, 100);
+
+  const thing = async (path: string) => {
+    if (!canWatch) return;
+
+    const moduleUrl = resolve(cwd, 'src', 'main.tsx');
+    clearModuleCache(path);
+    clearModuleCache(moduleUrl);
+    App = (await import(resolve(moduleUrl))).default;
+  };
+
+  watcher.on('add', thing);
+  watcher.on('change', thing);
 
   const app = express();
 
@@ -40,7 +66,6 @@ export const startServer = async (App: ComponentFactory, prod: boolean, port = 3
   app.use(viteServer.middlewares);
 
   app.use('*', async (req, res) => {
-    const cwd = process.cwd();
     const params: Record<string, string> = req.params;
     const url = params[0];
     const parts = url.slice(1).split('/');

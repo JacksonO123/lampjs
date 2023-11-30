@@ -74,10 +74,13 @@ export const toHtmlString = async (structure, options, cache) => {
     }
     return `${first}>${childrenHtml}${structure.tag === 'head' ? options.headInject : ''}${structure.tag === 'body' ? '<!-- lampjs_cache_insert -->' : ''}</${structure.tag}>`;
 };
-export const mountSSR = async (target, newDom) => {
+export const mountSSR = async (newDom) => {
+    if (import.meta.env.SSR)
+        return;
     if (newDom instanceof Promise) {
         newDom = await newDom;
     }
+    const target = document.body;
     newDom.childNodes.forEach((node) => {
         // let cacheData: HTMLElement | null = null;
         if (node.nodeName === 'BODY') {

@@ -2,7 +2,7 @@ import { ComponentFactory, ComponentAttributes, ComponentChild, SuspenseFn, Resp
 import { CacheType, DOMStructure, HtmlOptions } from './types.js';
 export declare const createElementSSR: (tag: string | ComponentFactory, attrs: ComponentAttributes | null, ...children: ComponentChild[]) => DOMStructure;
 export declare const toHtmlString: (structure: DOMStructure | string, options: HtmlOptions, cache: CacheType) => Promise<string>;
-export declare const mountSSR: (target: HTMLElement, newDom: JSX.Element) => Promise<void>;
+export declare const mountSSR: (newDom: JSX.Element) => Promise<void>;
 type SuspenseProps<T extends FetchResponse<any> | Promise<any>, K extends boolean> = {
     children: T | JSX.Element;
     fallback: JSX.Element;

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "npx nodemon -e '*' --watch src --watch pkg --exec bun run server.ts",
+    "dev": "bun run server.ts",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },

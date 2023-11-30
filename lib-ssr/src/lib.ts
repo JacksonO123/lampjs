@@ -125,10 +125,14 @@ export const toHtmlString = async (
   }</${structure.tag}>`;
 };
 
-export const mountSSR = async (target: HTMLElement, newDom: JSX.Element) => {
+export const mountSSR = async (newDom: JSX.Element) => {
+  if (import.meta.env.SSR) return;
+
   if (newDom instanceof Promise) {
     newDom = await newDom;
   }
+
+  const target = document.body;
 
   (newDom as JSX.NodeElements).childNodes.forEach((node) => {
     // let cacheData: HTMLElement | null = null;

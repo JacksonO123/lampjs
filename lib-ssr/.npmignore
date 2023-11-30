@@ -1,2 +1,4 @@
 /node_modules
+/src
+pnpm-lock.yaml
 .prettierrc

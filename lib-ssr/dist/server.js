@@ -3,6 +3,7 @@ import { toHtmlString, createElementSSR } from './lib.js';
 import { createServer as createViteServer } from 'vite';
 import { readFileSync, readdirSync } from 'fs';
 import { resolve } from 'path';
+import chokidar from 'chokidar';
 const getStyleTags = () => {
     let res = '';
     const cwd = process.cwd();
@@ -14,12 +15,32 @@ const getStyleTags = () => {
     });
     return res;
 };
-export const startServer = async (App, prod, port = 3000) => {
+function clearModuleCache(moduleName) {
+    delete require.cache[require.resolve(moduleName)];
+}
+export const startServer = async (prod, port = 3000) => {
     // @ts-ignore
     if (!import.meta.env)
         import.meta.env = {};
     import.meta.env.SSR = true;
     globalThis.createElement = createElementSSR;
+    const cwd = process.cwd();
+    let App = (await import(cwd + '/src/main')).default;
+    const watcher = chokidar.watch(resolve(cwd, 'src'));
+    let canWatch = false;
+    setTimeout(() => {
+        canWatch = true;
+    }, 100);
+    const thing = async (path) => {
+        if (!canWatch)
+            return;
+        const moduleUrl = resolve(cwd, 'src', 'main.tsx');
+        clearModuleCache(path);
+        clearModuleCache(moduleUrl);
+        App = (await import(resolve(moduleUrl))).default;
+    };
+    watcher.on('add', thing);
+    watcher.on('change', thing);
     const app = express();
     const viteServer = await createViteServer({
         server: {
@@ -30,7 +51,6 @@ export const startServer = async (App, prod, port = 3000) => {
     });
     app.use(viteServer.middlewares);
     app.use('*', async (req, res) => {
-        const cwd = process.cwd();
         const params = req.params;
         const url = params[0];
         const parts = url.slice(1).split('/');
