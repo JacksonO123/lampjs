@@ -135,8 +135,6 @@ export const mountSSR = async (newDom: JSX.Element) => {
   const target = document.body;
 
   (newDom as JSX.NodeElements).childNodes.forEach((node) => {
-    // let cacheData: HTMLElement | null = null;
-
     if (node.nodeName === 'BODY') {
       const cacheData = document.getElementById('_LAMPJS_DATA_');
       target.replaceWith(node);
@@ -178,7 +176,8 @@ export const mountSSR = async (newDom: JSX.Element) => {
           children.forEach((item) => {
             if (
               (item instanceof HTMLStyleElement && item.type === 'text/css') ||
-              (item instanceof HTMLLinkElement && item.rel === 'stylesheet')
+              (item instanceof HTMLLinkElement && item.rel === 'stylesheet') ||
+              item instanceof HTMLTitleElement
             ) {
               preservedElements.push(item);
             }

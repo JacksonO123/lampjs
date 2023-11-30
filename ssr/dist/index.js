@@ -194,10 +194,11 @@ const createElement = (tag, attrs, ...children) => {
   applyChildren(element, children);
   return element;
 };
-const mountSSR = async (target, newDom) => {
+const mountSSR = async (newDom) => {
   if (newDom instanceof Promise) {
     newDom = await newDom;
   }
+  const target = document.body;
   newDom.childNodes.forEach((node) => {
     if (node.nodeName === "BODY") {
       const cacheData = document.getElementById("_LAMPJS_DATA_");
@@ -214,7 +215,7 @@ const mountSSR = async (target, newDom) => {
         document.addEventListener("DOMContentLoaded", () => {
           const children = Array.from(document.head.childNodes);
           children.forEach((item) => {
-            if (item instanceof HTMLStyleElement && item.type === "text/css" || item instanceof HTMLLinkElement && item.rel === "stylesheet") {
+            if (item instanceof HTMLStyleElement && item.type === "text/css" || item instanceof HTMLLinkElement && item.rel === "stylesheet" || item instanceof HTMLTitleElement) {
               preservedElements.push(item);
             }
           });
@@ -238,12 +239,18 @@ const App = () => {
   const handleClick = () => {
     console.log("clicked");
   };
-  return /* @__PURE__ */ createElement("html", null, /* @__PURE__ */ createElement("head", null, /* @__PURE__ */ createElement(
+  return /* @__PURE__ */ createElement("html", { lang: "en" }, /* @__PURE__ */ createElement("head", null, /* @__PURE__ */ createElement(
     "meta",
     {
       name: "viewport",
       content: "width=device-width, initial-scale=1.0"
     }
+  ), /* @__PURE__ */ createElement(
+    "meta",
+    {
+      name: "description",
+      content: "Server side rendering !!!"
+    }
   ), /* @__PURE__ */ createElement("title", null, "test")), /* @__PURE__ */ createElement("body", { class: "make-blue" }, "in body pt2.3", /* @__PURE__ */ createElement("br", null), /* @__PURE__ */ createElement(Test, { onClick: handleClick })));
 };
-mountSSR(document.body, /* @__PURE__ */ createElement(App, null));
+mountSSR(/* @__PURE__ */ createElement(App, null));

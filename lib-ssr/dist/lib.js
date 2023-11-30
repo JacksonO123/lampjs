@@ -82,7 +82,6 @@ export const mountSSR = async (newDom) => {
     }
     const target = document.body;
     newDom.childNodes.forEach((node) => {
-        // let cacheData: HTMLElement | null = null;
         if (node.nodeName === 'BODY') {
             const cacheData = document.getElementById('_LAMPJS_DATA_');
             target.replaceWith(node);
@@ -117,7 +116,8 @@ export const mountSSR = async (newDom) => {
                     const children = Array.from(document.head.childNodes);
                     children.forEach((item) => {
                         if ((item instanceof HTMLStyleElement && item.type === 'text/css') ||
-                            (item instanceof HTMLLinkElement && item.rel === 'stylesheet')) {
+                            (item instanceof HTMLLinkElement && item.rel === 'stylesheet') ||
+                            item instanceof HTMLTitleElement) {
                             preservedElements.push(item);
                         }
                     });

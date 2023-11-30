@@ -1,7 +1,7 @@
 import express from 'express';
 import { toHtmlString, createElementSSR } from './lib.js';
 import { createServer as createViteServer } from 'vite';
-import { readFileSync, readdirSync } from 'fs';
+import { readFileSync, readdirSync, existsSync } from 'fs';
 import { resolve } from 'path';
 import chokidar from 'chokidar';
 const getStyleTags = () => {
@@ -31,7 +31,7 @@ export const startServer = async (prod, port = 3000) => {
     setTimeout(() => {
         canWatch = true;
     }, 100);
-    const thing = async (path) => {
+    const handleFileChange = async (path) => {
         if (!canWatch)
             return;
         const moduleUrl = resolve(cwd, 'src', 'main.tsx');
@@ -39,8 +39,8 @@ export const startServer = async (prod, port = 3000) => {
         clearModuleCache(moduleUrl);
         App = (await import(resolve(moduleUrl))).default;
     };
-    watcher.on('add', thing);
-    watcher.on('change', thing);
+    watcher.on('add', handleFileChange);
+    watcher.on('change', handleFileChange);
     const app = express();
     const viteServer = await createViteServer({
         server: {
@@ -53,18 +53,26 @@ export const startServer = async (prod, port = 3000) => {
     app.use('*', async (req, res) => {
         const params = req.params;
         const url = params[0];
-        const parts = url.slice(1).split('/');
+        const contentTypes = {
+            js: 'application/javascript',
+            css: 'text/css',
+            txt: 'text'
+        };
         if (prod) {
-            if (parts.length === 1) {
-                if (parts[0].endsWith('.js')) {
-                    const data = readFileSync(resolve(cwd, 'dist', parts[0]));
-                    res.status(200).set({ 'Content-Type': 'application/javascript' }).end(data);
+            const reg = new RegExp(/\..*$/);
+            if (reg.test(url)) {
+                const ext = url.split('.').at(-1);
+                const fileUrl = resolve(cwd, 'dist', url.slice(1));
+                const exists = existsSync(fileUrl);
+                if (exists) {
+                    const data = readFileSync(fileUrl);
+                    res
+                        .status(200)
+                        .set({ 'Content-Type': contentTypes[ext] || 'text' })
+                        .end(data);
                 }
-            }
-            else if (parts.length === 2) {
-                if (parts[0] === 'assets') {
-                    const data = readFileSync(resolve(cwd, 'dist', 'assets', parts[1]));
-                    res.status(200).set({ 'Content-Type': 'text/css' }).end(data);
+                else {
+                    res.status(404).end('404 page not found');
                 }
             }
         }

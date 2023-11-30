@@ -3,7 +3,7 @@ import { toHtmlString, createElementSSR } from './lib.js';
 import { createServer as createViteServer } from 'vite';
 import { CacheType } from './types.js';
 import { ComponentFactory } from '@jacksonotto/lampjs/types';
-import { readFileSync, readdirSync } from 'fs';
+import { readFileSync, readdirSync, existsSync } from 'fs';
 import { resolve } from 'path';
 import chokidar from 'chokidar';
 
@@ -41,7 +41,7 @@ export const startServer = async (prod: boolean, port = 3000) => {
     canWatch = true;
   }, 100);
 
-  const thing = async (path: string) => {
+  const handleFileChange = async (path: string) => {
     if (!canWatch) return;
 
     const moduleUrl = resolve(cwd, 'src', 'main.tsx');
@@ -50,8 +50,8 @@ export const startServer = async (prod: boolean, port = 3000) => {
     App = (await import(resolve(moduleUrl))).default;
   };
 
-  watcher.on('add', thing);
-  watcher.on('change', thing);
+  watcher.on('add', handleFileChange);
+  watcher.on('change', handleFileChange);
 
   const app = express();
 
@@ -68,18 +68,29 @@ export const startServer = async (prod: boolean, port = 3000) => {
   app.use('*', async (req, res) => {
     const params: Record<string, string> = req.params;
     const url = params[0];
-    const parts = url.slice(1).split('/');
+
+    const contentTypes = {
+      js: 'application/javascript',
+      css: 'text/css',
+      txt: 'text'
+    };
 
     if (prod) {
-      if (parts.length === 1) {
-        if (parts[0].endsWith('.js')) {
-          const data = readFileSync(resolve(cwd, 'dist', parts[0]));
-          res.status(200).set({ 'Content-Type': 'application/javascript' }).end(data);
-        }
-      } else if (parts.length === 2) {
-        if (parts[0] === 'assets') {
-          const data = readFileSync(resolve(cwd, 'dist', 'assets', parts[1]));
-          res.status(200).set({ 'Content-Type': 'text/css' }).end(data);
+      const reg = new RegExp(/\..*$/);
+      if (reg.test(url)) {
+        const ext = url.split('.').at(-1) as string;
+        const fileUrl = resolve(cwd, 'dist', url.slice(1));
+
+        const exists = existsSync(fileUrl);
+
+        if (exists) {
+          const data = readFileSync(fileUrl);
+          res
+            .status(200)
+            .set({ 'Content-Type': contentTypes[ext as keyof typeof contentTypes] || 'text' })
+            .end(data);
+        } else {
+          res.status(404).end('404 page not found');
         }
       }
     }
