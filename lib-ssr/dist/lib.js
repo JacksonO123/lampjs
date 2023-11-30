@@ -82,7 +82,6 @@ export const mountSSR = async (newDom) => {
     }
     const target = document.body;
     newDom.childNodes.forEach((node) => {
-        // let cacheData: HTMLElement | null = null;
         if (node.nodeName === 'BODY') {
             const cacheData = document.getElementById('_LAMPJS_DATA_');
             target.replaceWith(node);
@@ -117,13 +116,13 @@ export const mountSSR = async (newDom) => {
                     const children = Array.from(document.head.childNodes);
                     children.forEach((item) => {
                         if ((item instanceof HTMLStyleElement && item.type === 'text/css') ||
-                            (item instanceof HTMLLinkElement && item.rel === 'stylesheet')) {
+                            (item instanceof HTMLLinkElement && item.rel === 'stylesheet') ||
+                            item instanceof HTMLTitleElement) {
                             preservedElements.push(item);
                         }
                     });
                     document.head.replaceWith(node);
                     document.head.appendChild(devScript);
-                    // document.head.appendChild(viteScript);
                     preservedElements.forEach((el) => document.head.appendChild(el));
                 });
             }
@@ -143,6 +142,9 @@ export function ServerSuspense({ children, fallback, decoder, render, waitServer
     // @ts-ignore
     return createElementClient(Suspense, { fallback, render, decoder, suspenseId }, children);
 }
+const page404 = () => {
+    return createElementSSR('html', null, createElementSSR('head', null, createElementSSR('meta', { name: 'viewport', content: 'width=device-width, initial-scale=1.0' }), createElementSSR('title', null, '404 page not found')), createElementSSR('body', null, createElementSSR('span', null, '404 page not found')));
+};
 export function ServerRouter(props, options, cache) {
     const { children } = props;
     if (import.meta.env.SSR) {
@@ -164,7 +166,7 @@ export function ServerRouter(props, options, cache) {
         };
         let res;
         if (Array.isArray(children)) {
-            res = Promise.all(children
+            const temp = children
                 .reduce((acc, curr) => {
                 const temp = handleChildRoute(curr);
                 if (temp) {
@@ -172,7 +174,11 @@ export function ServerRouter(props, options, cache) {
                 }
                 return acc;
             }, [])
-                .flat());
+                .flat();
+            if (temp.length === 0) {
+                temp.push(toHtmlString(page404(), options, cache));
+            }
+            res = Promise.all(temp);
         }
         else {
             res = Promise.all(handleChildRoute(children) || '');
@@ -181,6 +187,6 @@ export function ServerRouter(props, options, cache) {
     }
     else {
         // @ts-ignore
-        return createElementClient(Router, null, ...children);
+        return createElementClient(Router, null, ...(Array.isArray(children) ? children : [children]));
     }
 }
