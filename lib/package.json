@@ -5,19 +5,18 @@
   "types": "./dist/index.d.ts",
   "description": "A lightweight front-end JavaScript framework",
   "author": "Jackson Otto",
-  "version": "4.4.7",
+  "version": "4.4.9",
   "scripts": {
     "build": "npx tsc",
     "dev": "npx nodemon -e ts --watch src --exec npx tsc"
   },
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": "./dist/lampjs.js",
+      "types": "./dist/lampjs.d.ts"
     },
-    "./jsx-runtime": {
-      "types": "./dist/jsx-runtime.d.ts",
-      "import": "./dist/jsx-runtime.js"
+    "./types": {
+      "types": "./dist/types.d.ts"
     }
   },
   "devDependencies": {

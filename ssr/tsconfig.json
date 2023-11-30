@@ -17,7 +17,9 @@
     "jsx": "react",
     "jsxFactory": "createElement",
     "jsxFragmentFactory": "Fragment",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "@jacksonotto/lampjs-ssr/*": ["./node_modules/@jacksonotto/lampjs-ssr/dist/*"]
+    }
   }
-  // "include": ["src"]
 }
