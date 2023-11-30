@@ -5,7 +5,7 @@
   "types": "./dist/index.d.ts",
   "description": "A server side rendering runtime for the LampJs framework",
   "author": "Jackson Otto",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "scripts": {
     "build": "npx tsc",
     "watch": "npx nodemon -e ts --watch src --exec npx tsc",
@@ -31,6 +31,10 @@
     "@types/node": "latest",
     "nodemon": "latest",
     "typescript": "latest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JacksonO123/lampjs.git"
   },
   "keywords": [
     "lampjs",
