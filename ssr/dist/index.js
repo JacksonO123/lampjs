@@ -145,165 +145,6 @@ const createState = (value) => {
   };
   return updateCb;
 };
-const compChildIsEl = (element) => {
-  return element instanceof HTMLElement || element instanceof SVGElement || element instanceof Text || typeof element === "string";
-};
-const reactiveElement = (fn, states) => {
-  const values = states.map((s) => s.value);
-  let res = fn(...values);
-  if (Array.isArray(res) && !res.reduce((acc, curr) => acc && compChildIsEl(curr), true) || !Array.isArray(res) && !compChildIsEl(res)) {
-    res = document.createTextNode(res + "");
-  }
-  const onStateChange = (val, index) => {
-    values[index] = val;
-    const newNode = fn(...values);
-    if (!res || !newNode)
-      return;
-    if (res instanceof Text) {
-      if (newNode instanceof HTMLElement || newNode instanceof SVGElement || newNode instanceof Text) {
-        res.replaceWith(newNode);
-      } else {
-        res.data = newNode + "";
-      }
-    } else {
-      if (elementIsNode(res, newNode)) {
-        elementReplace(res, newNode);
-        res = newNode;
-      }
-    }
-  };
-  states.forEach((state, index) => {
-    state.addStateChangeEvent((val) => onStateChange(val, index));
-  });
-  return res;
-};
-const page404 = () => {
-  return createElement("span", {}, ["404 page not found"]);
-};
-const trimPath = (path) => {
-  return path.trim().replace(/^\/*/, "").replace(/\/*$/g, "");
-};
-const validChild = (child) => {
-  return !Array.isArray(child) && child !== null || Array.isArray(child) && child.length !== 0;
-};
-const getRouteElement = (path, pathAcc, data) => {
-  const dataPath = trimPath(data.path);
-  const currentPath = pathAcc + (pathAcc === "/" ? "" : "/") + dataPath;
-  if (path === currentPath) {
-    return data.element;
-  }
-  if (dataPath.endsWith("*")) {
-    const tempPath = path.replace(pathAcc, "");
-    const pathParts = tempPath.split("/");
-    const pathPart = pathParts[0];
-    const newMatch = dataPath.substring(0, dataPath.length - 1);
-    if (pathPart.startsWith(newMatch)) {
-      for (let i = 0; i < data.nested.length; i++) {
-        const el = getRouteElement(path, pathAcc + (pathAcc === "/" ? "" : "/") + pathPart, data.nested[i]);
-        if (validChild(el))
-          return el;
-      }
-      const followingPath = path.replace(pathAcc, "");
-      if (followingPath.split("/").length === 1) {
-        return data.element;
-      }
-    }
-    return null;
-  }
-  if (path.startsWith(currentPath)) {
-    for (let i = 0; i < data.nested.length; i++) {
-      const el = getRouteElement(path, currentPath, data.nested[i]);
-      if (el !== null)
-        return el;
-    }
-  }
-  return null;
-};
-const currentPathname = createState("/");
-class RouteData {
-  constructor(path, element, nested) {
-    __publicField(this, "path");
-    __publicField(this, "element");
-    __publicField(this, "nested");
-    this.path = path;
-    this.element = element;
-    this.nested = nested;
-  }
-}
-const Router = (props) => {
-  const { children } = props;
-  const pathname = location.pathname;
-  currentPathname(pathname);
-  window.addEventListener("popstate", (e) => {
-    const newPath = e.currentTarget.location.pathname;
-    currentPathname(newPath);
-  });
-  return reactiveElement((path) => {
-    if (Array.isArray(children)) {
-      for (let i = 0; i < children.length; i++) {
-        if (children[i] instanceof RouteData) {
-          const el = getRouteElement(path, "/", children[i]);
-          console.log("got", el);
-          if (validChild(el))
-            return el;
-        }
-      }
-      return page404();
-    }
-    if (children instanceof RouteData) {
-      const el = getRouteElement(path, "/", children);
-      if (validChild(el))
-        return el;
-    }
-    return page404();
-  }, [currentPathname()]);
-};
-const Route = ({ path, children }) => {
-  console.log("in route", path, children);
-  const nested = [];
-  if (Array.isArray(children)) {
-    children = children.filter((child) => {
-      if (child instanceof RouteData) {
-        nested.push(child);
-        return false;
-      }
-      return true;
-    });
-  } else {
-    if (children instanceof RouteData) {
-      nested.push(children);
-      children = [];
-    }
-  }
-  return new RouteData(path, children, nested);
-};
-const elementReplace = (first, second) => {
-  if (Array.isArray(first)) {
-    if (Array.isArray(second)) {
-      for (let i = 1; i < first.length; i++) {
-        first[i].remove();
-      }
-      first[0].replaceWith(second[0]);
-      for (let i = second.length - 1; i > 0; i--) {
-        second[0].after(second[i]);
-      }
-    } else {
-      for (let i = 1; i < first.length; i++) {
-        first[i].remove();
-      }
-      first[0].replaceWith(second);
-    }
-  } else {
-    if (Array.isArray(second)) {
-      first.replaceWith(second[0]);
-      for (let i = second.length - 1; i > 0; i--) {
-        second[0].after(second[i]);
-      }
-    } else {
-      first.replaceWith(second);
-    }
-  }
-};
 const elementIsNode = (...el) => {
   return el.reduce((acc, curr) => acc && (curr instanceof HTMLElement || curr instanceof SVGElement || curr instanceof Text), true);
 };
@@ -364,21 +205,45 @@ const mountSSR = async (target, newDom) => {
       if (cacheData)
         document.body.appendChild(cacheData);
     }
+    if (node.nodeName === "HEAD") {
+      const preservedElements = [];
+      const devScript = document.createElement("script");
+      devScript.type = "module";
+      {
+        devScript.src = "/index.js";
+        document.addEventListener("DOMContentLoaded", () => {
+          const children = Array.from(document.head.childNodes);
+          children.forEach((item) => {
+            if (item instanceof HTMLStyleElement && item.type === "text/css" || item instanceof HTMLLinkElement && item.rel === "stylesheet") {
+              preservedElements.push(item);
+            }
+          });
+          document.head.replaceWith(node);
+          document.head.appendChild(devScript);
+          preservedElements.forEach((el) => document.head.appendChild(el));
+        });
+      }
+    }
   });
 };
-function ServerRouter(props, options, cache) {
-  const { children } = props;
-  {
-    return createElement(Router, null, ...children);
-  }
-}
+const Test = ({ onClick }) => {
+  const state = createState(0);
+  const handleClick = () => {
+    state((prev) => prev + 1);
+    onClick();
+  };
+  return /* @__PURE__ */ createElement("div", null, /* @__PURE__ */ createElement("button", { onClick: handleClick }, "test ", state()));
+};
 const App = () => {
+  const handleClick = () => {
+    console.log("clicked");
+  };
   return /* @__PURE__ */ createElement("html", null, /* @__PURE__ */ createElement("head", null, /* @__PURE__ */ createElement(
     "meta",
     {
       name: "viewport",
       content: "width=device-width, initial-scale=1.0"
     }
-  ), /* @__PURE__ */ createElement("title", null, "test")), /* @__PURE__ */ createElement("body", null, /* @__PURE__ */ createElement(ServerRouter, null, /* @__PURE__ */ createElement(Route, { path: "/" }, /* @__PURE__ */ createElement("h1", null, "home"), "in body pt2.3"), /* @__PURE__ */ createElement(Route, { path: "/more" }, /* @__PURE__ */ createElement("h1", null, "more things")))));
+  ), /* @__PURE__ */ createElement("title", null, "test")), /* @__PURE__ */ createElement("body", { class: "make-blue" }, "in body pt2.3", /* @__PURE__ */ createElement("br", null), /* @__PURE__ */ createElement(Test, { onClick: handleClick })));
 };
 mountSSR(document.body, /* @__PURE__ */ createElement(App, null));

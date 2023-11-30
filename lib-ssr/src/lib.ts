@@ -131,27 +131,60 @@ export const mountSSR = async (target: HTMLElement, newDom: JSX.Element) => {
   }
 
   (newDom as JSX.NodeElements).childNodes.forEach((node) => {
+    // let cacheData: HTMLElement | null = null;
+
     if (node.nodeName === 'BODY') {
       const cacheData = document.getElementById('_LAMPJS_DATA_');
       target.replaceWith(node);
       if (cacheData) document.body.appendChild(cacheData);
     }
 
-    // if (import.meta.env.DEV) {
-    if (true) {
-      if (node.nodeName === 'HEAD') {
-        const devScript = document.createElement('script');
+    if (node.nodeName === 'HEAD') {
+      const preservedElements: HTMLElement[] = [];
+
+      const devScript = document.createElement('script');
+      devScript.type = 'module';
+
+      if (import.meta.env.DEV) {
         devScript.src = './src/main.tsx';
-        devScript.type = 'module';
 
         const viteScript = document.createElement('script');
         viteScript.src = '/@vite/client';
         viteScript.type = 'module';
 
-        document.addEventListener('DOMContentLoaded', () => {
+        viteScript.onload = () => {
+          const children = Array.from(document.head.childNodes) as HTMLElement[];
+          children.forEach((item) => {
+            if (item instanceof HTMLStyleElement && item.type === 'text/css') {
+              preservedElements.push(item);
+            }
+          });
+
           document.head.replaceWith(node);
           document.head.appendChild(devScript);
           document.head.appendChild(viteScript);
+
+          preservedElements.forEach((el) => document.head.appendChild(el));
+        };
+      } else {
+        devScript.src = '/index.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+          const children = Array.from(document.head.childNodes) as HTMLElement[];
+          children.forEach((item) => {
+            if (
+              (item instanceof HTMLStyleElement && item.type === 'text/css') ||
+              (item instanceof HTMLLinkElement && item.rel === 'stylesheet')
+            ) {
+              preservedElements.push(item);
+            }
+          });
+
+          document.head.replaceWith(node);
+          document.head.appendChild(devScript);
+          // document.head.appendChild(viteScript);
+
+          preservedElements.forEach((el) => document.head.appendChild(el));
         });
       }
     }
@@ -206,7 +239,6 @@ type ServerRouterProps = {
 export function ServerRouter(props: ServerRouterPropsJSX, options: HtmlOptions, cache: CacheType) {
   const { children } = props as unknown as ServerRouterProps;
 
-  console.log(children);
   if (import.meta.env.SSR) {
     const handleChildRoute = (child: DOMStructure) => {
       if (typeof child.tag === 'function') {

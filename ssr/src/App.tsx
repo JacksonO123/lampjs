@@ -1,6 +1,7 @@
-import { ServerSuspense } from '@jacksonotto/lampjs-ssr';
+// import { ServerSuspense } from '@jacksonotto/lampjs-ssr';
+// import Async from './Async';
 import Test from './Test';
-import Async from './Async';
+import './test.css';
 
 const App = () => {
   const handleClick = () => {
@@ -16,17 +17,17 @@ const App = () => {
         />
         <title>test</title>
       </head>
-      <body>
+      <body class="make-blue">
         in body pt2.3
         <br />
         <Test onClick={handleClick} />
-        <ServerSuspense
-          fallback={<span>waiting</span>}
-          waitServer
-          suspenseId="test"
-        >
-          <Async />
-        </ServerSuspense>
+        {/* <ServerSuspense */}
+        {/*   fallback={<span>waiting</span>} */}
+        {/*   waitServer */}
+        {/*   suspenseId="test" */}
+        {/* > */}
+        {/*   <Async /> */}
+        {/* </ServerSuspense> */}
       </body>
     </html>
   );
