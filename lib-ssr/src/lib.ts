@@ -186,7 +186,6 @@ export const mountSSR = async (newDom: JSX.Element) => {
 
           document.head.replaceWith(node);
           document.head.appendChild(devScript);
-          // document.head.appendChild(viteScript);
 
           preservedElements.forEach((el) => document.head.appendChild(el));
         });
@@ -240,6 +239,20 @@ type ServerRouterProps = {
   children: DOMStructure[];
 };
 
+const page404 = () => {
+  return createElementSSR(
+    'html',
+    null,
+    createElementSSR(
+      'head',
+      null,
+      createElementSSR('meta', { name: 'viewport', content: 'width=device-width, initial-scale=1.0' }),
+      createElementSSR('title', null, '404 page not found')
+    ),
+    createElementSSR('body', null, createElementSSR('span', null, '404 page not found'))
+  );
+};
+
 export function ServerRouter(props: ServerRouterPropsJSX, options: HtmlOptions, cache: CacheType) {
   const { children } = props as unknown as ServerRouterProps;
 
@@ -265,19 +278,23 @@ export function ServerRouter(props: ServerRouterPropsJSX, options: HtmlOptions, 
     let res: Promise<string | string[]>;
 
     if (Array.isArray(children)) {
-      res = Promise.all(
-        children
-          .reduce((acc, curr) => {
-            const temp = handleChildRoute(curr);
+      const temp = children
+        .reduce((acc, curr) => {
+          const temp = handleChildRoute(curr);
 
-            if (temp) {
-              acc.push(temp);
-            }
+          if (temp) {
+            acc.push(temp);
+          }
 
-            return acc;
-          }, [] as Promise<string>[][])
-          .flat()
-      );
+          return acc;
+        }, [] as Promise<string>[][])
+        .flat();
+
+      if (temp.length === 0) {
+        temp.push(toHtmlString(page404(), options, cache));
+      }
+
+      res = Promise.all(temp);
     } else {
       res = Promise.all(handleChildRoute(children) || '');
     }
@@ -285,6 +302,6 @@ export function ServerRouter(props: ServerRouterPropsJSX, options: HtmlOptions, 
     return res as unknown as JSX.Element;
   } else {
     // @ts-ignore
-    return createElementClient(Router, null, ...children);
+    return createElementClient(Router, null, ...(Array.isArray(children) ? children : [children]));
   }
 }

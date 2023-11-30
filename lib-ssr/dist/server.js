@@ -57,7 +57,6 @@ export const startServer = async (prod, port = 3000) => {
         if (prod) {
             if (parts.length === 1) {
                 if (parts[0].endsWith('.js')) {
-                    // change this stuff for code splitting (maybe??)
                     const data = readFileSync(resolve(cwd, 'dist', parts[0]));
                     res.status(200).set({ 'Content-Type': 'application/javascript' }).end(data);
                 }

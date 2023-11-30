@@ -1,6 +1,6 @@
 import { mountSSR } from '@jacksonotto/lampjs-ssr';
-import App from './App';
+import Router from './App';
 
-mountSSR(<App />);
+mountSSR(<Router />);
 
-export default App;
+export default Router;
