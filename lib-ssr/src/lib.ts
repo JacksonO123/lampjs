@@ -1,27 +1,26 @@
-import {
+import type {
   ComponentFactory,
   ComponentAttributes,
   ComponentChild,
-  SuspenseFn,
-  ResponseData,
-  ValueFromResponse,
-  FetchResponse
+  ForPropsJSX,
+  ResponseData
 } from '@jacksonotto/lampjs/types';
 import {
   Reactive,
   RouteData,
-  Suspense,
   createElement as createElementClient,
   getRouteElement,
-  Router,
+  createState,
+  Suspense as ClientSuspense,
+  Router as ClientRouter,
   State,
-  For,
-  createState
+  For as ClientFor
 } from '@jacksonotto/lampjs';
 import { BuiltinServerComp, CacheType, DOMStructure, HtmlOptions } from './types.js';
+import { RouterPropsJSX } from '@jacksonotto/lampjs/types';
 
 const SINGLE_TAGS = ['br'];
-const BUILTIN_SERVER_COMPS: Function[] = [ServerSuspense, ServerRouter, ServerFor];
+const BUILTIN_SERVER_COMPS: Function[] = [Suspense, Router, For];
 
 export const createElementSSR = (
   tag: string | ComponentFactory,
@@ -90,6 +89,7 @@ export const toHtmlString = async (
       ? (structure.tag as BuiltinServerComp)(props, options, cache)
       : structure.tag(props);
 
+    // @ts-ignore
     let id: string | null = promise._lampjsSuspenseId !== undefined ? promise._lampjsSuspenseId : null;
 
     const res = (await promise) as unknown as DOMStructure | string[];
@@ -195,12 +195,19 @@ export const mountSSR = async (newDom: JSX.Element) => {
   });
 };
 
-type SuspenseProps<T extends FetchResponse<any> | Promise<any>, K extends boolean> = {
+export type DataFromPromiseResponse<T extends Promise<any> | JSX.Element> = Awaited<T> extends {
+  json(): Promise<infer R>;
+}
+  ? R
+  : Awaited<T>;
+
+type ServerSuspenseProps<T extends Promise<any> | JSX.Element, K extends boolean> = {
   // children is actually type DOMStructure
   children: T | JSX.Element;
   fallback: JSX.Element;
-  render?: SuspenseFn<T>;
-  decoder?: (value: ResponseData<ValueFromResponse<T>>) => any;
+  render?: (val: DataFromPromiseResponse<T>) => JSX.Element;
+  decoder?: (value: ResponseData<Awaited<T>>) => Promise<any>;
+  suspenseId?: string;
   waitServer?: K;
 } & (K extends true
   ? {
@@ -208,58 +215,83 @@ type SuspenseProps<T extends FetchResponse<any> | Promise<any>, K extends boolea
     }
   : { suspenseId?: string });
 
-export function ServerSuspense<T extends FetchResponse<any> | Promise<any>, K extends boolean>(
-  { children, fallback, decoder, render, waitServer, suspenseId }: SuspenseProps<T, K>,
+export function Suspense<T extends Promise<any> | JSX.Element, K extends boolean>(
+  // @ts-ignore
+  { children, fallback, decoder, render, waitServer, suspenseId }: ServerSuspenseProps<T, K>,
   options: HtmlOptions,
   cache: CacheType
 ) {
+  const comp = (children as unknown as DOMStructure[])[0];
+
   if (import.meta.env.SSR) {
     if (waitServer) {
-      const res = Promise.all(
-        (children as unknown as DOMStructure[]).map((item) => toHtmlString(item, options, cache))
-      ) as unknown as JSX.Element;
+      const res = new Promise(async (resolve) => {
+        let promiseData: any;
+
+        if (comp instanceof Promise) {
+          promiseData = await comp;
+        } else {
+          promiseData = await (comp.tag as ComponentFactory)(
+            {
+              ...comp.attrs
+            },
+            // @ts-ignore
+            ...comp.children
+          );
+        }
+
+        if (promiseData instanceof Response) {
+          if (decoder) promiseData = await decoder(promiseData);
+          else promiseData = await promiseData.json();
+        }
+
+        if (render) promiseData = render(promiseData);
+
+        const res = toHtmlString(promiseData as DOMStructure, options, cache) as unknown as JSX.Element;
+
+        resolve(res);
+      });
 
       // @ts-ignore
       res._lampjsSuspenseId = suspenseId;
 
-      return res;
+      return res as unknown as JSX.Element;
     }
 
     return fallback;
   }
 
   return createElementClient(
-    Suspense as ComponentFactory,
+    ClientSuspense as ComponentFactory,
     // @ts-ignore
     { fallback, render, decoder, suspenseId },
     children
   );
 }
 
-type ServerRouterPropsJSX = {
-  children: JSX.Element | JSX.Element[];
+const page404 = () => {
+  return createElementSSR(
+    'html',
+    { lang: 'en' },
+    // @ts-ignore
+    createElementSSR(
+      'head',
+      null,
+      // @ts-ignore
+      createElementSSR('meta', { name: 'viewport', content: 'width=device-width, initial-scale=1.0' }),
+      createElementSSR('meta', { name: 'description', content: '404 page not found' }),
+      createElementSSR('title', null, '404 page not found')
+    ),
+    // @ts-ignore
+    createElementSSR('body', null, createElementSSR('span', null, '404 page not found'))
+  );
 };
 
 type ServerRouterProps = {
   children: DOMStructure[];
 };
 
-const page404 = () => {
-  return createElementSSR(
-    'html',
-    { lang: 'en' },
-    createElementSSR(
-      'head',
-      null,
-      createElementSSR('meta', { name: 'viewport', content: 'width=device-width, initial-scale=1.0' }),
-      createElementSSR('meta', { name: 'description', content: '404 page not found' }),
-      createElementSSR('title', null, '404 page not found')
-    ),
-    createElementSSR('body', null, createElementSSR('span', null, '404 page not found'))
-  );
-};
-
-export function ServerRouter(props: ServerRouterPropsJSX, options: HtmlOptions, cache: CacheType) {
+export function Router(props: RouterPropsJSX, options: HtmlOptions, cache: CacheType) {
   const { children } = props as unknown as ServerRouterProps;
 
   if (import.meta.env.SSR) {
@@ -308,31 +340,27 @@ export function ServerRouter(props: ServerRouterPropsJSX, options: HtmlOptions, 
     return res as unknown as JSX.Element;
   } else {
     return createElementClient(
-      Router as ComponentFactory,
+      ClientRouter as ComponentFactory,
       null,
+      // @ts-ignore TODO
       ...(Array.isArray(children) ? children : [children])
     );
   }
 }
 
-type ForItemFn<T> = (
+type ServerForItemFn<T> = (
   item: State<T>,
   index: State<number>,
   cleanup: (...args: Reactive<any>[]) => void
-) => ComponentChild;
+) => DOMStructure;
 
-type ForPropsJSX<T> = {
+type ServerForProps<T> = {
   each: Reactive<T[]>;
-  children: ForItemFn<T>;
+  children: [ServerForItemFn<T>];
 };
 
-type ForProps<T> = {
-  each: Reactive<T[]>;
-  children: [ForItemFn<T>];
-};
-
-export function ServerFor<T>(props: ForPropsJSX<T>, options: HtmlOptions, cache: CacheType) {
-  const { each, children } = props as unknown as ForProps<T>;
+export function For<T>(props: ForPropsJSX<T>, options: HtmlOptions, cache: CacheType) {
+  const { each, children } = props as unknown as ServerForProps<T>;
 
   if (import.meta.env.SSR) {
     return Promise.all(
@@ -346,6 +374,8 @@ export function ServerFor<T>(props: ForPropsJSX<T>, options: HtmlOptions, cache:
     );
   } else {
     // @ts-ignore
-    return createElementClient(For as ComponentFactory, { each }, children);
+    return createElementClient(ClientFor as ComponentFactory, { each }, children);
   }
 }
+
+// export function If() {}

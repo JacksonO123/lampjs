@@ -1,6 +1,6 @@
-import { Reactive, Suspense, createElement as createElementClient, getRouteElement, Router, For, createState } from '@jacksonotto/lampjs';
+import { Reactive, createElement as createElementClient, getRouteElement, createState, Suspense as ClientSuspense, Router as ClientRouter, For as ClientFor } from '@jacksonotto/lampjs';
 const SINGLE_TAGS = ['br'];
-const BUILTIN_SERVER_COMPS = [ServerSuspense, ServerRouter, ServerFor];
+const BUILTIN_SERVER_COMPS = [Suspense, Router, For];
 export const createElementSSR = (tag, attrs, ...children) => {
     return {
         tag,
@@ -52,6 +52,7 @@ export const toHtmlString = async (structure, options, cache) => {
         const promise = isBuiltinServerComp(structure.tag)
             ? structure.tag(props, options, cache)
             : structure.tag(props);
+        // @ts-ignore
         let id = promise._lampjsSuspenseId !== undefined ? promise._lampjsSuspenseId : null;
         const res = (await promise);
         if (id)
@@ -128,24 +129,55 @@ export const mountSSR = async (newDom) => {
         }
     });
 };
-export function ServerSuspense({ children, fallback, decoder, render, waitServer, suspenseId }, options, cache) {
+export function Suspense(
+// @ts-ignore
+{ children, fallback, decoder, render, waitServer, suspenseId }, options, cache) {
+    const comp = children[0];
     if (import.meta.env.SSR) {
         if (waitServer) {
-            const res = Promise.all(children.map((item) => toHtmlString(item, options, cache)));
+            const res = new Promise(async (resolve) => {
+                let promiseData;
+                if (comp instanceof Promise) {
+                    promiseData = await comp;
+                }
+                else {
+                    promiseData = await comp.tag({
+                        ...comp.attrs
+                    }, 
+                    // @ts-ignore
+                    ...comp.children);
+                }
+                if (promiseData instanceof Response) {
+                    if (decoder)
+                        promiseData = await decoder(promiseData);
+                    else
+                        promiseData = await promiseData.json();
+                }
+                if (render)
+                    promiseData = render(promiseData);
+                const res = toHtmlString(promiseData, options, cache);
+                resolve(res);
+            });
             // @ts-ignore
             res._lampjsSuspenseId = suspenseId;
             return res;
         }
         return fallback;
     }
-    return createElementClient(Suspense, 
+    return createElementClient(ClientSuspense, 
     // @ts-ignore
     { fallback, render, decoder, suspenseId }, children);
 }
 const page404 = () => {
-    return createElementSSR('html', { lang: 'en' }, createElementSSR('head', null, createElementSSR('meta', { name: 'viewport', content: 'width=device-width, initial-scale=1.0' }), createElementSSR('meta', { name: 'description', content: '404 page not found' }), createElementSSR('title', null, '404 page not found')), createElementSSR('body', null, createElementSSR('span', null, '404 page not found')));
+    return createElementSSR('html', { lang: 'en' }, 
+    // @ts-ignore
+    createElementSSR('head', null, 
+    // @ts-ignore
+    createElementSSR('meta', { name: 'viewport', content: 'width=device-width, initial-scale=1.0' }), createElementSSR('meta', { name: 'description', content: '404 page not found' }), createElementSSR('title', null, '404 page not found')), 
+    // @ts-ignore
+    createElementSSR('body', null, createElementSSR('span', null, '404 page not found')));
 };
-export function ServerRouter(props, options, cache) {
+export function Router(props, options, cache) {
     const { children } = props;
     if (import.meta.env.SSR) {
         const handleChildRoute = (child) => {
@@ -186,16 +218,19 @@ export function ServerRouter(props, options, cache) {
         return res;
     }
     else {
-        return createElementClient(Router, null, ...(Array.isArray(children) ? children : [children]));
+        return createElementClient(ClientRouter, null, 
+        // @ts-ignore TODO
+        ...(Array.isArray(children) ? children : [children]));
     }
 }
-export function ServerFor(props, options, cache) {
+export function For(props, options, cache) {
     const { each, children } = props;
     if (import.meta.env.SSR) {
         return Promise.all(each.value.map((item, index) => toHtmlString(children[0](createState(item), createState(index), () => { }), options, cache)));
     }
     else {
         // @ts-ignore
-        return createElementClient(For, { each }, children);
+        return createElementClient(ClientFor, { each }, children);
     }
 }
+// export function If() {}

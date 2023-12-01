@@ -1,4 +1,45 @@
-import { type Reactive, RouteData, type CaseData } from './index.js';
+import { type Reactive, RouteData, type CaseData, State } from './index.js';
+
+export type DataFromPromiseResponse<T extends Promise<any>> = Awaited<T> extends { json(): Promise<infer R> }
+  ? R
+  : Awaited<T>;
+
+export type SuspenseProps<T extends Promise<any>> = {
+  children: T;
+  fallback: JSX.Element;
+  render?: (val: DataFromPromiseResponse<T>) => JSX.Element;
+  decoder?: (value: ResponseData<Awaited<T>>) => Promise<any>;
+  suspenseId?: string;
+};
+
+export type SwitchPropsJSX<T> = {
+  children: JSX.Element | JSX.Element[];
+  condition: Reactive<T>;
+};
+
+export type SwitchProps<T> = {
+  children: CaseData<T> | CaseData<T>[];
+  condition: Reactive<T>;
+};
+
+export type ForItemFn<T> = (
+  item: State<T>,
+  index: State<number>,
+  cleanup: (...args: Reactive<any>[]) => void
+) => ComponentChild;
+
+export type ForPropsJSX<T> = {
+  each: Reactive<T[]>;
+  children: ForItemFn<T>;
+};
+
+export type RouterPropsJSX = {
+  children: JSX.Element | JSX.Element[];
+};
+
+export type RouterProps = {
+  children: RouteData | RouteData[];
+};
 
 export interface ResponseData<T> extends Response {
   json(): Promise<T>;
@@ -6,18 +47,8 @@ export interface ResponseData<T> extends Response {
 
 export type FetchResponse<T> = Promise<ResponseData<T>>;
 
-export type ValueFromResponse<T extends FetchResponse<any> | Promise<any>> = T extends FetchResponse<infer R>
-  ? R
-  : T extends Promise<infer R>
-    ? R
-    : never;
-
-export type SuspenseFn<T extends FetchResponse<any> | Promise<any>> = (
-  current: ValueFromResponse<T>
-) => JSX.NodeElements;
-
 export type { JSX };
-export declare type ComponentChild =
+export type ComponentChild =
   | ComponentChild[]
   | JSX.Element
   | string
@@ -27,12 +58,12 @@ export declare type ComponentChild =
   | null
   | Reactive<any>
   | Promise<any>;
-export declare type ComponentChildren = ComponentChild | ComponentChild[];
+export type ComponentChildren = ComponentChild | ComponentChild[];
 export interface BaseProps {
   children?: ComponentChildren;
 }
-export declare type ComponentFactory = (props: BaseProps) => JSX.Element;
-export declare type ComponentAttributes = {
+export type ComponentFactory = (props: BaseProps) => JSX.Element;
+export type ComponentAttributes = {
   [s: string]:
     | string
     | number
@@ -61,7 +92,7 @@ interface BaseSyntheticEvent<E = object, C = any, T = any> {
 }
 interface SyntheticEvent<T = Element, E = Event>
   extends BaseSyntheticEvent<E, EventTarget & T, EventTarget> {}
-export declare interface ChangeEvent<T = Element> extends SyntheticEvent<T> {
+export interface ChangeEvent<T = Element> extends SyntheticEvent<T> {
   target: EventTarget & T;
 }
 

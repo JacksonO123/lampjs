@@ -1,13 +1,9 @@
-import { createState } from '@jacksonotto/lampjs';
 import './test.css';
-import { ServerFor } from '@jacksonotto/lampjs-ssr';
+import { Suspense } from '@jacksonotto/lampjs-ssr';
+// import Async from './Async';
 
 const App = () => {
-  const arr = createState([1, 2, 3, 4]);
-
-  setTimeout(() => {
-    arr((prev) => [...prev, 1]);
-  }, 1000);
+  const res = fetch<{ hello: 'world' }>('http://localhost:3001');
 
   return (
     <html lang="en">
@@ -23,7 +19,18 @@ const App = () => {
         <title>test</title>
       </head>
       <body class="make-blue">
-        <ServerFor each={arr()}>{(item) => <span>{item()}</span>}</ServerFor>
+        <Suspense
+          fallback={<span>waiting</span>}
+          waitServer
+          suspenseId="test"
+          decoder={(value) => value.text()}
+          render={(val: any) => {
+            return <span>before {val}</span>;
+          }}
+        >
+          {res}
+          {/* <Async /> */}
+        </Suspense>
       </body>
     </html>
   );

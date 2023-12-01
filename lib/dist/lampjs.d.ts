@@ -1,4 +1,4 @@
-import type { JSX, ComponentChild, ComponentAttributes, SuspenseFn, FetchResponse, ResponseData, ValueFromResponse, ComponentFactory } from './types.js';
+import type { JSX, ComponentChild, ComponentAttributes, ComponentFactory, RouterPropsJSX, ForPropsJSX, SwitchPropsJSX, SuspenseProps } from './types.js';
 export declare const mount: (root: HTMLElement | null, el: JSX.Element | JSX.Element[]) => void;
 export declare class Reactive<T> {
     private onStateChange;
@@ -30,15 +30,12 @@ export declare class RouteData<T = ComponentChild> {
     readonly nested: RouteData<T>[];
     constructor(path: string, element: T, nested: RouteData<T>[]);
 }
-type RouterPropsJSX = {
-    children: JSX.Element | JSX.Element[];
-};
 export declare const Router: (props: RouterPropsJSX) => JSX.SyncElement | null;
 type RouteProps = {
     path: string;
     children: ComponentChild;
 };
-export declare const Route: ({ path, children }: RouteProps) => RouteData<string | number | boolean | JSX.Element | ComponentChild[] | Reactive<any> | Promise<any> | null | undefined>;
+export declare const Route: ({ path, children }: RouteProps) => RouteData<string | number | boolean | Promise<any> | JSX.Element | Reactive<any> | ComponentChild[] | null | undefined>;
 type LinkProps = {
     children: ComponentChild;
     href: string;
@@ -50,22 +47,13 @@ type IfProps = {
     else: JSX.Element;
 };
 export declare const If: ({ condition, then, else: elseBranch }: IfProps) => JSX.Element;
-type ForItemFn<T> = (item: State<T>, index: State<number>, cleanup: (...args: Reactive<any>[]) => void) => ComponentChild;
-type ForProps<T> = {
-    each: Reactive<T[]>;
-    children: ForItemFn<T>;
-};
-export declare const For: <T>({ each, children }: ForProps<T>) => JSX.Element;
+export declare const For: <T>({ each, children }: ForPropsJSX<T>) => JSX.Element;
 export declare class CaseData<T> {
     readonly value: T | undefined;
     readonly children: JSX.Element;
     readonly isDefault: boolean;
     constructor(value: T | undefined, children: JSX.Element, isDefault: boolean);
 }
-type SwitchPropsJSX<T> = {
-    children: JSX.Element | JSX.Element[];
-    condition: Reactive<T>;
-};
 export declare const Switch: <T>(props: SwitchPropsJSX<T>) => JSX.SyncElement | null;
 type CaseProps<T> = {
     value?: T;
@@ -75,13 +63,6 @@ type CaseProps<T> = {
 export declare const Case: <T>({ value, children, isDefault }: CaseProps<T>) => CaseData<T>;
 export declare const elementIsNode: (...el: ComponentChild[]) => ComponentChild;
 export declare const wait: (el: JSX.Element) => HTMLDivElement;
-type SuspenseProps<T extends FetchResponse<any> | Promise<any>> = {
-    children: T | Promise<any>;
-    fallback: JSX.Element;
-    render?: SuspenseFn<T>;
-    decoder?: (value: ResponseData<ValueFromResponse<T>>) => any;
-    suspenseId?: string;
-};
-export declare const Suspense: <T extends Promise<any> | FetchResponse<any>>({ children, render, fallback, decoder, suspenseId }: SuspenseProps<T>) => JSX.Element | JSX.Element[];
+export declare const Suspense: <T extends Promise<any>>({ children, render, fallback, decoder, suspenseId }: SuspenseProps<T>) => JSX.Element | JSX.Element[];
 export declare const createElement: (tag: string | ComponentFactory, attrs: ComponentAttributes | null, ...children: ComponentChild[]) => JSX.Element;
 export {};

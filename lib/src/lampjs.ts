@@ -3,11 +3,14 @@ import type {
   ComponentChild,
   ComponentAttributes,
   BaseProps,
-  SuspenseFn,
-  FetchResponse,
-  ResponseData,
-  ValueFromResponse,
-  ComponentFactory
+  ComponentFactory,
+  RouterPropsJSX,
+  RouterProps,
+  ForPropsJSX,
+  SwitchPropsJSX,
+  SwitchProps,
+  SuspenseProps,
+  DataFromPromiseResponse
 } from './types.js';
 import { isSvgTag, applyChildren, setElementStyle, applyChild } from './util.js';
 
@@ -242,14 +245,6 @@ export class RouteData<T = ComponentChild> {
   }
 }
 
-type RouterPropsJSX = {
-  children: JSX.Element | JSX.Element[];
-};
-
-type RouterProps = {
-  children: RouteData | RouteData[];
-};
-
 export const Router = (props: RouterPropsJSX) => {
   const { children } = props as RouterProps;
   const pathname = location.pathname;
@@ -393,18 +388,7 @@ export const If = ({ condition, then, else: elseBranch }: IfProps) => {
   return condition.value ? then : elseBranch;
 };
 
-type ForItemFn<T> = (
-  item: State<T>,
-  index: State<number>,
-  cleanup: (...args: Reactive<any>[]) => void
-) => ComponentChild;
-
-type ForProps<T> = {
-  each: Reactive<T[]>;
-  children: ForItemFn<T>;
-};
-
-export const For = <T>({ each, children }: ForProps<T>) => {
+export const For = <T>({ each, children }: ForPropsJSX<T>) => {
   let info: [JSX.NodeElements, State<T> | null, State<number> | null][] = [];
   let toTerminate: Record<number, Reactive<any>[]> = {};
 
@@ -522,16 +506,6 @@ export class CaseData<T> {
   }
 }
 
-type SwitchPropsJSX<T> = {
-  children: JSX.Element | JSX.Element[];
-  condition: Reactive<T>;
-};
-
-type SwitchProps<T> = {
-  children: CaseData<T> | CaseData<T>[];
-  condition: Reactive<T>;
-};
-
 export const Switch = <T>(props: SwitchPropsJSX<T>) => {
   const { condition, children } = props as SwitchProps<T>;
 
@@ -594,15 +568,7 @@ export const wait = (el: JSX.Element) => {
   return placeholder;
 };
 
-type SuspenseProps<T extends FetchResponse<any> | Promise<any>> = {
-  children: T | Promise<any>;
-  fallback: JSX.Element;
-  render?: SuspenseFn<T>;
-  decoder?: (value: ResponseData<ValueFromResponse<T>>) => any;
-  suspenseId?: string;
-};
-
-export const Suspense = <T extends FetchResponse<any> | Promise<any>>({
+export const Suspense = <T extends Promise<any>>({
   children,
   render,
   fallback,
@@ -617,9 +583,9 @@ export const Suspense = <T extends FetchResponse<any> | Promise<any>>({
       if (current instanceof Response) return current.json();
       return Promise.resolve(current);
     })
-    .then(async (val: ValueFromResponse<T>) => {
+    .then(async (val: DataFromPromiseResponse<T>) => {
       const el = render
-        ? render(val)
+        ? (render(val) as JSX.NodeElements)
         : !((val as any) instanceof Node)
           ? document.createTextNode(val + '')
           : (val as JSX.NodeElements);
@@ -630,11 +596,11 @@ export const Suspense = <T extends FetchResponse<any> | Promise<any>>({
   if (suspenseId) {
     const ssrCache = document.getElementById('_LAMPJS_DATA_');
     if (ssrCache) {
-      const data: Record<string, string[]> = JSON.parse(ssrCache.innerHTML);
+      const data: Record<string, string> = JSON.parse(ssrCache.innerHTML);
 
       if (data[suspenseId]) {
         const wrapper = document.createElement('div');
-        wrapper.innerHTML = data[suspenseId].join('');
+        wrapper.innerHTML = data[suspenseId];
         const cachedEl = Array.from(wrapper.childNodes) as HTMLElement[];
         elToReplace = cachedEl;
       }
