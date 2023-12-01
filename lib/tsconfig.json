@@ -2,9 +2,9 @@
   "compilerOptions": {
     "target": "ESNext",
     "lib": ["ESNext", "DOM"],
-    "module": "ESNext",
+    "module": "NodeNext",
     "rootDir": "src",
-    "moduleResolution": "node",
+    "moduleResolution": "NodeNext",
     "declaration": true,
     "outDir": "dist",
     "esModuleInterop": true,

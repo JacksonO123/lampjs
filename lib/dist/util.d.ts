@@ -1,4 +1,4 @@
-import { ComponentChild } from './types';
+import { ComponentChild } from './types.js';
 export declare const isSvgTag: (tag: string) => boolean;
 export declare const setElementStyle: (element: JSX.Element, style: Partial<CSSStyleDeclaration>) => void;
 export declare const applyChild: (element: JSX.SyncElement, child: ComponentChild) => void;

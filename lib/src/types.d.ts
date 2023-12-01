@@ -1,4 +1,4 @@
-import { type Reactive, RouteData, type CaseData } from './index';
+import { type Reactive, RouteData, type CaseData } from './index.js';
 
 export interface ResponseData<T> extends Response {
   json(): Promise<T>;

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "start": "bun run server.ts",
+    "start": "bun run --bun lampjs-ssr",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
