@@ -1,4 +1,4 @@
-import type { JSX, ComponentChild, ComponentAttributes, SuspenseFn, FetchResponse, ResponseData, ValueFromResponse, ComponentFactory } from './types';
+import type { JSX, ComponentChild, ComponentAttributes, SuspenseFn, FetchResponse, ResponseData, ValueFromResponse, ComponentFactory } from './types.js';
 export declare const mount: (root: HTMLElement | null, el: JSX.Element | JSX.Element[]) => void;
 export declare class Reactive<T> {
     private onStateChange;

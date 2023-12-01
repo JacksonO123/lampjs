@@ -8,8 +8,8 @@ import type {
   ResponseData,
   ValueFromResponse,
   ComponentFactory
-} from './types';
-import { isSvgTag, applyChildren, setElementStyle, applyChild } from './util';
+} from './types.js';
+import { isSvgTag, applyChildren, setElementStyle, applyChild } from './util.js';
 
 let mountEvents: (() => void)[] = [];
 

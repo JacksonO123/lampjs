@@ -1,5 +1,5 @@
-import { ComponentChild } from './types';
-import { Reactive, elementIsNode } from './lampjs';
+import { ComponentChild } from './types.js';
+import { Reactive, elementIsNode } from './lampjs.js';
 
 export const isSvgTag = (tag: string) => {
   return [
