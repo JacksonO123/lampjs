@@ -83,5 +83,5 @@ type SuspenseProps<T extends FetchResponse<any> | Promise<any>> = {
     suspenseId?: string;
 };
 export declare const Suspense: <T extends Promise<any> | FetchResponse<any>>({ children, render, fallback, decoder, suspenseId }: SuspenseProps<T>) => JSX.Element | JSX.Element[];
-export declare const createElement: (tag: string | ComponentFactory, attrs: ComponentAttributes, ...children: ComponentChild[]) => JSX.Element;
+export declare const createElement: (tag: string | ComponentFactory, attrs: ComponentAttributes | null, ...children: ComponentChild[]) => JSX.Element;
 export {};

@@ -646,7 +646,7 @@ export const Suspense = <T extends FetchResponse<any> | Promise<any>>({
 
 export const createElement = (
   tag: string | ComponentFactory,
-  attrs: ComponentAttributes,
+  attrs: ComponentAttributes | null,
   ...children: ComponentChild[]
 ) => {
   if (typeof tag === 'function')

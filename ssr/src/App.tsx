@@ -1,12 +1,13 @@
-// import { ServerSuspense } from '@jacksonotto/lampjs-ssr';
-// import Async from './Async';
-import Test from './Test';
+import { createState } from '@jacksonotto/lampjs';
 import './test.css';
+import { ServerFor } from '@jacksonotto/lampjs-ssr';
 
 const App = () => {
-  const handleClick = () => {
-    console.log('clicked');
-  };
+  const arr = createState([1, 2, 3, 4]);
+
+  setTimeout(() => {
+    arr((prev) => [...prev, 1]);
+  }, 1000);
 
   return (
     <html lang="en">
@@ -22,16 +23,7 @@ const App = () => {
         <title>test</title>
       </head>
       <body class="make-blue">
-        in body pt2.3
-        <br />
-        <Test onClick={handleClick} />
-        {/* <ServerSuspense */}
-        {/*   fallback={<span>waiting</span>} */}
-        {/*   waitServer */}
-        {/*   suspenseId="test" */}
-        {/* > */}
-        {/*   <Async /> */}
-        {/* </ServerSuspense> */}
+        <ServerFor each={arr()}>{(item) => <span>{item()}</span>}</ServerFor>
       </body>
     </html>
   );

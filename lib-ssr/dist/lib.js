@@ -1,6 +1,6 @@
-import { Reactive, Suspense, createElement as createElementClient, getRouteElement, Router } from '@jacksonotto/lampjs';
+import { Reactive, Suspense, createElement as createElementClient, getRouteElement, Router, For, createState } from '@jacksonotto/lampjs';
 const SINGLE_TAGS = ['br'];
-const BUILTIN_SERVER_COMPS = [ServerSuspense, ServerRouter];
+const BUILTIN_SERVER_COMPS = [ServerSuspense, ServerRouter, ServerFor];
 export const createElementSSR = (tag, attrs, ...children) => {
     return {
         tag,
@@ -52,7 +52,6 @@ export const toHtmlString = async (structure, options, cache) => {
         const promise = isBuiltinServerComp(structure.tag)
             ? structure.tag(props, options, cache)
             : structure.tag(props);
-        // @ts-ignore
         let id = promise._lampjsSuspenseId !== undefined ? promise._lampjsSuspenseId : null;
         const res = (await promise);
         if (id)
@@ -139,11 +138,12 @@ export function ServerSuspense({ children, fallback, decoder, render, waitServer
         }
         return fallback;
     }
+    return createElementClient(Suspense, 
     // @ts-ignore
-    return createElementClient(Suspense, { fallback, render, decoder, suspenseId }, children);
+    { fallback, render, decoder, suspenseId }, children);
 }
 const page404 = () => {
-    return createElementSSR('html', null, createElementSSR('head', null, createElementSSR('meta', { name: 'viewport', content: 'width=device-width, initial-scale=1.0' }), createElementSSR('title', null, '404 page not found')), createElementSSR('body', null, createElementSSR('span', null, '404 page not found')));
+    return createElementSSR('html', { lang: 'en' }, createElementSSR('head', null, createElementSSR('meta', { name: 'viewport', content: 'width=device-width, initial-scale=1.0' }), createElementSSR('meta', { name: 'description', content: '404 page not found' }), createElementSSR('title', null, '404 page not found')), createElementSSR('body', null, createElementSSR('span', null, '404 page not found')));
 };
 export function ServerRouter(props, options, cache) {
     const { children } = props;
@@ -186,7 +186,16 @@ export function ServerRouter(props, options, cache) {
         return res;
     }
     else {
-        // @ts-ignore
         return createElementClient(Router, null, ...(Array.isArray(children) ? children : [children]));
+    }
+}
+export function ServerFor(props, options, cache) {
+    const { each, children } = props;
+    if (import.meta.env.SSR) {
+        return Promise.all(each.value.map((item, index) => toHtmlString(children[0](createState(item), createState(index), () => { }), options, cache)));
+    }
+    else {
+        // @ts-ignore
+        return createElementClient(For, { each }, children);
     }
 }

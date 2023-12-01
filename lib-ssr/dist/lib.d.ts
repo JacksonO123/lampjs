@@ -1,4 +1,5 @@
 import { ComponentFactory, ComponentAttributes, ComponentChild, SuspenseFn, ResponseData, ValueFromResponse, FetchResponse } from '@jacksonotto/lampjs/types';
+import { Reactive, State } from '@jacksonotto/lampjs';
 import { CacheType, DOMStructure, HtmlOptions } from './types.js';
 export declare const createElementSSR: (tag: string | ComponentFactory, attrs: ComponentAttributes | null, ...children: ComponentChild[]) => DOMStructure;
 export declare const toHtmlString: (structure: DOMStructure | string, options: HtmlOptions, cache: CacheType) => Promise<string>;
@@ -19,4 +20,10 @@ type ServerRouterPropsJSX = {
     children: JSX.Element | JSX.Element[];
 };
 export declare function ServerRouter(props: ServerRouterPropsJSX, options: HtmlOptions, cache: CacheType): any;
+type ForItemFn<T> = (item: State<T>, index: State<number>, cleanup: (...args: Reactive<any>[]) => void) => ComponentChild;
+type ForPropsJSX<T> = {
+    each: Reactive<T[]>;
+    children: ForItemFn<T>;
+};
+export declare function ServerFor<T>(props: ForPropsJSX<T>, options: HtmlOptions, cache: CacheType): any;
 export {};
