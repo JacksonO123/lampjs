@@ -1,6 +1,6 @@
 # LampJs SSR
 
-LampJs SSR is a server-side rendering runtime for the LampJs framework. See [LampJs Documentation](https://github.com/JacksonO123/lampjs/blob/main/lib/docs.md)
+LampJs SSR is a server-side rendering runtime for the LampJs framework. See [LampJs](https://lampjs.vercel.app/)
 
 <br>
 

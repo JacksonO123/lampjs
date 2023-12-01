@@ -1,6 +1,6 @@
-import { Reactive, createElement as createElementClient, getRouteElement, createState, Suspense as ClientSuspense, Router as ClientRouter, For as ClientFor } from '@jacksonotto/lampjs';
+import { Reactive, createElement as createElementClient, getRouteElement, createState, Suspense as ClientSuspense, Router as ClientRouter, For as ClientFor, If as ClientIf, Switch as ClientSwitch, getSwitchElement } from '@jacksonotto/lampjs';
 const SINGLE_TAGS = ['br'];
-const BUILTIN_SERVER_COMPS = [Suspense, Router, For];
+const BUILTIN_SERVER_COMPS = [Suspense, Router, For, If];
 export const createElementSSR = (tag, attrs, ...children) => {
     return {
         tag,
@@ -217,20 +217,35 @@ export function Router(props, options, cache) {
         }
         return res;
     }
-    else {
-        return createElementClient(ClientRouter, null, 
-        // @ts-ignore TODO
-        ...(Array.isArray(children) ? children : [children]));
-    }
+    return createElementClient(ClientRouter, null, ...(Array.isArray(children) ? children : [children]));
 }
 export function For(props, options, cache) {
     const { each, children } = props;
     if (import.meta.env.SSR) {
-        return Promise.all(each.value.map((item, index) => toHtmlString(children[0](createState(item), createState(index), () => { }), options, cache)));
-    }
-    else {
+        return Promise.all(each.value.map((item, index) => toHtmlString(
         // @ts-ignore
-        return createElementClient(ClientFor, { each }, children);
+        children[0](createState(item), createState(index), () => { }), options, cache)));
     }
+    return createElementClient(ClientFor, { each }, 
+    // @ts-ignore
+    children[0]);
 }
-// export function If() {}
+export function If(props) {
+    const { condition, then, else: elseBranch } = props;
+    if (import.meta.env.SSR) {
+        return (condition.value ? then : elseBranch);
+    }
+    return createElementClient(ClientIf, { condition, then, else: elseBranch });
+}
+export function Switch(props, options, cache) {
+    const { children, condition } = props;
+    if (import.meta.env.SSR) {
+        const cases = children.map((child) => child.tag({
+            ...child.attrs,
+            children: child.children
+        }));
+        const el = getSwitchElement(cases, condition.value);
+        return toHtmlString(el[0], options, cache);
+    }
+    return createElementClient(ClientSwitch, { condition }, ...(Array.isArray(children) ? children : [children]));
+}

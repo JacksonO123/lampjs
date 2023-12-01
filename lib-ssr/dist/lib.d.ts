@@ -1,4 +1,5 @@
-import type { ComponentFactory, ComponentAttributes, ComponentChild, ForPropsJSX, ResponseData } from '@jacksonotto/lampjs/types';
+import type { ComponentFactory, ComponentAttributes, ComponentChild, ResponseData } from '@jacksonotto/lampjs/types';
+import { Reactive, State, CaseData } from '@jacksonotto/lampjs';
 import { CacheType, DOMStructure, HtmlOptions } from './types.js';
 import { RouterPropsJSX } from '@jacksonotto/lampjs/types';
 export declare const createElementSSR: (tag: string | ComponentFactory, attrs: ComponentAttributes | null, ...children: ComponentChild[]) => DOMStructure;
@@ -21,5 +22,25 @@ type ServerSuspenseProps<T extends Promise<any> | JSX.Element, K extends boolean
 });
 export declare function Suspense<T extends Promise<any> | JSX.Element, K extends boolean>({ children, fallback, decoder, render, waitServer, suspenseId }: ServerSuspenseProps<T, K>, options: HtmlOptions, cache: CacheType): JSX.Element;
 export declare function Router(props: RouterPropsJSX, options: HtmlOptions, cache: CacheType): JSX.Element;
-export declare function For<T>(props: ForPropsJSX<T>, options: HtmlOptions, cache: CacheType): JSX.Element | Promise<string[]>;
+type ServerForItemFnJSX<T> = (item: State<T>, index: State<number>, cleanup: (...args: Reactive<any>[]) => void) => JSX.Element;
+type ServerForPropsJSX<T> = {
+    each: Reactive<T[]>;
+    children: ServerForItemFnJSX<T>;
+};
+export declare function For<T>(props: ServerForPropsJSX<T>, options: HtmlOptions, cache: CacheType): JSX.Element;
+export type IfPropsJSX = {
+    condition: Reactive<boolean>;
+    then: JSX.Element;
+    else: JSX.Element;
+};
+export declare function If(props: IfPropsJSX): JSX.Element;
+export type SwitchPropsJSX<T> = {
+    children: JSX.Element | JSX.Element[];
+    condition: Reactive<T>;
+};
+export type SwitchProps<T> = {
+    children: CaseData<T> | CaseData<T>[];
+    condition: Reactive<T>;
+};
+export declare function Switch<T>(props: SwitchPropsJSX<T>, options: HtmlOptions, cache: CacheType): JSX.Element;
 export {};

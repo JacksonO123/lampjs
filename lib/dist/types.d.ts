@@ -1,4 +1,9 @@
 import { type Reactive, RouteData, type CaseData, State } from './index.js';
+export type IfPropsJSX = {
+    condition: Reactive<boolean>;
+    then: JSX.Element;
+    else: JSX.Element;
+};
 export type DataFromPromiseResponse<T extends Promise<any>> = Awaited<T> extends {
     json(): Promise<infer R>;
 } ? R : Awaited<T>;

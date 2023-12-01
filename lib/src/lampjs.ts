@@ -10,7 +10,8 @@ import type {
   SwitchPropsJSX,
   SwitchProps,
   SuspenseProps,
-  DataFromPromiseResponse
+  DataFromPromiseResponse,
+  IfPropsJSX
 } from './types.js';
 import { isSvgTag, applyChildren, setElementStyle, applyChild } from './util.js';
 
@@ -360,13 +361,7 @@ const elementReplace = (
   }
 };
 
-type IfProps = {
-  condition: Reactive<boolean>;
-  then: JSX.Element;
-  else: JSX.Element;
-};
-
-export const If = ({ condition, then, else: elseBranch }: IfProps) => {
+export const If = ({ condition, then, else: elseBranch }: IfPropsJSX) => {
   if (Array.isArray(then) && then.length === 0) {
     then = createElement('div', {});
   }
@@ -506,32 +501,36 @@ export class CaseData<T> {
   }
 }
 
+export const getSwitchElement = <T>(data: CaseData<T> | CaseData<T>[], val: T) => {
+  if (Array.isArray(data)) {
+    let defaultIndex = -1;
+
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].isDefault) defaultIndex = i;
+      if (data[i].value === val) {
+        return data[i].children;
+      }
+    }
+
+    if (defaultIndex >= 0) {
+      return data[defaultIndex].children;
+    } else {
+      throw new Error('Switch case not met, expected Default element');
+    }
+  } else {
+    if (data.isDefault) {
+      return data.children;
+    } else {
+      throw new Error('Expected default element for single child Switch element');
+    }
+  }
+};
+
 export const Switch = <T>(props: SwitchPropsJSX<T>) => {
   const { condition, children } = props as SwitchProps<T>;
 
   const effect = (val: T) => {
-    if (Array.isArray(children)) {
-      let defaultIndex = -1;
-
-      for (let i = 0; i < children.length; i++) {
-        if (children[i].isDefault) defaultIndex = i;
-        if (children[i].value === val) {
-          return children[i].children;
-        }
-      }
-
-      if (defaultIndex >= 0) {
-        return children[defaultIndex].children;
-      } else {
-        throw new Error('Switch case not met, expected Default element');
-      }
-    } else {
-      if (children.isDefault) {
-        return children.children;
-      } else {
-        throw new Error('Expected default element for single child Switch element');
-      }
-    }
+    return getSwitchElement(children, val);
   };
 
   return reactiveElement((val) => effect(val), [condition]);

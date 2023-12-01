@@ -2,7 +2,6 @@ import type {
   ComponentFactory,
   ComponentAttributes,
   ComponentChild,
-  ForPropsJSX,
   ResponseData
 } from '@jacksonotto/lampjs/types';
 import {
@@ -14,13 +13,17 @@ import {
   Suspense as ClientSuspense,
   Router as ClientRouter,
   State,
-  For as ClientFor
+  For as ClientFor,
+  If as ClientIf,
+  Switch as ClientSwitch,
+  CaseData,
+  getSwitchElement
 } from '@jacksonotto/lampjs';
 import { BuiltinServerComp, CacheType, DOMStructure, HtmlOptions } from './types.js';
 import { RouterPropsJSX } from '@jacksonotto/lampjs/types';
 
 const SINGLE_TAGS = ['br'];
-const BUILTIN_SERVER_COMPS: Function[] = [Suspense, Router, For];
+const BUILTIN_SERVER_COMPS: Function[] = [Suspense, Router, For, If];
 
 export const createElementSSR = (
   tag: string | ComponentFactory,
@@ -338,15 +341,20 @@ export function Router(props: RouterPropsJSX, options: HtmlOptions, cache: Cache
     }
 
     return res as unknown as JSX.Element;
-  } else {
-    return createElementClient(
-      ClientRouter as ComponentFactory,
-      null,
-      // @ts-ignore TODO
-      ...(Array.isArray(children) ? children : [children])
-    );
   }
+
+  return createElementClient(
+    ClientRouter as ComponentFactory,
+    null,
+    ...((Array.isArray(children) ? children : [children]) as unknown as ComponentChild[])
+  );
 }
+
+type ServerForItemFnJSX<T> = (
+  item: State<T>,
+  index: State<number>,
+  cleanup: (...args: Reactive<any>[]) => void
+) => JSX.Element;
 
 type ServerForItemFn<T> = (
   item: State<T>,
@@ -354,28 +362,93 @@ type ServerForItemFn<T> = (
   cleanup: (...args: Reactive<any>[]) => void
 ) => DOMStructure;
 
+type ServerForPropsJSX<T> = {
+  each: Reactive<T[]>;
+  children: ServerForItemFnJSX<T>;
+};
+
 type ServerForProps<T> = {
   each: Reactive<T[]>;
   children: [ServerForItemFn<T>];
 };
 
-export function For<T>(props: ForPropsJSX<T>, options: HtmlOptions, cache: CacheType) {
+export function For<T>(props: ServerForPropsJSX<T>, options: HtmlOptions, cache: CacheType) {
   const { each, children } = props as unknown as ServerForProps<T>;
 
   if (import.meta.env.SSR) {
     return Promise.all(
       each.value.map((item, index) =>
         toHtmlString(
+          // @ts-ignore
           children[0](createState(item), createState(index), () => {}),
           options,
           cache
         )
       )
-    );
-  } else {
-    // @ts-ignore
-    return createElementClient(ClientFor as ComponentFactory, { each }, children);
+    ) as unknown as JSX.Element;
   }
+
+  return createElementClient(
+    ClientFor as unknown as ComponentFactory,
+    { each } as unknown as ComponentAttributes,
+    // @ts-ignore
+    children[0] as unknown as ComponentChild[]
+  );
 }
 
-// export function If() {}
+type ServerIfProps = {
+  condition: Reactive<boolean>;
+  then: DOMStructure;
+  else: DOMStructure;
+};
+
+export type IfPropsJSX = {
+  condition: Reactive<boolean>;
+  then: JSX.Element;
+  else: JSX.Element;
+};
+
+export function If(props: IfPropsJSX) {
+  const { condition, then, else: elseBranch } = props as unknown as ServerIfProps;
+
+  if (import.meta.env.SSR) {
+    return (condition.value ? then : elseBranch) as unknown as JSX.Element;
+  }
+
+  return createElementClient(
+    ClientIf as ComponentFactory,
+    { condition, then, else: elseBranch } as unknown as ComponentAttributes
+  );
+}
+
+export type SwitchPropsJSX<T> = {
+  children: JSX.Element | JSX.Element[];
+  condition: Reactive<T>;
+};
+
+export type SwitchProps<T> = {
+  children: CaseData<T> | CaseData<T>[];
+  condition: Reactive<T>;
+};
+
+export function Switch<T>(props: SwitchPropsJSX<T>, options: HtmlOptions, cache: CacheType) {
+  const { children, condition } = props as unknown as SwitchProps<T>;
+
+  if (import.meta.env.SSR) {
+    const cases = (children as unknown as DOMStructure[]).map(
+      (child) =>
+        (child.tag as ComponentFactory)({
+          ...child.attrs,
+          children: child.children
+        }) as unknown as CaseData<T>
+    );
+    const el = getSwitchElement(cases, condition.value) as unknown as DOMStructure[];
+    return toHtmlString(el[0], options, cache) as unknown as JSX.Element;
+  }
+
+  return createElementClient(
+    ClientSwitch as ComponentFactory,
+    { condition } as unknown as ComponentAttributes,
+    ...(Array.isArray(children) ? children : [children])
+  );
+}

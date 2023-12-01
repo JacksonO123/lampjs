@@ -1,4 +1,4 @@
-import type { JSX, ComponentChild, ComponentAttributes, ComponentFactory, RouterPropsJSX, ForPropsJSX, SwitchPropsJSX, SuspenseProps } from './types.js';
+import type { JSX, ComponentChild, ComponentAttributes, ComponentFactory, RouterPropsJSX, ForPropsJSX, SwitchPropsJSX, SuspenseProps, IfPropsJSX } from './types.js';
 export declare const mount: (root: HTMLElement | null, el: JSX.Element | JSX.Element[]) => void;
 export declare class Reactive<T> {
     private onStateChange;
@@ -35,18 +35,13 @@ type RouteProps = {
     path: string;
     children: ComponentChild;
 };
-export declare const Route: ({ path, children }: RouteProps) => RouteData<string | number | boolean | Promise<any> | JSX.Element | Reactive<any> | ComponentChild[] | null | undefined>;
+export declare const Route: ({ path, children }: RouteProps) => RouteData<string | number | boolean | JSX.Element | Promise<any> | Reactive<any> | ComponentChild[] | null | undefined>;
 type LinkProps = {
     children: ComponentChild;
     href: string;
 };
 export declare const Link: ({ children, href }: LinkProps) => JSX.Element;
-type IfProps = {
-    condition: Reactive<boolean>;
-    then: JSX.Element;
-    else: JSX.Element;
-};
-export declare const If: ({ condition, then, else: elseBranch }: IfProps) => JSX.Element;
+export declare const If: ({ condition, then, else: elseBranch }: IfPropsJSX) => JSX.Element;
 export declare const For: <T>({ each, children }: ForPropsJSX<T>) => JSX.Element;
 export declare class CaseData<T> {
     readonly value: T | undefined;
@@ -54,6 +49,7 @@ export declare class CaseData<T> {
     readonly isDefault: boolean;
     constructor(value: T | undefined, children: JSX.Element, isDefault: boolean);
 }
+export declare const getSwitchElement: <T>(data: CaseData<T> | CaseData<T>[], val: T) => JSX.Element;
 export declare const Switch: <T>(props: SwitchPropsJSX<T>) => JSX.SyncElement | null;
 type CaseProps<T> = {
     value?: T;
