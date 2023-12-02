@@ -1,6 +1,6 @@
-import { Reactive, RouteData, createElement as createElementClient, getRouteElement, createState, getSwitchElement, Suspense as ClientSuspense, Router as ClientRouter, For as ClientFor, If as ClientIf, Switch as ClientSwitch, Link as ClientLink, getStateValue } from '@jacksonotto/lampjs';
+import { Reactive, createElement as createElementClient, getRouteElement, createState, getSwitchElement, Suspense as ClientSuspense, Router as ClientRouter, For as ClientFor, If as ClientIf, Switch as ClientSwitch, Link as ClientLink, getStateValue } from '@jacksonotto/lampjs';
 const SINGLE_TAGS = ['br'];
-const BUILTIN_SERVER_COMPS = [Suspense, Router, For, If, Link, Route];
+const BUILTIN_SERVER_COMPS = [Suspense, Router, For, If, Link];
 export const createElementSSR = (tag, attrs, ...children) => {
     return {
         tag,
@@ -223,10 +223,7 @@ export function Router(props, options, cache) {
     const replacePage = (newPage) => {
         mountSSR(newPage);
     };
-    return createElementClient(ClientRouter, { onRouteChange: replacePage }, ...(Array.isArray(children) ? children : [children]));
-}
-export function Route({ path, content, children }) {
-    return new RouteData(path, content, children ? (Array.isArray(children) ? children : [children]) : []);
+    return createElementClient(ClientRouter, { onRouteChange: replacePage }, ...ensureArray(children));
 }
 export function For(props, options, cache) {
     const { each, children } = props;
@@ -252,12 +249,21 @@ export function Switch(props, options, cache) {
         const el = getSwitchElement(cases, condition.value);
         return toHtmlString(el[0], options, cache);
     }
-    return createElementClient(ClientSwitch, { condition }, ...(Array.isArray(children) ? children : [children]));
+    return createElementClient(ClientSwitch, { condition }, ...ensureArray(children));
 }
-export function Link({ children, href }, options, cache) {
+function ensureArray(value) {
+    if (Array.isArray(value))
+        return value;
+    return [value];
+}
+export function Link({ children, href, revalidate }, options, cache) {
+    const tempChildren = ensureArray(children);
     if (import.meta.env.SSR) {
-        const el = createElementSSR('a', { href: getStateValue(href) }, ...(Array.isArray(children) ? children : [children]));
+        const el = createElementSSR('a', { href: getStateValue(href) }, ...tempChildren);
         return toHtmlString(el, options, cache);
     }
-    return createElementClient(ClientLink, { href }, ...(Array.isArray(children) ? children : [children]));
+    if (revalidate) {
+        return createElementClient('a', { href: getStateValue(href) }, ...tempChildren);
+    }
+    return createElementClient(ClientLink, { href: getStateValue(href) }, ...tempChildren);
 }

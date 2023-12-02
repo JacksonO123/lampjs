@@ -1,5 +1,5 @@
-import type { ComponentFactory, ComponentAttributes, ComponentChild, ResponseData, LinkProps } from '@jacksonotto/lampjs/types';
-import { Reactive, RouteData, State, CaseData } from '@jacksonotto/lampjs';
+import type { ComponentFactory, ComponentAttributes, ComponentChild, ResponseData } from '@jacksonotto/lampjs/types';
+import { Reactive, State, CaseData } from '@jacksonotto/lampjs';
 import { CacheType, DOMStructure, HtmlOptions } from './types.js';
 import { RouterPropsJSX } from '@jacksonotto/lampjs/types';
 export declare const createElementSSR: (tag: string | ComponentFactory, attrs: ComponentAttributes | null, ...children: ComponentChild[]) => DOMStructure;
@@ -22,12 +22,6 @@ type ServerSuspenseProps<T extends Promise<any> | JSX.Element, K extends boolean
 });
 export declare function Suspense<T extends Promise<any> | JSX.Element, K extends boolean>({ children, fallback, decoder, render, waitServer, suspenseId }: ServerSuspenseProps<T, K>, options: HtmlOptions, cache: CacheType): JSX.Element;
 export declare function Router(props: RouterPropsJSX, options: HtmlOptions, cache: CacheType): JSX.Element;
-type RouteProps = {
-    path: string;
-    content: () => JSX.Element;
-    children?: RouteData | RouteData[];
-};
-export declare function Route({ path, content, children }: RouteProps): RouteData<string | number | boolean | ComponentChild[] | JSX.Element | Reactive<any> | Promise<any> | null | undefined>;
 type ServerForItemFnJSX<T> = (item: State<T>, index: State<number>, cleanup: (...args: Reactive<any>[]) => void) => JSX.Element;
 type ServerForPropsJSX<T> = {
     each: Reactive<T[]>;
@@ -49,5 +43,11 @@ export type SwitchProps<T> = {
     condition: Reactive<T>;
 };
 export declare function Switch<T>(props: SwitchPropsJSX<T>, options: HtmlOptions, cache: CacheType): JSX.Element;
-export declare function Link({ children, href }: LinkProps, options: HtmlOptions, cache: CacheType): JSX.Element;
+type LinkProps = Omit<JSX.HTMLAttributes, 'href'> & {
+    href: string | Reactive<string>;
+};
+type ServerLinkProps = LinkProps & {
+    revalidate?: boolean;
+};
+export declare function Link({ children, href, revalidate }: ServerLinkProps, options: HtmlOptions, cache: CacheType): JSX.Element;
 export {};

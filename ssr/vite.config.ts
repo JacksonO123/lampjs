@@ -7,8 +7,7 @@ export default defineConfig({
       output: {
         entryFileNames: 'index.js'
       }
-    },
-    minify: false
+    }
   },
   esbuild: {
     jsxFactory: 'createElement',

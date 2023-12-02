@@ -6,9 +6,66 @@ import { ComponentFactory } from '@jacksonotto/lampjs/types';
 import { readFileSync, readdirSync, existsSync } from 'fs';
 import { resolve } from 'path';
 import chokidar from 'chokidar';
+import mime from 'mime-types';
+
+// @ts-ignore
+if (!import.meta.env) import.meta.env = {};
+import.meta.env.SSR = true;
 
 const port = 3000;
 const prod = process.argv[2] === 'prod';
+
+globalThis.createElement = createElementSSR;
+
+const cwd = process.cwd();
+let App: ComponentFactory | null = null;
+App = (await import(resolve(cwd, 'src', 'main.tsx'))).default as ComponentFactory;
+
+const app = express();
+
+function clearModuleCache(moduleName: string) {
+  delete require.cache[require.resolve(moduleName)];
+}
+
+if (!prod) {
+  const watcher = chokidar.watch(resolve(cwd, 'src'));
+  let canWatch = false;
+
+  setTimeout(() => {
+    canWatch = true;
+  }, 100);
+
+  const handleFileChange = async () => {
+    if (!canWatch) return;
+
+    console.log('[lampjs:hmr] start');
+
+    const moduleKeys = Object.keys(require.cache);
+    const toClear = moduleKeys.filter((item) => item.startsWith(resolve(cwd, 'src')));
+
+    toClear.forEach((item) => {
+      clearModuleCache(item);
+    });
+
+    const moduleUrl = resolve(cwd, 'src', 'main.tsx');
+    App = (await import(moduleUrl)).default;
+
+    console.log('[lampjs:hmr] done');
+  };
+
+  watcher.on('add', handleFileChange);
+  watcher.on('change', handleFileChange);
+
+  const viteServer = await createViteServer({
+    server: {
+      middlewareMode: true,
+      hmr: true
+    },
+    appType: 'custom'
+  });
+
+  app.use(viteServer.middlewares);
+}
 
 const getStyleTags = () => {
   let res = '';
@@ -24,63 +81,9 @@ const getStyleTags = () => {
   return res;
 };
 
-function clearModuleCache(moduleName: string) {
-  delete require.cache[require.resolve(moduleName)];
-}
-
-// @ts-ignore
-if (!import.meta.env) import.meta.env = {};
-import.meta.env.SSR = true;
-
-globalThis.createElement = createElementSSR;
-
-const cwd = process.cwd();
-
-let App: ComponentFactory | null = null;
-
-App = (await import(resolve(cwd, 'src', 'main.tsx'))).default as ComponentFactory;
-const watcher = chokidar.watch(resolve(cwd, 'src'));
-let canWatch = false;
-
-setTimeout(() => {
-  canWatch = true;
-}, 100);
-
-const handleFileChange = async (path: string) => {
-  if (!canWatch) return;
-
-  const moduleUrl = resolve(cwd, 'src', 'main.tsx');
-  clearModuleCache(path);
-  clearModuleCache(moduleUrl);
-  App = (await import(resolve(moduleUrl))).default;
-};
-
-watcher.on('add', handleFileChange);
-watcher.on('change', handleFileChange);
-
-const app = express();
-
-if (!prod) {
-  const viteServer = await createViteServer({
-    server: {
-      middlewareMode: true,
-      hmr: true
-    },
-    appType: 'custom'
-  });
-
-  app.use(viteServer.middlewares);
-}
-
 app.use('*', async (req, res) => {
   const params: Record<string, string> = req.params;
   const url = params[0];
-
-  const contentTypes = {
-    js: 'application/javascript',
-    css: 'text/css',
-    txt: 'text'
-  };
 
   if (prod) {
     const reg = new RegExp(/\..*$/);
@@ -92,10 +95,10 @@ app.use('*', async (req, res) => {
 
       if (exists) {
         const data = readFileSync(fileUrl);
-        res
-          .status(200)
-          .set({ 'Content-Type': contentTypes[ext as keyof typeof contentTypes] || 'text' })
-          .end(data);
+
+        const type = mime.lookup(ext);
+
+        res.status(200).set({ 'Content-Type': type }).end(data);
       } else {
         res.status(404).end('404 page not found');
       }

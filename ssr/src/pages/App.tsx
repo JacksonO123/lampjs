@@ -8,8 +8,10 @@ const App = () => {
       <img
         src="/lamp.svg"
         alt="LampJs Icon"
+        width="40"
+        height="40"
       />
-      <h1>LampJs</h1>
+      <h1>LampJs SSR 2</h1>
       <span>A powerful, lightweight JS framework</span>
       <Counter />
       <Link href="/about">about</Link>

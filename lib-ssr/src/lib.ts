@@ -2,8 +2,7 @@ import type {
   ComponentFactory,
   ComponentAttributes,
   ComponentChild,
-  ResponseData,
-  LinkProps
+  ResponseData
 } from '@jacksonotto/lampjs/types';
 import {
   Reactive,
@@ -26,7 +25,7 @@ import { BuiltinServerComp, CacheType, DOMStructure, HtmlOptions } from './types
 import { RouterPropsJSX } from '@jacksonotto/lampjs/types';
 
 const SINGLE_TAGS = ['br'];
-const BUILTIN_SERVER_COMPS: Function[] = [Suspense, Router, For, If, Link, Route];
+const BUILTIN_SERVER_COMPS: Function[] = [Suspense, Router, For, If, Link];
 
 export const createElementSSR = (
   tag: string | ComponentFactory,
@@ -353,18 +352,8 @@ export function Router(props: RouterPropsJSX, options: HtmlOptions, cache: Cache
   return createElementClient(
     ClientRouter as ComponentFactory,
     { onRouteChange: replacePage } as unknown as ComponentAttributes,
-    ...((Array.isArray(children) ? children : [children]) as unknown as ComponentChild[])
+    ...(ensureArray(children) as unknown as ComponentChild[])
   );
-}
-
-type RouteProps = {
-  path: string;
-  content: () => JSX.Element;
-  children?: RouteData | RouteData[];
-};
-
-export function Route({ path, content, children }: RouteProps) {
-  return new RouteData(path, content, children ? (Array.isArray(children) ? children : [children]) : []);
 }
 
 type ServerForItemFnJSX<T> = (
@@ -464,23 +453,38 @@ export function Switch<T>(props: SwitchPropsJSX<T>, options: HtmlOptions, cache:
   return createElementClient(
     ClientSwitch as ComponentFactory,
     { condition } as unknown as ComponentAttributes,
-    ...(Array.isArray(children) ? children : [children])
+    ...ensureArray(children)
   );
 }
 
-export function Link({ children, href }: LinkProps, options: HtmlOptions, cache: CacheType) {
+type LinkProps = Omit<JSX.HTMLAttributes, 'href'> & {
+  href: string | Reactive<string>;
+};
+
+type ServerLinkProps = LinkProps & {
+  revalidate?: boolean;
+};
+
+function ensureArray<T>(value: T | T[]) {
+  if (Array.isArray(value)) return value;
+  return [value];
+}
+
+export function Link(
+  { children, href, revalidate }: ServerLinkProps,
+  options: HtmlOptions,
+  cache: CacheType
+) {
+  const tempChildren = ensureArray(children);
+
   if (import.meta.env.SSR) {
-    const el = createElementSSR(
-      'a',
-      { href: getStateValue(href) },
-      ...(Array.isArray(children) ? children : [children])
-    );
+    const el = createElementSSR('a', { href: getStateValue(href) }, ...tempChildren);
     return toHtmlString(el, options, cache) as unknown as JSX.Element;
   }
 
-  return createElementClient(
-    ClientLink as ComponentFactory,
-    { href } as ComponentAttributes,
-    ...(Array.isArray(children) ? children : [children])
-  );
+  if (revalidate) {
+    return createElementClient('a', { href: getStateValue(href) }, ...tempChildren);
+  }
+
+  return createElementClient(ClientLink as ComponentFactory, { href: getStateValue(href) }, ...tempChildren);
 }
