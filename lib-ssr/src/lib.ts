@@ -26,7 +26,7 @@ import { BuiltinServerComp, CacheType, DOMStructure, HtmlOptions } from './types
 import { RouterPropsJSX } from '@jacksonotto/lampjs/types';
 
 const SINGLE_TAGS = ['br'];
-const BUILTIN_SERVER_COMPS: Function[] = [Suspense, Router, For, If, Link];
+const BUILTIN_SERVER_COMPS: Function[] = [Suspense, Router, For, If, Link, Route];
 
 export const createElementSSR = (
   tag: string | ComponentFactory,
@@ -133,23 +133,21 @@ export const toHtmlString = async (
   }</${structure.tag}>`;
 };
 
-export const mountSSR = async (newDom: JSX.Element, replaceHead = true) => {
+export const mountSSR = async (newDom: JSX.Element) => {
   if (import.meta.env.SSR) return;
 
   if (newDom instanceof Promise) {
     newDom = await newDom;
   }
 
-  const domClone = (newDom as HTMLElement).cloneNode(true);
-
-  (domClone as JSX.NodeElements).childNodes.forEach((node) => {
+  (newDom as JSX.NodeElements).childNodes.forEach((node) => {
     if (node.nodeName === 'BODY') {
       const cacheData = document.getElementById('_LAMPJS_DATA_');
       document.body.replaceWith(node);
       if (cacheData) document.body.appendChild(cacheData);
     }
 
-    if (node.nodeName === 'HEAD' && replaceHead) {
+    if (node.nodeName === 'HEAD') {
       const preservedElements: HTMLElement[] = [];
 
       const devScript = document.createElement('script');
@@ -349,7 +347,7 @@ export function Router(props: RouterPropsJSX, options: HtmlOptions, cache: Cache
   }
 
   const replacePage = (newPage: JSX.Element) => {
-    mountSSR(newPage, false);
+    mountSSR(newPage);
   };
 
   return createElementClient(
@@ -357,6 +355,16 @@ export function Router(props: RouterPropsJSX, options: HtmlOptions, cache: Cache
     { onRouteChange: replacePage } as unknown as ComponentAttributes,
     ...((Array.isArray(children) ? children : [children]) as unknown as ComponentChild[])
   );
+}
+
+type RouteProps = {
+  path: string;
+  content: () => JSX.Element;
+  children?: RouteData | RouteData[];
+};
+
+export function Route({ path, content, children }: RouteProps) {
+  return new RouteData(path, content, children ? (Array.isArray(children) ? children : [children]) : []);
 }
 
 type ServerForItemFnJSX<T> = (

@@ -1,6 +1,6 @@
-import { Reactive, createElement as createElementClient, getRouteElement, createState, getSwitchElement, Suspense as ClientSuspense, Router as ClientRouter, For as ClientFor, If as ClientIf, Switch as ClientSwitch, Link as ClientLink, getStateValue } from '@jacksonotto/lampjs';
+import { Reactive, RouteData, createElement as createElementClient, getRouteElement, createState, getSwitchElement, Suspense as ClientSuspense, Router as ClientRouter, For as ClientFor, If as ClientIf, Switch as ClientSwitch, Link as ClientLink, getStateValue } from '@jacksonotto/lampjs';
 const SINGLE_TAGS = ['br'];
-const BUILTIN_SERVER_COMPS = [Suspense, Router, For, If, Link];
+const BUILTIN_SERVER_COMPS = [Suspense, Router, For, If, Link, Route];
 export const createElementSSR = (tag, attrs, ...children) => {
     return {
         tag,
@@ -76,21 +76,20 @@ export const toHtmlString = async (structure, options, cache) => {
     }
     return `${first}>${childrenHtml}${structure.tag === 'head' ? options.headInject : ''}${structure.tag === 'body' ? '<!-- lampjs_cache_insert -->' : ''}</${structure.tag}>`;
 };
-export const mountSSR = async (newDom, replaceHead = true) => {
+export const mountSSR = async (newDom) => {
     if (import.meta.env.SSR)
         return;
     if (newDom instanceof Promise) {
         newDom = await newDom;
     }
-    const domClone = newDom.cloneNode(true);
-    domClone.childNodes.forEach((node) => {
+    newDom.childNodes.forEach((node) => {
         if (node.nodeName === 'BODY') {
             const cacheData = document.getElementById('_LAMPJS_DATA_');
             document.body.replaceWith(node);
             if (cacheData)
                 document.body.appendChild(cacheData);
         }
-        if (node.nodeName === 'HEAD' && replaceHead) {
+        if (node.nodeName === 'HEAD') {
             const preservedElements = [];
             const devScript = document.createElement('script');
             devScript.type = 'module';
@@ -222,9 +221,12 @@ export function Router(props, options, cache) {
         return res;
     }
     const replacePage = (newPage) => {
-        mountSSR(newPage, false);
+        mountSSR(newPage);
     };
     return createElementClient(ClientRouter, { onRouteChange: replacePage }, ...(Array.isArray(children) ? children : [children]));
+}
+export function Route({ path, content, children }) {
+    return new RouteData(path, content, children ? (Array.isArray(children) ? children : [children]) : []);
 }
 export function For(props, options, cache) {
     const { each, children } = props;

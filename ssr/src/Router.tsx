@@ -7,16 +7,22 @@ import Layout from './layouts/Layout';
 const Router = () => {
   return (
     <LampJsRouter>
-      <Route path="/">
-        <Layout>
-          <App />
-        </Layout>
-      </Route>
-      <Route path="/about">
-        <Layout>
-          <About />
-        </Layout>
-      </Route>
+      <Route
+        path="/"
+        content={() => (
+          <Layout>
+            <App />
+          </Layout>
+        )}
+      />
+      <Route
+        path="/about"
+        content={() => (
+          <Layout>
+            <About />
+          </Layout>
+        )}
+      />
     </LampJsRouter>
   );
 };

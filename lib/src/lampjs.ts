@@ -201,7 +201,7 @@ export const getRouteElement = <T = ComponentChild>(
   const currentPath = pathAcc + (pathAcc === '/' ? '' : '/') + dataPath;
 
   if (path === currentPath) {
-    return data.element;
+    return data.element();
   }
 
   if (dataPath.endsWith('*')) {
@@ -222,7 +222,7 @@ export const getRouteElement = <T = ComponentChild>(
 
       const followingPath = path.replace(pathAcc, '');
       if (followingPath.split('/').length === 1) {
-        return data.element;
+        return data.element();
       }
     }
 
@@ -243,9 +243,9 @@ const currentPathname = createState('/');
 
 export class RouteData<T = ComponentChild> {
   readonly path: string;
-  readonly element: T;
+  readonly element: () => T;
   readonly nested: RouteData<T>[];
-  constructor(path: string, element: T, nested: RouteData<T>[]) {
+  constructor(path: string, element: () => T, nested: RouteData<T>[]) {
     this.path = path;
     this.element = element;
     this.nested = nested;
@@ -285,41 +285,31 @@ export const Router = (props: RouterPropsJSX) => {
 
   if (onRouteChange) {
     createEffect(() => {
-      const el = handleNewRoute(currentPathname().value);
-      onRouteChange(el);
+      const currentElement = handleNewRoute(currentPathname().value);
+      onRouteChange(currentElement);
     }, [currentPathname()]);
 
-    return handleNewRoute(currentPathname().value);
+    return handleNewRoute(currentPathname().value) as JSX.Element;
   }
 
   return reactiveElement(handleNewRoute, [currentPathname()]);
 };
 
-type RouteProps = {
+type RoutePropsJSX = {
   path: string;
-  children: ComponentChild;
+  content: () => JSX.Element;
+  children?: JSX.Element | JSX.Element[];
 };
 
-export const Route = ({ path, children }: RouteProps) => {
-  const nested: RouteData[] = [];
+type RouteProps = {
+  path: string;
+  content: () => JSX.Element;
+  children?: RouteData | RouteData[];
+};
 
-  if (Array.isArray(children)) {
-    children = children.filter((child) => {
-      if (child instanceof RouteData) {
-        nested.push(child);
-        return false;
-      }
-
-      return true;
-    });
-  } else {
-    if (children instanceof RouteData) {
-      nested.push(children);
-      children = [];
-    }
-  }
-
-  return new RouteData(path, children, nested);
+export const Route = (props: RoutePropsJSX) => {
+  const { path, content, children } = props as RouteProps;
+  return new RouteData(path, content, children ? (Array.isArray(children) ? children : [children]) : []);
 };
 
 export const Link = ({ children, href }: LinkProps) => {

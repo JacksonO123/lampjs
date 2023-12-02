@@ -27,16 +27,17 @@ export declare const Fragment: ({ children }: {
 export declare const getRouteElement: <T = ComponentChild>(path: string, pathAcc: string, data: RouteData<T>) => T | T[] | null;
 export declare class RouteData<T = ComponentChild> {
     readonly path: string;
-    readonly element: T;
+    readonly element: () => T;
     readonly nested: RouteData<T>[];
-    constructor(path: string, element: T, nested: RouteData<T>[]);
+    constructor(path: string, element: () => T, nested: RouteData<T>[]);
 }
-export declare const Router: (props: RouterPropsJSX) => string | number | boolean | JSX.SyncElement | Promise<any> | Reactive<any> | ComponentChild[] | null | undefined;
-type RouteProps = {
+export declare const Router: (props: RouterPropsJSX) => HTMLElement | SVGElement | Text | RouteData<ComponentChild> | CaseData<any> | Promise<JSX.SyncElement> | null;
+type RoutePropsJSX = {
     path: string;
-    children: ComponentChild;
+    content: () => JSX.Element;
+    children?: JSX.Element | JSX.Element[];
 };
-export declare const Route: ({ path, children }: RouteProps) => RouteData<string | number | boolean | JSX.Element | Promise<any> | Reactive<any> | ComponentChild[] | null | undefined>;
+export declare const Route: (props: RoutePropsJSX) => RouteData<string | number | boolean | JSX.Element | Promise<any> | Reactive<any> | ComponentChild[] | null | undefined>;
 export declare const Link: ({ children, href }: LinkProps) => JSX.Element;
 export declare const If: ({ condition, then, else: elseBranch }: IfPropsJSX) => JSX.Element;
 export declare const For: <T>({ each, children }: ForPropsJSX<T>) => JSX.Element;

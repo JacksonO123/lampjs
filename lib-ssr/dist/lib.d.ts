@@ -1,10 +1,10 @@
 import type { ComponentFactory, ComponentAttributes, ComponentChild, ResponseData, LinkProps } from '@jacksonotto/lampjs/types';
-import { Reactive, State, CaseData } from '@jacksonotto/lampjs';
+import { Reactive, RouteData, State, CaseData } from '@jacksonotto/lampjs';
 import { CacheType, DOMStructure, HtmlOptions } from './types.js';
 import { RouterPropsJSX } from '@jacksonotto/lampjs/types';
 export declare const createElementSSR: (tag: string | ComponentFactory, attrs: ComponentAttributes | null, ...children: ComponentChild[]) => DOMStructure;
 export declare const toHtmlString: (structure: DOMStructure | string, options: HtmlOptions, cache: CacheType) => Promise<string>;
-export declare const mountSSR: (newDom: JSX.Element, replaceHead?: boolean) => Promise<void>;
+export declare const mountSSR: (newDom: JSX.Element) => Promise<void>;
 export type DataFromPromiseResponse<T extends Promise<any> | JSX.Element> = Awaited<T> extends {
     json(): Promise<infer R>;
 } ? R : Awaited<T>;
@@ -22,6 +22,12 @@ type ServerSuspenseProps<T extends Promise<any> | JSX.Element, K extends boolean
 });
 export declare function Suspense<T extends Promise<any> | JSX.Element, K extends boolean>({ children, fallback, decoder, render, waitServer, suspenseId }: ServerSuspenseProps<T, K>, options: HtmlOptions, cache: CacheType): JSX.Element;
 export declare function Router(props: RouterPropsJSX, options: HtmlOptions, cache: CacheType): JSX.Element;
+type RouteProps = {
+    path: string;
+    content: () => JSX.Element;
+    children?: RouteData | RouteData[];
+};
+export declare function Route({ path, content, children }: RouteProps): RouteData<string | number | boolean | ComponentChild[] | JSX.Element | Reactive<any> | Promise<any> | null | undefined>;
 type ServerForItemFnJSX<T> = (item: State<T>, index: State<number>, cleanup: (...args: Reactive<any>[]) => void) => JSX.Element;
 type ServerForPropsJSX<T> = {
     each: Reactive<T[]>;
