@@ -1,5 +1,7 @@
 import { type Reactive, RouteData, type CaseData, State } from './index.js';
 
+export type LinkProps = Omit<JSX.HTMLAttributes, 'href'> & { href: string | Reactive<string> };
+
 export type IfPropsJSX = {
   condition: Reactive<boolean>;
   then: JSX.Element;
@@ -41,10 +43,12 @@ export type ForPropsJSX<T> = {
 
 export type RouterPropsJSX = {
   children: JSX.Element | JSX.Element[];
+  onRouteChange?: (el: ComponentChild) => void;
 };
 
 export type RouterProps = {
   children: RouteData | RouteData[];
+  onRouteChange?: (el: ComponentChild) => void;
 };
 
 export interface ResponseData<T> extends Response {

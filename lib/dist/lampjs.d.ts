@@ -1,4 +1,4 @@
-import type { JSX, ComponentChild, ComponentAttributes, ComponentFactory, RouterPropsJSX, ForPropsJSX, SwitchPropsJSX, SuspenseProps, IfPropsJSX } from './types.js';
+import type { JSX, ComponentChild, ComponentAttributes, ComponentFactory, RouterPropsJSX, ForPropsJSX, SwitchPropsJSX, SuspenseProps, IfPropsJSX, LinkProps } from './types.js';
 export declare const mount: (root: HTMLElement | null, el: JSX.Element | JSX.Element[]) => void;
 export declare class Reactive<T> {
     private onStateChange;
@@ -15,6 +15,7 @@ export declare const createState: <T>(value: T) => (newState?: T | ((val: T) => 
 export type State<T> = ReturnType<typeof createState<T>>;
 export declare const createEffect: <T extends Reactive<any>>(cb: () => void, deps: T[]) => void;
 export declare const isState: <T>(val: T | ((newState?: T | ((val: T) => T) | undefined) => Reactive<T>)) => boolean;
+export declare const getStateValue: <T>(val: T | Reactive<T>) => T;
 type InnerStateFromArray<T extends readonly Reactive<any>[]> = {
     [K in keyof T]: T[K] extends Reactive<infer U> ? U : Exclude<T[K], Reactive<any>>;
 };
@@ -30,16 +31,12 @@ export declare class RouteData<T = ComponentChild> {
     readonly nested: RouteData<T>[];
     constructor(path: string, element: T, nested: RouteData<T>[]);
 }
-export declare const Router: (props: RouterPropsJSX) => JSX.SyncElement | null;
+export declare const Router: (props: RouterPropsJSX) => string | number | boolean | JSX.SyncElement | Promise<any> | Reactive<any> | ComponentChild[] | null | undefined;
 type RouteProps = {
     path: string;
     children: ComponentChild;
 };
 export declare const Route: ({ path, children }: RouteProps) => RouteData<string | number | boolean | JSX.Element | Promise<any> | Reactive<any> | ComponentChild[] | null | undefined>;
-type LinkProps = {
-    children: ComponentChild;
-    href: string;
-};
 export declare const Link: ({ children, href }: LinkProps) => JSX.Element;
 export declare const If: ({ condition, then, else: elseBranch }: IfPropsJSX) => JSX.Element;
 export declare const For: <T>({ each, children }: ForPropsJSX<T>) => JSX.Element;

@@ -2,7 +2,8 @@ import type {
   ComponentFactory,
   ComponentAttributes,
   ComponentChild,
-  ResponseData
+  ResponseData,
+  LinkProps
 } from '@jacksonotto/lampjs/types';
 import {
   Reactive,
@@ -10,20 +11,22 @@ import {
   createElement as createElementClient,
   getRouteElement,
   createState,
+  State,
+  CaseData,
+  getSwitchElement,
   Suspense as ClientSuspense,
   Router as ClientRouter,
-  State,
   For as ClientFor,
   If as ClientIf,
   Switch as ClientSwitch,
-  CaseData,
-  getSwitchElement
+  Link as ClientLink,
+  getStateValue
 } from '@jacksonotto/lampjs';
 import { BuiltinServerComp, CacheType, DOMStructure, HtmlOptions } from './types.js';
 import { RouterPropsJSX } from '@jacksonotto/lampjs/types';
 
 const SINGLE_TAGS = ['br'];
-const BUILTIN_SERVER_COMPS: Function[] = [Suspense, Router, For, If];
+const BUILTIN_SERVER_COMPS: Function[] = [Suspense, Router, For, If, Link];
 
 export const createElementSSR = (
   tag: string | ComponentFactory,
@@ -109,9 +112,9 @@ export const toHtmlString = async (
   let childrenHtml = '';
   if (structure.children !== undefined) {
     const newChildren = await Promise.all(
-      structure.children.map(
-        async (child) => await toHtmlString(child as unknown as DOMStructure, options, cache)
-      )
+      structure.children
+        .flat()
+        .map(async (child) => await toHtmlString(child as unknown as DOMStructure, options, cache))
     );
 
     childrenHtml = newChildren.join('');
@@ -130,23 +133,23 @@ export const toHtmlString = async (
   }</${structure.tag}>`;
 };
 
-export const mountSSR = async (newDom: JSX.Element) => {
+export const mountSSR = async (newDom: JSX.Element, replaceHead = true) => {
   if (import.meta.env.SSR) return;
 
   if (newDom instanceof Promise) {
     newDom = await newDom;
   }
 
-  const target = document.body;
+  const domClone = (newDom as HTMLElement).cloneNode(true);
 
-  (newDom as JSX.NodeElements).childNodes.forEach((node) => {
+  (domClone as JSX.NodeElements).childNodes.forEach((node) => {
     if (node.nodeName === 'BODY') {
       const cacheData = document.getElementById('_LAMPJS_DATA_');
-      target.replaceWith(node);
+      document.body.replaceWith(node);
       if (cacheData) document.body.appendChild(cacheData);
     }
 
-    if (node.nodeName === 'HEAD') {
+    if (node.nodeName === 'HEAD' && replaceHead) {
       const preservedElements: HTMLElement[] = [];
 
       const devScript = document.createElement('script');
@@ -307,7 +310,9 @@ export function Router(props: RouterPropsJSX, options: HtmlOptions, cache: Cache
         const el = getRouteElement<DOMStructure>(options.route, '/', routeData);
 
         if (Array.isArray(el)) {
-          return el.map((item) => toHtmlString(item, options, cache));
+          return el.map((item) => {
+            return toHtmlString(item, options, cache);
+          });
         } else if (el !== null) {
           return [toHtmlString(el, options, cache)];
         }
@@ -343,9 +348,13 @@ export function Router(props: RouterPropsJSX, options: HtmlOptions, cache: Cache
     return res as unknown as JSX.Element;
   }
 
+  const replacePage = (newPage: JSX.Element) => {
+    mountSSR(newPage, false);
+  };
+
   return createElementClient(
     ClientRouter as ComponentFactory,
-    null,
+    { onRouteChange: replacePage } as unknown as ComponentAttributes,
     ...((Array.isArray(children) ? children : [children]) as unknown as ComponentChild[])
   );
 }
@@ -379,7 +388,6 @@ export function For<T>(props: ServerForPropsJSX<T>, options: HtmlOptions, cache:
     return Promise.all(
       each.value.map((item, index) =>
         toHtmlString(
-          // @ts-ignore
           children[0](createState(item), createState(index), () => {}),
           options,
           cache
@@ -391,7 +399,6 @@ export function For<T>(props: ServerForPropsJSX<T>, options: HtmlOptions, cache:
   return createElementClient(
     ClientFor as unknown as ComponentFactory,
     { each } as unknown as ComponentAttributes,
-    // @ts-ignore
     children[0] as unknown as ComponentChild[]
   );
 }
@@ -449,6 +456,23 @@ export function Switch<T>(props: SwitchPropsJSX<T>, options: HtmlOptions, cache:
   return createElementClient(
     ClientSwitch as ComponentFactory,
     { condition } as unknown as ComponentAttributes,
+    ...(Array.isArray(children) ? children : [children])
+  );
+}
+
+export function Link({ children, href }: LinkProps, options: HtmlOptions, cache: CacheType) {
+  if (import.meta.env.SSR) {
+    const el = createElementSSR(
+      'a',
+      { href: getStateValue(href) },
+      ...(Array.isArray(children) ? children : [children])
+    );
+    return toHtmlString(el, options, cache) as unknown as JSX.Element;
+  }
+
+  return createElementClient(
+    ClientLink as ComponentFactory,
+    { href } as ComponentAttributes,
     ...(Array.isArray(children) ? children : [children])
   );
 }

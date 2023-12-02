@@ -1,6 +1,6 @@
-import { Reactive, createElement as createElementClient, getRouteElement, createState, Suspense as ClientSuspense, Router as ClientRouter, For as ClientFor, If as ClientIf, Switch as ClientSwitch, getSwitchElement } from '@jacksonotto/lampjs';
+import { Reactive, createElement as createElementClient, getRouteElement, createState, getSwitchElement, Suspense as ClientSuspense, Router as ClientRouter, For as ClientFor, If as ClientIf, Switch as ClientSwitch, Link as ClientLink, getStateValue } from '@jacksonotto/lampjs';
 const SINGLE_TAGS = ['br'];
-const BUILTIN_SERVER_COMPS = [Suspense, Router, For, If];
+const BUILTIN_SERVER_COMPS = [Suspense, Router, For, If, Link];
 export const createElementSSR = (tag, attrs, ...children) => {
     return {
         tag,
@@ -64,7 +64,9 @@ export const toHtmlString = async (structure, options, cache) => {
     }
     let childrenHtml = '';
     if (structure.children !== undefined) {
-        const newChildren = await Promise.all(structure.children.map(async (child) => await toHtmlString(child, options, cache)));
+        const newChildren = await Promise.all(structure.children
+            .flat()
+            .map(async (child) => await toHtmlString(child, options, cache)));
         childrenHtml = newChildren.join('');
     }
     const attrString = attrsToString(structure.attrs || {});
@@ -74,21 +76,21 @@ export const toHtmlString = async (structure, options, cache) => {
     }
     return `${first}>${childrenHtml}${structure.tag === 'head' ? options.headInject : ''}${structure.tag === 'body' ? '<!-- lampjs_cache_insert -->' : ''}</${structure.tag}>`;
 };
-export const mountSSR = async (newDom) => {
+export const mountSSR = async (newDom, replaceHead = true) => {
     if (import.meta.env.SSR)
         return;
     if (newDom instanceof Promise) {
         newDom = await newDom;
     }
-    const target = document.body;
-    newDom.childNodes.forEach((node) => {
+    const domClone = newDom.cloneNode(true);
+    domClone.childNodes.forEach((node) => {
         if (node.nodeName === 'BODY') {
             const cacheData = document.getElementById('_LAMPJS_DATA_');
-            target.replaceWith(node);
+            document.body.replaceWith(node);
             if (cacheData)
                 document.body.appendChild(cacheData);
         }
-        if (node.nodeName === 'HEAD') {
+        if (node.nodeName === 'HEAD' && replaceHead) {
             const preservedElements = [];
             const devScript = document.createElement('script');
             devScript.type = 'module';
@@ -188,7 +190,9 @@ export function Router(props, options, cache) {
                 });
                 const el = getRouteElement(options.route, '/', routeData);
                 if (Array.isArray(el)) {
-                    return el.map((item) => toHtmlString(item, options, cache));
+                    return el.map((item) => {
+                        return toHtmlString(item, options, cache);
+                    });
                 }
                 else if (el !== null) {
                     return [toHtmlString(el, options, cache)];
@@ -217,18 +221,17 @@ export function Router(props, options, cache) {
         }
         return res;
     }
-    return createElementClient(ClientRouter, null, ...(Array.isArray(children) ? children : [children]));
+    const replacePage = (newPage) => {
+        mountSSR(newPage, false);
+    };
+    return createElementClient(ClientRouter, { onRouteChange: replacePage }, ...(Array.isArray(children) ? children : [children]));
 }
 export function For(props, options, cache) {
     const { each, children } = props;
     if (import.meta.env.SSR) {
-        return Promise.all(each.value.map((item, index) => toHtmlString(
-        // @ts-ignore
-        children[0](createState(item), createState(index), () => { }), options, cache)));
+        return Promise.all(each.value.map((item, index) => toHtmlString(children[0](createState(item), createState(index), () => { }), options, cache)));
     }
-    return createElementClient(ClientFor, { each }, 
-    // @ts-ignore
-    children[0]);
+    return createElementClient(ClientFor, { each }, children[0]);
 }
 export function If(props) {
     const { condition, then, else: elseBranch } = props;
@@ -248,4 +251,11 @@ export function Switch(props, options, cache) {
         return toHtmlString(el[0], options, cache);
     }
     return createElementClient(ClientSwitch, { condition }, ...(Array.isArray(children) ? children : [children]));
+}
+export function Link({ children, href }, options, cache) {
+    if (import.meta.env.SSR) {
+        const el = createElementSSR('a', { href: getStateValue(href) }, ...(Array.isArray(children) ? children : [children]));
+        return toHtmlString(el, options, cache);
+    }
+    return createElementClient(ClientLink, { href }, ...(Array.isArray(children) ? children : [children]));
 }

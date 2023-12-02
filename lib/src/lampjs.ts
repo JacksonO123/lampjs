@@ -11,7 +11,8 @@ import type {
   SwitchProps,
   SuspenseProps,
   DataFromPromiseResponse,
-  IfPropsJSX
+  IfPropsJSX,
+  LinkProps
 } from './types.js';
 import { isSvgTag, applyChildren, setElementStyle, applyChild } from './util.js';
 
@@ -89,6 +90,11 @@ export const createEffect = <T extends Reactive<any>>(cb: () => void, deps: T[])
 
 export const isState = <T>(val: T | State<T>) => {
   return val instanceof Function ? val() instanceof Reactive : false;
+};
+
+export const getStateValue = <T>(val: T | Reactive<T>) => {
+  if (isState(val)) return (val as Reactive<T>).value;
+  return val as T;
 };
 
 type InnerStateFromArray<T extends readonly Reactive<any>[]> = {
@@ -247,7 +253,7 @@ export class RouteData<T = ComponentChild> {
 }
 
 export const Router = (props: RouterPropsJSX) => {
-  const { children } = props as RouterProps;
+  const { children, onRouteChange } = props as RouterProps;
   const pathname = location.pathname;
 
   currentPathname(pathname);
@@ -257,28 +263,36 @@ export const Router = (props: RouterPropsJSX) => {
     currentPathname(newPath);
   });
 
-  return reactiveElement(
-    (path) => {
-      if (Array.isArray(children)) {
-        for (let i = 0; i < children.length; i++) {
-          if (children[i] instanceof RouteData) {
-            const el = getRouteElement(path, '/', children[i]);
-            if (validChild(el)) return el;
-          }
+  const handleNewRoute = (path: string) => {
+    if (Array.isArray(children)) {
+      for (let i = 0; i < children.length; i++) {
+        if (children[i] instanceof RouteData) {
+          const el = getRouteElement(path, '/', children[i]);
+          if (validChild(el)) return el;
         }
-
-        return page404();
-      }
-
-      if (children instanceof RouteData) {
-        const el = getRouteElement(path, '/', children);
-        if (validChild(el)) return el;
       }
 
       return page404();
-    },
-    [currentPathname()]
-  );
+    }
+
+    if (children instanceof RouteData) {
+      const el = getRouteElement(path, '/', children);
+      if (validChild(el)) return el;
+    }
+
+    return page404();
+  };
+
+  if (onRouteChange) {
+    createEffect(() => {
+      const el = handleNewRoute(currentPathname().value);
+      onRouteChange(el);
+    }, [currentPathname()]);
+
+    return handleNewRoute(currentPathname().value);
+  }
+
+  return reactiveElement(handleNewRoute, [currentPathname()]);
 };
 
 type RouteProps = {
@@ -308,19 +322,15 @@ export const Route = ({ path, children }: RouteProps) => {
   return new RouteData(path, children, nested);
 };
 
-type LinkProps = {
-  children: ComponentChild;
-  href: string;
-};
-
 export const Link = ({ children, href }: LinkProps) => {
   const handleClick = (e: any) => {
     e.preventDefault();
-    currentPathname(href);
-    window.history.pushState({}, '', href);
+    const hrefVal = isState(href) ? (href as Reactive<string>).value : (href as string);
+    currentPathname(hrefVal);
+    window.history.pushState({}, '', hrefVal);
   };
 
-  return createElement('a', { onClick: handleClick, href }, children);
+  return createElement('a', { onClick: handleClick, href: getStateValue(href) }, children);
 };
 
 /**
@@ -616,10 +626,12 @@ export const createElement = (
 ) => {
   if (typeof tag === 'function')
     return tag({ ...attrs, children: children.length === 1 ? children[0] : children } as BaseProps);
+
   const isSvg = isSvgTag(tag);
   const element = isSvg
     ? document.createElementNS('http://www.w3.org/2000/svg', tag)
     : document.createElement(tag);
+
   if (attrs) {
     if (attrs.style && typeof attrs.style === 'object') {
       if (attrs.style instanceof Reactive) {

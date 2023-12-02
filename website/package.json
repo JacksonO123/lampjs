@@ -14,6 +14,6 @@
     "vite": "latest"
   },
   "dependencies": {
-    "@jacksonotto/lampjs": "^4.4.0"
+    "@jacksonotto/lampjs": "^4.4.12"
   }
 }

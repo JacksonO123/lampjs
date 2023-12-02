@@ -1,10 +1,10 @@
-import type { ComponentFactory, ComponentAttributes, ComponentChild, ResponseData } from '@jacksonotto/lampjs/types';
+import type { ComponentFactory, ComponentAttributes, ComponentChild, ResponseData, LinkProps } from '@jacksonotto/lampjs/types';
 import { Reactive, State, CaseData } from '@jacksonotto/lampjs';
 import { CacheType, DOMStructure, HtmlOptions } from './types.js';
 import { RouterPropsJSX } from '@jacksonotto/lampjs/types';
 export declare const createElementSSR: (tag: string | ComponentFactory, attrs: ComponentAttributes | null, ...children: ComponentChild[]) => DOMStructure;
 export declare const toHtmlString: (structure: DOMStructure | string, options: HtmlOptions, cache: CacheType) => Promise<string>;
-export declare const mountSSR: (newDom: JSX.Element) => Promise<void>;
+export declare const mountSSR: (newDom: JSX.Element, replaceHead?: boolean) => Promise<void>;
 export type DataFromPromiseResponse<T extends Promise<any> | JSX.Element> = Awaited<T> extends {
     json(): Promise<infer R>;
 } ? R : Awaited<T>;
@@ -43,4 +43,5 @@ export type SwitchProps<T> = {
     condition: Reactive<T>;
 };
 export declare function Switch<T>(props: SwitchPropsJSX<T>, options: HtmlOptions, cache: CacheType): JSX.Element;
+export declare function Link({ children, href }: LinkProps, options: HtmlOptions, cache: CacheType): JSX.Element;
 export {};

@@ -1,4 +1,10 @@
-const App = () => {
+import './Layout.css';
+
+type LayoutProps = {
+  children: JSX.Element | JSX.Element[];
+};
+
+const Layout = ({ children }: LayoutProps) => {
   return (
     <html lang="en">
       <head>
@@ -12,11 +18,9 @@ const App = () => {
         />
         <title>test</title>
       </head>
-      <body class="make-blue">
-        <span>something</span>
-      </body>
+      <body>{children}</body>
     </html>
   );
 };
 
-export default App;
+export default Layout;
