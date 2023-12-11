@@ -27,17 +27,17 @@ import { RouterPropsJSX } from '@jacksonotto/lampjs/types';
 const SINGLE_TAGS = ['br'];
 const BUILTIN_SERVER_COMPS: Function[] = [Suspense, Router, For, If, Link];
 
-export const createElementSSR = (
+export function createElementSSR(
   tag: string | ComponentFactory,
   attrs: ComponentAttributes | null,
   ...children: ComponentChild[]
-): DOMStructure => {
+): DOMStructure {
   return {
     tag,
     attrs,
     children
   } as const;
-};
+}
 
 const formatAttr = (attr: string) => {
   if (attr.startsWith('on')) {
@@ -132,7 +132,18 @@ export const toHtmlString = async (
   }</${structure.tag}>`;
 };
 
+const setupEnv = () => {
+  // @ts-ignore
+  if (!import.meta.env) import.meta.env = {};
+  import.meta.env.SSR = true;
+};
+
 export const mountSSR = async (newDom: JSX.Element) => {
+  // mount ssr is called from a module imported from the server module
+  // in a node environment it does not have access to import.meta.env set
+  // in the server module, so setting it here in the entry point
+  if (import.meta.env?.SSR === undefined) setupEnv();
+
   if (import.meta.env.SSR) return;
 
   if (newDom instanceof Promise) {
@@ -304,6 +315,7 @@ export function Router(props: RouterPropsJSX, options: HtmlOptions, cache: Cache
           ...child.attrs,
           children: child.children
         }) as unknown as RouteData<DOMStructure>;
+
         const el = getRouteElement<DOMStructure>(options.route, '/', routeData);
 
         if (Array.isArray(el)) {
@@ -488,3 +500,5 @@ export function Link(
 
   return createElementClient(ClientLink as ComponentFactory, { href: getStateValue(href) }, ...tempChildren);
 }
+
+export default isBuiltinServerComp;

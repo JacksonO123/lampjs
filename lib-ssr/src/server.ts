@@ -1,9 +1,9 @@
 import express from 'express';
-import { toHtmlString, createElementSSR } from './lib.js';
+import { createElementSSR, toHtmlString } from './lib.js';
 import { createServer as createViteServer } from 'vite';
 import { CacheType } from './types.js';
 import { ComponentFactory } from '@jacksonotto/lampjs/types';
-import { readFileSync, readdirSync, existsSync } from 'fs';
+import { existsSync, readFileSync, readdirSync } from 'fs';
 import { resolve } from 'path';
 import chokidar from 'chokidar';
 import mime from 'mime-types';
@@ -13,13 +13,14 @@ if (!import.meta.env) import.meta.env = {};
 import.meta.env.SSR = true;
 
 const port = 3000;
-const prod = process.argv[2] === 'prod';
+const prod = process.argv[3] === 'prod';
 
 globalThis.createElement = createElementSSR;
 
 const cwd = process.cwd();
 let App: ComponentFactory | null = null;
-App = (await import(resolve(cwd, 'src', 'main.tsx'))).default as ComponentFactory;
+const appPath = prod ? resolve(cwd, 'ssr-dist', 'main.js') : resolve(cwd, 'src', 'main.tsx');
+App = (await import(appPath)).default as ComponentFactory;
 
 const app = express();
 
@@ -47,8 +48,7 @@ if (!prod) {
       clearModuleCache(item);
     });
 
-    const moduleUrl = resolve(cwd, 'src', 'main.tsx');
-    App = (await import(moduleUrl)).default;
+    App = (await import(appPath)).default;
 
     console.log('[lampjs:hmr] done');
   };
@@ -87,27 +87,28 @@ app.use('*', async (req, res) => {
 
   if (prod) {
     const reg = new RegExp(/\..*$/);
+
     if (reg.test(url)) {
       const ext = url.split('.').at(-1) as string;
       const fileUrl = resolve(cwd, 'dist', url.slice(1));
-
       const exists = existsSync(fileUrl);
 
       if (exists) {
         const data = readFileSync(fileUrl);
-
         const type = mime.lookup(ext);
-
         res.status(200).set({ 'Content-Type': type }).end(data);
       } else {
         res.status(404).end('404 page not found');
       }
+
+      return;
     }
   }
 
   const clientJs = prod
     ? '<script type="module" src="/index.js"></script>'
     : '<script type="module" src="./src/main.tsx"></script>';
+
   const viteJs = prod ? '' : '<script type="module" src="/@vite/client"></script>';
   const styleTags = prod ? getStyleTags() : '';
 

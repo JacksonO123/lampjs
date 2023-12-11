@@ -2,7 +2,8 @@ import type { ComponentFactory, ComponentAttributes, ComponentChild, ResponseDat
 import { Reactive, State, CaseData } from '@jacksonotto/lampjs';
 import { CacheType, DOMStructure, HtmlOptions } from './types.js';
 import { RouterPropsJSX } from '@jacksonotto/lampjs/types';
-export declare const createElementSSR: (tag: string | ComponentFactory, attrs: ComponentAttributes | null, ...children: ComponentChild[]) => DOMStructure;
+export declare function createElementSSR(tag: string | ComponentFactory, attrs: ComponentAttributes | null, ...children: ComponentChild[]): DOMStructure;
+declare const isBuiltinServerComp: (tag: Function) => boolean;
 export declare const toHtmlString: (structure: DOMStructure | string, options: HtmlOptions, cache: CacheType) => Promise<string>;
 export declare const mountSSR: (newDom: JSX.Element) => Promise<void>;
 export type DataFromPromiseResponse<T extends Promise<any> | JSX.Element> = Awaited<T> extends {
@@ -50,4 +51,4 @@ type ServerLinkProps = LinkProps & {
     revalidate?: boolean;
 };
 export declare function Link({ children, href, revalidate }: ServerLinkProps, options: HtmlOptions, cache: CacheType): JSX.Element;
-export {};
+export default isBuiltinServerComp;

@@ -1,13 +1,13 @@
 import { Reactive, createElement as createElementClient, getRouteElement, createState, getSwitchElement, Suspense as ClientSuspense, Router as ClientRouter, For as ClientFor, If as ClientIf, Switch as ClientSwitch, Link as ClientLink, getStateValue } from '@jacksonotto/lampjs';
 const SINGLE_TAGS = ['br'];
 const BUILTIN_SERVER_COMPS = [Suspense, Router, For, If, Link];
-export const createElementSSR = (tag, attrs, ...children) => {
+export function createElementSSR(tag, attrs, ...children) {
     return {
         tag,
         attrs,
         children
     };
-};
+}
 const formatAttr = (attr) => {
     if (attr.startsWith('on')) {
         if (attr === 'onChange')
@@ -76,7 +76,18 @@ export const toHtmlString = async (structure, options, cache) => {
     }
     return `${first}>${childrenHtml}${structure.tag === 'head' ? options.headInject : ''}${structure.tag === 'body' ? '<!-- lampjs_cache_insert -->' : ''}</${structure.tag}>`;
 };
+const setupEnv = () => {
+    // @ts-ignore
+    if (!import.meta.env)
+        import.meta.env = {};
+    import.meta.env.SSR = true;
+};
 export const mountSSR = async (newDom) => {
+    // mount ssr is called from a module imported from the server module
+    // in a node environment it does not have access to import.meta.env set
+    // in the server module, so setting it here in the entry point
+    if (import.meta.env?.SSR === undefined)
+        setupEnv();
     if (import.meta.env.SSR)
         return;
     if (newDom instanceof Promise) {
@@ -267,3 +278,4 @@ export function Link({ children, href, revalidate }, options, cache) {
     }
     return createElementClient(ClientLink, { href: getStateValue(href) }, ...tempChildren);
 }
+export default isBuiltinServerComp;

@@ -1,7 +1,7 @@
 import express from 'express';
-import { toHtmlString, createElementSSR } from './lib.js';
+import { createElementSSR, toHtmlString } from './lib.js';
 import { createServer as createViteServer } from 'vite';
-import { readFileSync, readdirSync, existsSync } from 'fs';
+import { existsSync, readFileSync, readdirSync } from 'fs';
 import { resolve } from 'path';
 import chokidar from 'chokidar';
 import mime from 'mime-types';
@@ -10,11 +10,12 @@ if (!import.meta.env)
     import.meta.env = {};
 import.meta.env.SSR = true;
 const port = 3000;
-const prod = process.argv[2] === 'prod';
+const prod = process.argv[3] === 'prod';
 globalThis.createElement = createElementSSR;
 const cwd = process.cwd();
 let App = null;
-App = (await import(resolve(cwd, 'src', 'main.tsx'))).default;
+const appPath = prod ? resolve(cwd, 'ssr-dist', 'main.js') : resolve(cwd, 'src', 'main.tsx');
+App = (await import(appPath)).default;
 const app = express();
 function clearModuleCache(moduleName) {
     delete require.cache[require.resolve(moduleName)];
@@ -34,8 +35,7 @@ if (!prod) {
         toClear.forEach((item) => {
             clearModuleCache(item);
         });
-        const moduleUrl = resolve(cwd, 'src', 'main.tsx');
-        App = (await import(moduleUrl)).default;
+        App = (await import(appPath)).default;
         console.log('[lampjs:hmr] done');
     };
     watcher.on('add', handleFileChange);
@@ -77,6 +77,7 @@ app.use('*', async (req, res) => {
             else {
                 res.status(404).end('404 page not found');
             }
+            return;
         }
     }
     const clientJs = prod
