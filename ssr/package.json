@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "start": "bun run --bun lampjs-ssr serve",
+    "start:dev": "bun run --bun lampjs-ssr serve",
+    "start:prod": "lampjs-ssr serve prod",
     "build": "tsc && vite build && bun run --bun lampjs-ssr build | rollup ssr-dist/main.js -o ssr-dist/main.js",
-    "test": "bun run --bun lampjs-ssr build",
     "preview": "vite preview"
   },
   "devDependencies": {

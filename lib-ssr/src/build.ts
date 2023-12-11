@@ -14,6 +14,7 @@ await build({
     'import.meta.env.DEV': 'true'
   },
   bundle: true,
+  minify: true,
   outfile: 'ssr-dist/main.js',
   format: 'esm',
   external: ['@jacksonotto/lampjs-ssr']
