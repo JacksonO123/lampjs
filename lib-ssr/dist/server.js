@@ -2,6 +2,7 @@ import express from 'express';
 import { createElementSSR, toHtmlString } from './lib.js';
 import { createServer as createViteServer } from 'vite';
 import { existsSync, readFileSync, readdirSync } from 'fs';
+import { outDir } from './constants.js';
 import { resolve } from 'path';
 import chokidar from 'chokidar';
 import mime from 'mime-types';
@@ -14,7 +15,7 @@ const prod = process.argv[3] === 'prod';
 globalThis.createElement = createElementSSR;
 const cwd = process.cwd();
 let App = null;
-const appPath = prod ? resolve(cwd, 'ssr-dist', 'main.js') : resolve(cwd, 'src', 'main.tsx');
+const appPath = prod ? resolve(cwd, outDir, 'main.js') : resolve(cwd, 'src', 'main.tsx');
 App = (await import(appPath)).default;
 const app = express();
 function clearModuleCache(moduleName) {

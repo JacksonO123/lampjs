@@ -4,6 +4,7 @@ import { createServer as createViteServer } from 'vite';
 import { CacheType } from './types.js';
 import { ComponentFactory } from '@jacksonotto/lampjs/types';
 import { existsSync, readFileSync, readdirSync } from 'fs';
+import { outDir } from './constants.js';
 import { resolve } from 'path';
 import chokidar from 'chokidar';
 import mime from 'mime-types';
@@ -19,7 +20,7 @@ globalThis.createElement = createElementSSR;
 
 const cwd = process.cwd();
 let App: ComponentFactory | null = null;
-const appPath = prod ? resolve(cwd, 'ssr-dist', 'main.js') : resolve(cwd, 'src', 'main.tsx');
+const appPath = prod ? resolve(cwd, outDir, 'main.js') : resolve(cwd, 'src', 'main.tsx');
 App = (await import(appPath)).default as ComponentFactory;
 
 const app = express();
