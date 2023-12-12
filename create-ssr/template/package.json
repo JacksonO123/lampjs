@@ -5,7 +5,7 @@
   "scripts": {
     "start:dev": "bun run --bun lampjs-ssr serve",
     "start:prod": "lampjs-ssr serve prod",
-    "build": "tsc && vite build && bun run --bun lampjs-ssr build | rollup dist-ssr/main.js -o dist-ssr/main.js",
+    "build": "tsc && vite build && lampjs-ssr build | rollup dist-ssr/main.js -o dist-ssr/main.js",
     "preview": "vite preview"
   },
   "devDependencies": {
@@ -13,8 +13,8 @@
     "typescript": "latest"
   },
   "dependencies": {
-    "@jacksonotto/lampjs": "link:../lib",
-    "@jacksonotto/lampjs-ssr": "link:../lib-ssr",
+    "@jacksonotto/lampjs": "latest",
+    "@jacksonotto/lampjs-ssr": "latest",
     "rollup": "^4.7.0",
     "vite": "^5.0.4"
   }

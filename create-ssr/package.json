@@ -1,0 +1,33 @@
+{
+  "type": "module",
+  "name": "create-lampjs-ssr-app",
+  "version": "1.0.0",
+  "description": "Templating cli for ssr runtime for LampJs",
+  "engines": {
+    "node": "^14.18.0 || >=16.0.0"
+  },
+  "main": "cli.js",
+  "bin": {
+    "create-lampjs-ssr-app": "./cli.js"
+  },
+  "dependencies": {
+    "fs-extra": "^11.1.0",
+    "readline": "^1.3.0"
+  },
+  "keywords": [
+    "lamp",
+    "lampjs",
+    "lampjs-ssr",
+    "js",
+    "ts",
+    "javascript",
+    "typescript",
+    "framework",
+    "html",
+    "jsx",
+    "tsx",
+    "create"
+  ],
+  "author": "Jackson Otto",
+  "license": "MIT"
+}

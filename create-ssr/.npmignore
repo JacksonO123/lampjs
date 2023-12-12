@@ -1,0 +1,5 @@
+/node_modules
+/template/node_modules
+/template/pnpm-lock.yaml
+pnpm-lock.yaml
+package-lock.json
