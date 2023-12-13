@@ -5,17 +5,21 @@
   "types": "./dist/index.d.ts",
   "description": "A server side rendering runtime for the LampJs framework",
   "author": "Jackson Otto",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "bin": {
     "lampjs-ssr": "./dist/bin.js"
   },
   "scripts": {
-    "watch": "npx nodemon -e ts --watch src --exec npx tsc"
+    "watch": "npx nodemon -e ts,cts --watch src --exec npx tsc"
   },
   "exports": {
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./server": {
+      "import": "./dist/server.js",
+      "types": "./dist/server.d.ts"
     }
   },
   "devDependencies": {

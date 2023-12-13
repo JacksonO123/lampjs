@@ -2,8 +2,9 @@ const mode = process.argv[2];
 
 if (mode === 'serve') {
   const serverFile = '../dist/server.js';
-  import(serverFile);
+  const startServer = (await import(serverFile)).default;
+  startServer();
 } else if (mode === 'build') {
   const buildFile = '../dist/build.js';
-  import(buildFile);
+  await import(buildFile);
 }
