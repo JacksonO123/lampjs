@@ -10,15 +10,27 @@ import mime from 'mime-types';
 if (!import.meta.env)
     import.meta.env = {};
 import.meta.env.SSR = true;
-const port = 3000;
-const argProd = process.argv[3] === 'prod';
-function clearModuleCache(moduleName) {
+const args = process.argv.slice(2);
+const defaultPort = 3000;
+const argProd = args[1] === 'prod';
+const clearModuleCache = (moduleName) => {
     delete require.cache[require.resolve(moduleName)];
-}
+};
+export const getStyleTags = (path) => {
+    let res = '';
+    const files = readdirSync(path);
+    files.forEach((file) => {
+        if (!file.endsWith('.css'))
+            return;
+        res += `<link rel="stylesheet" href="/assets/${file}">`;
+    });
+    return res;
+};
 export default async function startServer(cliProd, cliPort, getApp) {
     const app = express();
     getApp?.(app);
     const prod = cliProd || argProd;
+    const port = cliPort || defaultPort;
     globalThis.createElement = createElementSSR;
     const cwd = process.cwd();
     let App = null;
@@ -53,17 +65,6 @@ export default async function startServer(cliProd, cliPort, getApp) {
         });
         app.use(viteServer.middlewares);
     }
-    const getStyleTags = () => {
-        let res = '';
-        const cwd = process.cwd();
-        const files = readdirSync(resolve(cwd, 'dist', 'assets'));
-        files.forEach((file) => {
-            if (!file.endsWith('.css'))
-                return;
-            res += `<link rel="stylesheet" href="/assets/${file}">`;
-        });
-        return res;
-    };
     app.use('*', async (req, res) => {
         const params = req.params;
         const url = params[0];
@@ -88,7 +89,7 @@ export default async function startServer(cliProd, cliPort, getApp) {
             ? '<script type="module" src="/index.js"></script>'
             : '<script type="module" src="./src/main.tsx"></script>';
         const viteJs = prod ? '' : '<script type="module" src="/@vite/client"></script>';
-        const styleTags = prod ? getStyleTags() : '';
+        const styleTags = prod ? getStyleTags(resolve(cwd, 'dist', 'assets')) : '';
         const options = {
             headInject: clientJs + viteJs + styleTags,
             route: url
@@ -98,5 +99,8 @@ export default async function startServer(cliProd, cliPort, getApp) {
         html = html.replace('<!-- lampjs_cache_insert -->', `<script id="_LAMPJS_DATA_" type="application/json">${JSON.stringify(promiseCache)}</script>`);
         res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
     });
-    app.listen(cliPort || port);
+    if (!getApp) {
+        console.log(`[lampjs:server] watching on port ${port}${!prod ? `\n - http://localhost:${port}` : ''}`);
+        app.listen(port);
+    }
 }

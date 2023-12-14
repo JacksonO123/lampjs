@@ -127,7 +127,7 @@ export const toHtmlString = async (
     return `${first} />`;
   }
 
-  return `${first}>${childrenHtml}${structure.tag === 'head' ? options.headInject : ''}${
+  return `${first}>${structure.tag === 'head' ? options.headInject : ''}${childrenHtml}${
     structure.tag === 'body' ? '<!-- lampjs_cache_insert -->' : ''
   }</${structure.tag}>`;
 };

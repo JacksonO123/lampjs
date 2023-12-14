@@ -266,19 +266,15 @@ export const Router = (props: RouterPropsJSX) => {
   const handleNewRoute = (path: string) => {
     if (Array.isArray(children)) {
       for (let i = 0; i < children.length; i++) {
-        if (children[i] instanceof RouteData) {
-          const el = getRouteElement(path, '/', children[i]);
-          if (validChild(el)) return el;
-        }
+        const el = getRouteElement(path, '/', children[i]);
+        if (validChild(el)) return el;
       }
 
       return page404();
     }
 
-    if (children instanceof RouteData) {
-      const el = getRouteElement(path, '/', children);
-      if (validChild(el)) return el;
-    }
+    const el = getRouteElement(path, '/', children);
+    if (validChild(el)) return el;
 
     return page404();
   };

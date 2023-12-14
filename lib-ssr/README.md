@@ -11,13 +11,13 @@ To create a new LampJs project run
 pnpm:
 
 ```sh
-pnpm create lampjs-app
+pnpm create lampjs-ssr-app
 ```
 
 npm:
 
 ```sh
-npx create-lampjs-app
+npx create-lampjs-ssr-app
 ```
 
 _By Jackson Otto_

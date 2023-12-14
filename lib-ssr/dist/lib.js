@@ -74,7 +74,7 @@ export const toHtmlString = async (structure, options, cache) => {
     if (isSingleTag(structure.tag)) {
         return `${first} />`;
     }
-    return `${first}>${childrenHtml}${structure.tag === 'head' ? options.headInject : ''}${structure.tag === 'body' ? '<!-- lampjs_cache_insert -->' : ''}</${structure.tag}>`;
+    return `${first}>${structure.tag === 'head' ? options.headInject : ''}${childrenHtml}${structure.tag === 'body' ? '<!-- lampjs_cache_insert -->' : ''}</${structure.tag}>`;
 };
 const setupEnv = () => {
     // @ts-ignore
