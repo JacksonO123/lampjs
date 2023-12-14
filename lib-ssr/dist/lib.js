@@ -123,7 +123,7 @@ export const mountSSR = async (newDom) => {
                 };
             }
             else {
-                devScript.src = '/index.js';
+                devScript.src = '/main.js';
                 document.addEventListener('DOMContentLoaded', () => {
                     const children = Array.from(document.head.childNodes);
                     children.forEach((item) => {

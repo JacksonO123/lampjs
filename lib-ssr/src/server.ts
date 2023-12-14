@@ -117,7 +117,7 @@ export default async function startServer(
     }
 
     const clientJs = prod
-      ? '<script type="module" src="/index.js"></script>'
+      ? '<script type="module" src="/main.js"></script>'
       : '<script type="module" src="./src/main.tsx"></script>';
 
     const viteJs = prod ? '' : '<script type="module" src="/@vite/client"></script>';

@@ -185,7 +185,7 @@ export const mountSSR = async (newDom: JSX.Element) => {
           preservedElements.forEach((el) => document.head.appendChild(el));
         };
       } else {
-        devScript.src = '/index.js';
+        devScript.src = '/main.js';
 
         document.addEventListener('DOMContentLoaded', () => {
           const children = Array.from(document.head.childNodes) as HTMLElement[];
