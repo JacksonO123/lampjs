@@ -1,22 +1,17 @@
-import { fileURLToPath, URL } from "node:url";
-import { defineConfig } from "vite";
-import aliasConfig from "./aliases";
-
-const aliases = Object.entries(aliasConfig).reduce(
-  (acc, curr) => {
-    acc[`@${curr[0]}`] = fileURLToPath(new URL(curr[1], import.meta.url));
-    return acc;
-  },
-  { "@": fileURLToPath(new URL("./src", import.meta.url)) }
-);
+import { defineConfig } from 'vite';
 
 export default defineConfig({
-  resolve: {
-    alias: aliases,
+  build: {
+    rollupOptions: {
+      input: 'src/main.tsx',
+      output: {
+        entryFileNames: 'main.js'
+      }
+    }
   },
   esbuild: {
-    jsxFactory: "createElement",
-    jsxFragment: "Fragment",
-    jsxInject: 'import { createElement, Fragment } from "@jacksonotto/lampjs"',
-  },
+    jsxFactory: 'createElement',
+    jsxFragment: 'Fragment',
+    jsxInject: 'import { createElement, Fragment } from "@jacksonotto/lampjs"'
+  }
 });

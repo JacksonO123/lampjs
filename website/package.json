@@ -1,19 +1,22 @@
 {
-  "name": "Lampjs Home Page",
-  "version": "1.0.0",
+  "name": "new-lampjs-app",
+  "version": "0.1.0",
   "type": "module",
-  "author": "Jackson Otto",
   "scripts": {
-    "dev": "vite --port 3000",
-    "build": "tsc && vite build",
+    "start:dev": "bun run --bun lampjs-ssr serve",
+    "start:prod": "lampjs-ssr serve prod",
+    "build": "tsc && vite build && lampjs-ssr build | rollup dist-ssr/main.js -o dist-ssr/main.js",
     "preview": "vite preview"
   },
   "devDependencies": {
     "@types/node": "latest",
-    "typescript": "latest",
-    "vite": "latest"
+    "typescript": "latest"
   },
   "dependencies": {
-    "@jacksonotto/lampjs": "^4.4.12"
+    "@jacksonotto/lampjs": "latest",
+    "@jacksonotto/lampjs-ssr": "latest",
+    "@jacksonotto/lampjs-vercel": "^1.0.2",
+    "rollup": "^4.7.0",
+    "vite": "^5.0.4"
   }
 }

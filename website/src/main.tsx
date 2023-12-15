@@ -1,5 +1,7 @@
-import "./style.css";
-import Root from "./pages/root";
-import { mount } from "@jacksonotto/lampjs";
+import { mountSSR } from '@jacksonotto/lampjs-ssr';
+import App from './pages/App';
+import './main.css';
 
-mount(document.body, <Root />);
+mountSSR(<App />);
+
+export default App;

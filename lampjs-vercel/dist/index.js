@@ -41,7 +41,6 @@ export default async function handler(request, response) {
         route: url
     };
     const promiseCache = {};
-    console.log(toHtmlString);
     let html = '<!DOCTYPE html>' + (await toHtmlString(createElement(App, null), options, promiseCache));
     html = html.replace('<!-- lampjs_cache_insert -->', `<script id="_LAMPJS_DATA_" type="application/json">${JSON.stringify(promiseCache)}</script>`);
     response.status(200).end(html);
