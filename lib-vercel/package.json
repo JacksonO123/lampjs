@@ -5,9 +5,9 @@
   "types": "./dist/index.d.ts",
   "description": "A helper library for lampjs-ssr on vercel serverless functions",
   "author": "Jackson Otto",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "scripts": {
-    "watch": "npx nodemon -e ts --watch src --exec npx tsc || exit 1"
+    "watch": "npx nodemon -e ts --watch src --exec 'npx tsc || exit 1'"
   },
   "exports": {
     ".": {
