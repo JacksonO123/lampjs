@@ -5,12 +5,12 @@
   "types": "./dist/index.d.ts",
   "description": "A server side rendering runtime for the LampJs framework",
   "author": "Jackson Otto",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "bin": {
     "lampjs-ssr": "./dist/bin.js"
   },
   "scripts": {
-    "watch": "npx nodemon -e ts --watch src --exec npx tsc"
+    "watch": "npx nodemon -e ts --watch src --exec 'npx tsc || exit 1'"
   },
   "exports": {
     ".": {
