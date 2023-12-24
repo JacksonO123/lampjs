@@ -5,7 +5,7 @@
   "types": "./dist/index.d.ts",
   "description": "A server side rendering runtime for the LampJs framework",
   "author": "Jackson Otto",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "bin": {
     "lampjs-ssr": "./dist/bin.js"
   },
@@ -26,6 +26,7 @@
     "@types/express": "^4.17.21",
     "@types/mime-types": "^2.1.4",
     "@types/node": "latest",
+    "@vercel/node": "^3.0.14",
     "typescript": "latest"
   },
   "repository": {
