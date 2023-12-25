@@ -36,7 +36,6 @@ export default async function handler(request: VercelRequest, response: VercelRe
     if (exists) {
       const data = readFileSync(fileUrl);
       const type = mime.lookup(ext);
-      console.log(ext, type);
       if (type) response.setHeader('Content-Type', type);
       response.status(200).end(data);
     } else {
