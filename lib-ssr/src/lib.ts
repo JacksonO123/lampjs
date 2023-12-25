@@ -25,7 +25,13 @@ import { BuiltinServerComp, CacheType, DOMStructure, HtmlOptions } from './types
 import { RouterPropsJSX } from '@jacksonotto/lampjs/types';
 
 const SINGLE_TAGS = ['br'];
-const BUILTIN_SERVER_COMPS: Function[] = [Suspense, Router, For, If, Link];
+
+type ServerFunction = Function & { isServerFunction: boolean };
+
+const createServerFunction = <T extends (...args: any[]) => any>(fn: T) => {
+  (fn as unknown as ServerFunction).isServerFunction = true;
+  return fn;
+};
 
 export function createElementSSR(
   tag: string | ComponentFactory,
@@ -68,9 +74,7 @@ const isSingleTag = (tag: string) => {
   return SINGLE_TAGS.includes(tag);
 };
 
-const isBuiltinServerComp = (tag: Function) => {
-  return BUILTIN_SERVER_COMPS.includes(tag);
-};
+const isBuiltinServerComp = (tag: Function) => Boolean((tag as ServerFunction).isServerFunction);
 
 export const toHtmlString = async (
   structure: DOMStructure | string,
@@ -229,59 +233,61 @@ type ServerSuspenseProps<T extends Promise<any> | JSX.Element, K extends boolean
     }
   : { suspenseId?: string });
 
-export function Suspense<T extends Promise<any> | JSX.Element, K extends boolean>(
-  // @ts-ignore
-  { children, fallback, decoder, render, waitServer, suspenseId }: ServerSuspenseProps<T, K>,
-  options: HtmlOptions,
-  cache: CacheType
-) {
-  const comp = (children as unknown as DOMStructure[])[0];
+export const Suspense = createServerFunction(
+  <T extends Promise<any> | JSX.Element, K extends boolean>(
+    // @ts-ignore
+    { children, fallback, decoder, render, waitServer, suspenseId }: ServerSuspenseProps<T, K>,
+    options: HtmlOptions,
+    cache: CacheType
+  ) => {
+    const comp = (children as unknown as DOMStructure[])[0];
 
-  if (import.meta.env.SSR) {
-    if (waitServer) {
-      const res = new Promise(async (resolve) => {
-        let promiseData: any;
+    if (import.meta.env.SSR) {
+      if (waitServer) {
+        const res = new Promise(async (resolve) => {
+          let promiseData: any;
 
-        if (comp instanceof Promise) {
-          promiseData = await comp;
-        } else {
-          promiseData = await (comp.tag as ComponentFactory)(
-            {
-              ...comp.attrs
-            },
-            // @ts-ignore
-            ...comp.children
-          );
-        }
+          if (comp instanceof Promise) {
+            promiseData = await comp;
+          } else {
+            promiseData = await (comp.tag as ComponentFactory)(
+              {
+                ...comp.attrs
+              },
+              // @ts-ignore
+              ...comp.children
+            );
+          }
 
-        if (promiseData instanceof Response) {
-          if (decoder) promiseData = await decoder(promiseData);
-          else promiseData = await promiseData.json();
-        }
+          if (promiseData instanceof Response) {
+            if (decoder) promiseData = await decoder(promiseData);
+            else promiseData = await promiseData.json();
+          }
 
-        if (render) promiseData = render(promiseData);
+          if (render) promiseData = render(promiseData);
 
-        const res = toHtmlString(promiseData as DOMStructure, options, cache) as unknown as JSX.Element;
+          const res = toHtmlString(promiseData as DOMStructure, options, cache) as unknown as JSX.Element;
 
-        resolve(res);
-      });
+          resolve(res);
+        });
 
-      // @ts-ignore
-      res._lampjsSuspenseId = suspenseId;
+        // @ts-ignore
+        res._lampjsSuspenseId = suspenseId;
 
-      return res as unknown as JSX.Element;
+        return res as unknown as JSX.Element;
+      }
+
+      return fallback;
     }
 
-    return fallback;
+    return createElementClient(
+      ClientSuspense as ComponentFactory,
+      // @ts-ignore
+      { fallback, render, decoder, suspenseId },
+      children
+    );
   }
-
-  return createElementClient(
-    ClientSuspense as ComponentFactory,
-    // @ts-ignore
-    { fallback, render, decoder, suspenseId },
-    children
-  );
-}
+);
 
 const page404 = () => {
   return createElementSSR(
@@ -305,68 +311,70 @@ type ServerRouterProps = {
   children: DOMStructure[];
 };
 
-export function Router(props: RouterPropsJSX, options: HtmlOptions, cache: CacheType) {
-  const { children } = props as unknown as ServerRouterProps;
+export const Router = createServerFunction(
+  (props: RouterPropsJSX, options: HtmlOptions, cache: CacheType) => {
+    const { children } = props as unknown as ServerRouterProps;
 
-  if (import.meta.env.SSR) {
-    const handleChildRoute = (child: DOMStructure) => {
-      if (typeof child.tag === 'function') {
-        const routeData = child.tag({
-          ...child.attrs,
-          children: child.children
-        }) as unknown as RouteData<DOMStructure>;
+    if (import.meta.env.SSR) {
+      const handleChildRoute = (child: DOMStructure) => {
+        if (typeof child.tag === 'function') {
+          const routeData = child.tag({
+            ...child.attrs,
+            children: child.children
+          }) as unknown as RouteData<DOMStructure>;
 
-        const el = getRouteElement<DOMStructure>(options.route, '/', routeData);
+          const el = getRouteElement<DOMStructure>(options.route, '/', routeData);
 
-        if (Array.isArray(el)) {
-          return el.map((item) => {
-            return toHtmlString(item, options, cache);
-          });
-        } else if (el !== null) {
-          return [toHtmlString(el, options, cache)];
-        }
-      }
-
-      return null;
-    };
-
-    let res: Promise<string | string[]>;
-
-    if (Array.isArray(children)) {
-      const temp = children
-        .reduce((acc, curr) => {
-          const temp = handleChildRoute(curr);
-
-          if (temp) {
-            acc.push(temp);
+          if (Array.isArray(el)) {
+            return el.map((item) => {
+              return toHtmlString(item, options, cache);
+            });
+          } else if (el !== null) {
+            return [toHtmlString(el, options, cache)];
           }
+        }
 
-          return acc;
-        }, [] as Promise<string>[][])
-        .flat();
+        return null;
+      };
 
-      if (temp.length === 0) {
-        temp.push(toHtmlString(page404(), options, cache));
+      let res: Promise<string | string[]>;
+
+      if (Array.isArray(children)) {
+        const temp = children
+          .reduce((acc, curr) => {
+            const temp = handleChildRoute(curr);
+
+            if (temp) {
+              acc.push(temp);
+            }
+
+            return acc;
+          }, [] as Promise<string>[][])
+          .flat();
+
+        if (temp.length === 0) {
+          temp.push(toHtmlString(page404(), options, cache));
+        }
+
+        res = Promise.all(temp);
+      } else {
+        res = Promise.all(handleChildRoute(children) || '');
       }
 
-      res = Promise.all(temp);
-    } else {
-      res = Promise.all(handleChildRoute(children) || '');
+      return res as unknown as JSX.Element;
     }
 
-    return res as unknown as JSX.Element;
+    const replacePage = (newPage: JSX.Element) => {
+      mountSSR(newPage);
+    };
+
+    return createElementClient(
+      ClientRouter as ComponentFactory,
+      { onRouteChange: replacePage } as unknown as ComponentAttributes,
+      ...(ensureArray(children) as unknown as ComponentChild[])
+    );
   }
-
-  const replacePage = (newPage: JSX.Element) => {
-    mountSSR(newPage);
-  };
-
-  return createElementClient(
-    ClientRouter as ComponentFactory,
-    { onRouteChange: replacePage } as unknown as ComponentAttributes,
-    ...(ensureArray(children) as unknown as ComponentChild[])
-  );
-}
+);
 
 type ServerForItemFnJSX<T> = (
   item: State<T>,
@@ -390,27 +398,29 @@ type ServerForProps<T> = {
   children: [ServerForItemFn<T>];
 };
 
-export function For<T>(props: ServerForPropsJSX<T>, options: HtmlOptions, cache: CacheType) {
-  const { each, children } = props as unknown as ServerForProps<T>;
+export const For = createServerFunction(
+  <T>(props: ServerForPropsJSX<T>, options: HtmlOptions, cache: CacheType) => {
+    const { each, children } = props as unknown as ServerForProps<T>;
 
-  if (import.meta.env.SSR) {
-    return Promise.all(
-      each.value.map((item, index) =>
-        toHtmlString(
-          children[0](createState(item), createState(index), () => {}),
-          options,
-          cache
+    if (import.meta.env.SSR) {
+      return Promise.all(
+        each.value.map((item, index) =>
+          toHtmlString(
+            children[0](createState(item), createState(index), () => {}),
+            options,
+            cache
+          )
         )
-      )
-    ) as unknown as JSX.Element;
-  }
+      ) as unknown as JSX.Element;
+    }
 
-  return createElementClient(
-    ClientFor as unknown as ComponentFactory,
-    { each } as unknown as ComponentAttributes,
-    children[0] as unknown as ComponentChild[]
-  );
-}
+    return createElementClient(
+      ClientFor as unknown as ComponentFactory,
+      { each } as unknown as ComponentAttributes,
+      children[0] as unknown as ComponentChild[]
+    );
+  }
+);
 
 type ServerIfProps = {
   condition: Reactive<boolean>;
@@ -424,7 +434,7 @@ export type IfPropsJSX = {
   else: JSX.Element;
 };
 
-export function If(props: IfPropsJSX) {
+export const If = createServerFunction((props: IfPropsJSX) => {
   const { condition, then, else: elseBranch } = props as unknown as ServerIfProps;
 
   if (import.meta.env.SSR) {
@@ -435,7 +445,7 @@ export function If(props: IfPropsJSX) {
     ClientIf as ComponentFactory,
     { condition, then, else: elseBranch } as unknown as ComponentAttributes
   );
-}
+});
 
 export type SwitchPropsJSX<T> = {
   children: JSX.Element | JSX.Element[];
@@ -447,27 +457,29 @@ export type SwitchProps<T> = {
   condition: Reactive<T>;
 };
 
-export function Switch<T>(props: SwitchPropsJSX<T>, options: HtmlOptions, cache: CacheType) {
-  const { children, condition } = props as unknown as SwitchProps<T>;
+export const Switch = createServerFunction(
+  <T>(props: SwitchPropsJSX<T>, options: HtmlOptions, cache: CacheType) => {
+    const { children, condition } = props as unknown as SwitchProps<T>;
 
-  if (import.meta.env.SSR) {
-    const cases = (children as unknown as DOMStructure[]).map(
-      (child) =>
-        (child.tag as ComponentFactory)({
-          ...child.attrs,
-          children: child.children
-        }) as unknown as CaseData<T>
+    if (import.meta.env.SSR) {
+      const cases = (children as unknown as DOMStructure[]).map(
+        (child) =>
+          (child.tag as ComponentFactory)({
+            ...child.attrs,
+            children: child.children
+          }) as unknown as CaseData<T>
+      );
+      const el = getSwitchElement(cases, condition.value) as unknown as DOMStructure[];
+      return toHtmlString(el[0], options, cache) as unknown as JSX.Element;
+    }
+
+    return createElementClient(
+      ClientSwitch as ComponentFactory,
+      { condition } as unknown as ComponentAttributes,
+      ...ensureArray(children)
     );
-    const el = getSwitchElement(cases, condition.value) as unknown as DOMStructure[];
-    return toHtmlString(el[0], options, cache) as unknown as JSX.Element;
   }
-
-  return createElementClient(
-    ClientSwitch as ComponentFactory,
-    { condition } as unknown as ComponentAttributes,
-    ...ensureArray(children)
-  );
-}
+);
 
 type LinkProps = Omit<JSX.HTMLAttributes, 'href'> & {
   href: string | Reactive<string>;
@@ -482,23 +494,25 @@ function ensureArray<T>(value: T | T[]) {
   return [value];
 }
 
-export function Link(
-  { children, href, revalidate }: ServerLinkProps,
-  options: HtmlOptions,
-  cache: CacheType
-) {
-  const tempChildren = ensureArray(children);
+export const Link = createServerFunction(
+  ({ children, href, revalidate }: ServerLinkProps, options: HtmlOptions, cache: CacheType) => {
+    const tempChildren = ensureArray(children);
 
-  if (import.meta.env.SSR) {
-    const el = createElementSSR('a', { href: getStateValue(href) }, ...tempChildren);
-    return toHtmlString(el, options, cache) as unknown as JSX.Element;
+    if (import.meta.env.SSR) {
+      const el = createElementSSR('a', { href: getStateValue(href) }, ...tempChildren);
+      return toHtmlString(el, options, cache) as unknown as JSX.Element;
+    }
+
+    if (revalidate) {
+      return createElementClient('a', { href: getStateValue(href) }, ...tempChildren);
+    }
+
+    return createElementClient(
+      ClientLink as ComponentFactory,
+      { href: getStateValue(href) },
+      ...tempChildren
+    );
   }
-
-  if (revalidate) {
-    return createElementClient('a', { href: getStateValue(href) }, ...tempChildren);
-  }
-
-  return createElementClient(ClientLink as ComponentFactory, { href: getStateValue(href) }, ...tempChildren);
-}
+);
 
 export default isBuiltinServerComp;

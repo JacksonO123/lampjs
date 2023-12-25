@@ -1,6 +1,9 @@
 import { Reactive, createElement as createElementClient, getRouteElement, createState, getSwitchElement, Suspense as ClientSuspense, Router as ClientRouter, For as ClientFor, If as ClientIf, Switch as ClientSwitch, Link as ClientLink, getStateValue } from '@jacksonotto/lampjs';
 const SINGLE_TAGS = ['br'];
-const BUILTIN_SERVER_COMPS = [Suspense, Router, For, If, Link];
+const createServerFunction = (fn) => {
+    fn.isServerFunction = true;
+    return fn;
+};
 export function createElementSSR(tag, attrs, ...children) {
     return {
         tag,
@@ -33,9 +36,7 @@ const attrsToString = (attrs) => {
 const isSingleTag = (tag) => {
     return SINGLE_TAGS.includes(tag);
 };
-const isBuiltinServerComp = (tag) => {
-    return BUILTIN_SERVER_COMPS.includes(tag);
-};
+const isBuiltinServerComp = (tag) => Boolean(tag.isServerFunction);
 export const toHtmlString = async (structure, options, cache) => {
     if (structure instanceof Reactive) {
         return structure.value.toString();
@@ -141,9 +142,9 @@ export const mountSSR = async (newDom) => {
         }
     });
 };
-export function Suspense(
+export const Suspense = createServerFunction((
 // @ts-ignore
-{ children, fallback, decoder, render, waitServer, suspenseId }, options, cache) {
+{ children, fallback, decoder, render, waitServer, suspenseId }, options, cache) => {
     const comp = children[0];
     if (import.meta.env.SSR) {
         if (waitServer) {
@@ -179,7 +180,7 @@ export function Suspense(
     return createElementClient(ClientSuspense, 
     // @ts-ignore
     { fallback, render, decoder, suspenseId }, children);
-}
+});
 const page404 = () => {
     return createElementSSR('html', { lang: 'en' }, 
     // @ts-ignore
@@ -189,7 +190,7 @@ const page404 = () => {
     // @ts-ignore
     createElementSSR('body', null, createElementSSR('span', null, '404 page not found')));
 };
-export function Router(props, options, cache) {
+export const Router = createServerFunction((props, options, cache) => {
     const { children } = props;
     if (import.meta.env.SSR) {
         const handleChildRoute = (child) => {
@@ -235,22 +236,22 @@ export function Router(props, options, cache) {
         mountSSR(newPage);
     };
     return createElementClient(ClientRouter, { onRouteChange: replacePage }, ...ensureArray(children));
-}
-export function For(props, options, cache) {
+});
+export const For = createServerFunction((props, options, cache) => {
     const { each, children } = props;
     if (import.meta.env.SSR) {
         return Promise.all(each.value.map((item, index) => toHtmlString(children[0](createState(item), createState(index), () => { }), options, cache)));
     }
     return createElementClient(ClientFor, { each }, children[0]);
-}
-export function If(props) {
+});
+export const If = createServerFunction((props) => {
     const { condition, then, else: elseBranch } = props;
     if (import.meta.env.SSR) {
         return (condition.value ? then : elseBranch);
     }
     return createElementClient(ClientIf, { condition, then, else: elseBranch });
-}
-export function Switch(props, options, cache) {
+});
+export const Switch = createServerFunction((props, options, cache) => {
     const { children, condition } = props;
     if (import.meta.env.SSR) {
         const cases = children.map((child) => child.tag({
@@ -261,13 +262,13 @@ export function Switch(props, options, cache) {
         return toHtmlString(el[0], options, cache);
     }
     return createElementClient(ClientSwitch, { condition }, ...ensureArray(children));
-}
+});
 function ensureArray(value) {
     if (Array.isArray(value))
         return value;
     return [value];
 }
-export function Link({ children, href, revalidate }, options, cache) {
+export const Link = createServerFunction(({ children, href, revalidate }, options, cache) => {
     const tempChildren = ensureArray(children);
     if (import.meta.env.SSR) {
         const el = createElementSSR('a', { href: getStateValue(href) }, ...tempChildren);
@@ -277,5 +278,5 @@ export function Link({ children, href, revalidate }, options, cache) {
         return createElementClient('a', { href: getStateValue(href) }, ...tempChildren);
     }
     return createElementClient(ClientLink, { href: getStateValue(href) }, ...tempChildren);
-}
+});
 export default isBuiltinServerComp;

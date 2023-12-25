@@ -1,7 +1,6 @@
 import { createElementSSR as createElement, toHtmlString } from '@jacksonotto/lampjs-ssr';
 import { readdirSync, existsSync, readFileSync } from 'fs';
 import { resolve } from 'path';
-import mime from 'mime-types';
 const outDir = 'dist-ssr';
 const getStyleTags = (path) => {
     let res = '';
@@ -20,15 +19,13 @@ export default async function handler(request, response) {
     const App = (await import(appPath)).default;
     const reg = new RegExp(/\..*$/);
     if (reg.test(url)) {
-        const ext = url.split('.').at(-1);
+        // const ext = url.split('.').at(-1)!;
         const fileUrl = resolve(cwd, 'dist', url.slice(1));
         const exists = existsSync(fileUrl);
         if (exists) {
             const data = readFileSync(fileUrl);
-            const type = mime.lookup(ext);
-            console.log(ext, type);
-            if (type)
-                response.setHeader('Content-Type', type);
+            // const type = mime.lookup(ext);
+            // if (type) response.setHeader('Content-Type', type);
             response.status(200).end(data);
         }
         else {

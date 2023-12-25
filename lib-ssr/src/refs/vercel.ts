@@ -1,7 +1,6 @@
 import { createElementSSR as createElement, toHtmlString } from '@jacksonotto/lampjs-ssr';
 import { readdirSync, existsSync, readFileSync } from 'fs';
 import { resolve } from 'path';
-import mime from 'mime-types';
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
 const outDir = 'dist-ssr';
@@ -29,14 +28,11 @@ export default async function handler(request: VercelRequest, response: VercelRe
   const reg = new RegExp(/\..*$/);
 
   if (reg.test(url)) {
-    const ext = url.split('.').at(-1)!;
     const fileUrl = resolve(cwd, 'dist', url.slice(1));
     const exists = existsSync(fileUrl);
 
     if (exists) {
       const data = readFileSync(fileUrl);
-      const type = mime.lookup(ext);
-      if (type) response.setHeader('Content-Type', type);
       response.status(200).end(data);
     } else {
       response.status(404).end('404 page not found');

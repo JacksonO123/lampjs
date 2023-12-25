@@ -21,20 +21,20 @@ type ServerSuspenseProps<T extends Promise<any> | JSX.Element, K extends boolean
 } : {
     suspenseId?: string;
 });
-export declare function Suspense<T extends Promise<any> | JSX.Element, K extends boolean>({ children, fallback, decoder, render, waitServer, suspenseId }: ServerSuspenseProps<T, K>, options: HtmlOptions, cache: CacheType): JSX.Element;
-export declare function Router(props: RouterPropsJSX, options: HtmlOptions, cache: CacheType): JSX.Element;
+export declare const Suspense: <T extends Promise<any> | JSX.Element, K extends boolean>({ children, fallback, decoder, render, waitServer, suspenseId }: ServerSuspenseProps<T, K>, options: HtmlOptions, cache: CacheType) => JSX.Element;
+export declare const Router: (props: RouterPropsJSX, options: HtmlOptions, cache: CacheType) => JSX.Element;
 type ServerForItemFnJSX<T> = (item: State<T>, index: State<number>, cleanup: (...args: Reactive<any>[]) => void) => JSX.Element;
 type ServerForPropsJSX<T> = {
     each: Reactive<T[]>;
     children: ServerForItemFnJSX<T>;
 };
-export declare function For<T>(props: ServerForPropsJSX<T>, options: HtmlOptions, cache: CacheType): JSX.Element;
+export declare const For: <T>(props: ServerForPropsJSX<T>, options: HtmlOptions, cache: CacheType) => JSX.Element;
 export type IfPropsJSX = {
     condition: Reactive<boolean>;
     then: JSX.Element;
     else: JSX.Element;
 };
-export declare function If(props: IfPropsJSX): JSX.Element;
+export declare const If: (props: IfPropsJSX) => JSX.Element;
 export type SwitchPropsJSX<T> = {
     children: JSX.Element | JSX.Element[];
     condition: Reactive<T>;
@@ -43,12 +43,12 @@ export type SwitchProps<T> = {
     children: CaseData<T> | CaseData<T>[];
     condition: Reactive<T>;
 };
-export declare function Switch<T>(props: SwitchPropsJSX<T>, options: HtmlOptions, cache: CacheType): JSX.Element;
+export declare const Switch: <T>(props: SwitchPropsJSX<T>, options: HtmlOptions, cache: CacheType) => JSX.Element;
 type LinkProps = Omit<JSX.HTMLAttributes, 'href'> & {
     href: string | Reactive<string>;
 };
 type ServerLinkProps = LinkProps & {
     revalidate?: boolean;
 };
-export declare function Link({ children, href, revalidate }: ServerLinkProps, options: HtmlOptions, cache: CacheType): JSX.Element;
+export declare const Link: ({ children, href, revalidate }: ServerLinkProps, options: HtmlOptions, cache: CacheType) => JSX.Element;
 export default isBuiltinServerComp;
