@@ -199,6 +199,7 @@ export const Router = createServerFunction((props, options, cache) => {
                     ...child.attrs,
                     children: child.children
                 });
+                console.log(options.route, '|', routeData);
                 const el = getRouteElement(options.route, '/', routeData);
                 if (Array.isArray(el)) {
                     return el.map((item) => {

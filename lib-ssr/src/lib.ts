@@ -323,6 +323,7 @@ export const Router = createServerFunction(
             children: child.children
           }) as unknown as RouteData<DOMStructure>;
 
+          console.log(options.route, '|', routeData);
           const el = getRouteElement<DOMStructure>(options.route, '/', routeData);
 
           if (Array.isArray(el)) {

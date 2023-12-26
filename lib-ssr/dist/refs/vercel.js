@@ -13,22 +13,21 @@ const getStyleTags = (path) => {
     return res;
 };
 export default async function handler(request, response) {
-    const url = request.url;
+    const url = request.url.split('?')[0];
     const cwd = process.cwd();
     const appPath = resolve(cwd, outDir, 'main.js');
     const App = (await import(appPath)).default;
     const reg = new RegExp(/\..*$/);
     if (reg.test(url)) {
-        // const ext = url.split('.').at(-1)!;
         const fileUrl = resolve(cwd, 'dist', url.slice(1));
+        console.log(fileUrl);
         const exists = existsSync(fileUrl);
         if (exists) {
             const data = readFileSync(fileUrl);
-            // const type = mime.lookup(ext);
-            // if (type) response.setHeader('Content-Type', type);
             response.status(200).end(data);
         }
         else {
+            console.log('resolving 404');
             response.status(404).end('404 page not found');
         }
         return;
@@ -40,6 +39,7 @@ export default async function handler(request, response) {
         route: url
     };
     const promiseCache = {};
+    console.log(options);
     let html = '<!DOCTYPE html>' + (await toHtmlString(createElement(App, null), options, promiseCache));
     html = html.replace('<!-- lampjs_cache_insert -->', `<script id="_LAMPJS_DATA_" type="application/json">${JSON.stringify(promiseCache)}</script>`);
     response.status(200).end(html);

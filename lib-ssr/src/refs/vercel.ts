@@ -19,7 +19,7 @@ const getStyleTags = (path: string) => {
 };
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
-  const url = request.url!;
+  const url = request.url!.split('?')[0];
 
   const cwd = process.cwd();
   const appPath = resolve(cwd, outDir, 'main.js');
@@ -29,12 +29,15 @@ export default async function handler(request: VercelRequest, response: VercelRe
 
   if (reg.test(url)) {
     const fileUrl = resolve(cwd, 'dist', url.slice(1));
+    console.log(fileUrl);
     const exists = existsSync(fileUrl);
 
     if (exists) {
       const data = readFileSync(fileUrl);
       response.status(200).end(data);
     } else {
+      console.log('resolving 404');
+
       response.status(404).end('404 page not found');
     }
 
@@ -51,6 +54,8 @@ export default async function handler(request: VercelRequest, response: VercelRe
   };
 
   const promiseCache = {};
+
+  console.log(options);
 
   let html = '<!DOCTYPE html>' + (await toHtmlString(createElement(App, null), options, promiseCache));
 
