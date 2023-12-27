@@ -5,12 +5,8 @@ import { Route, Router } from "@jacksonotto/lampjs";
 const PageRouter = () => {
   return (
     <Router>
-      <Route path="/">
-        <Root />
-      </Route>
-      <Route path="/about">
-        <About />
-      </Route>
+      <Route path="/" content={() => <Root />} />
+      <Route path="/about" content={() => <About />} />
     </Router>
   );
 };
