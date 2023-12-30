@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "create-lampjs-ssr-app",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Templating cli for ssr runtime for LampJs",
   "engines": {
     "node": "^14.18.0 || >=16.0.0"

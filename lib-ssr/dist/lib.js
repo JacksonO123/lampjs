@@ -53,6 +53,8 @@ export const toHtmlString = async (structure, options, cache) => {
         const promise = isBuiltinServerComp(structure.tag)
             ? structure.tag(props, options, cache)
             : structure.tag(props);
+        if (promise === undefined)
+            return '';
         // @ts-ignore
         let id = promise._lampjsSuspenseId !== undefined ? promise._lampjsSuspenseId : null;
         const res = (await promise);
@@ -199,7 +201,6 @@ export const Router = createServerFunction((props, options, cache) => {
                     ...child.attrs,
                     children: child.children
                 });
-                console.log(options.route, '|', routeData);
                 const el = getRouteElement(options.route, '/', routeData);
                 if (Array.isArray(el)) {
                     return el.map((item) => {
@@ -280,4 +281,18 @@ export const Link = createServerFunction(({ children, href, revalidate }, option
     }
     return createElementClient(ClientLink, { href: getStateValue(href) }, ...tempChildren);
 });
+export const onServer = (cb) => {
+    const fn = () => {
+        if (import.meta.env.SSR)
+            return cb();
+    };
+    return fn;
+};
+export const onClient = (cb) => {
+    const fn = () => {
+        if (!import.meta.env.SSR)
+            return cb();
+    };
+    return fn;
+};
 export default isBuiltinServerComp;

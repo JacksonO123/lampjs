@@ -51,4 +51,6 @@ type ServerLinkProps = LinkProps & {
     revalidate?: boolean;
 };
 export declare const Link: ({ children, href, revalidate }: ServerLinkProps, options: HtmlOptions, cache: CacheType) => JSX.Element;
+export declare const onServer: <T extends (...args: any[]) => any>(cb: T) => () => any;
+export declare const onClient: <T extends (...args: any[]) => any>(cb: T) => () => any;
 export default isBuiltinServerComp;
