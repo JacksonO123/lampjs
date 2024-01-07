@@ -128,12 +128,7 @@ export const reactive = <T extends readonly (Reactive<any> | any)[], K>(
 };
 
 const compChildIsEl = (element: ComponentChild) => {
-  return (
-    element instanceof HTMLElement ||
-    element instanceof SVGElement ||
-    element instanceof Text ||
-    typeof element === 'string'
-  );
+  return element instanceof HTMLElement || element instanceof SVGElement || element instanceof Text;
 };
 
 export const reactiveElement = <T extends readonly Reactive<any>[]>(
