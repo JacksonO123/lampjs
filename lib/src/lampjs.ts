@@ -630,10 +630,16 @@ export const createElement = (
       if (name === 'ref') {
         (value as unknown as Reactive<any>).distributeNewState(element);
       } else if (value instanceof Reactive) {
-        element.setAttribute(name, value.value);
+        element.setAttribute(name, value.value + '');
+        // @ts-ignore
+        element[name] = value.value + '';
+
         const effect = (newVal: any) => {
-          element.setAttribute(name, newVal);
+          // @ts-ignore
+          element[name] = newVal + '';
+          element.setAttribute(name, newVal + '');
         };
+
         value.addStateChangeEvent(effect);
       } else if (name.startsWith('on')) {
         if (name === 'onChange') name = 'onInput';
