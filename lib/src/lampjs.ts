@@ -12,7 +12,8 @@ import type {
   SuspenseProps,
   DataFromPromiseResponse,
   IfPropsJSX,
-  LinkProps
+  LinkProps,
+  Cleanup
 } from './types.js';
 import { isSvgTag, applyChildren, setElementStyle, applyChild } from './util.js';
 
@@ -395,13 +396,14 @@ export const For = <T>({ each, children }: ForPropsJSX<T>) => {
   }
 
   for (let i = 0; i < each.value.length; i++) {
+    const cleanup: Cleanup = (...args: Reactive<any>[]) => {
+      collectCleanupSignals(i, ...args);
+    };
     const item = each.value[i];
 
     const indexState = createState(i);
     const itemState = createState(item);
-    const res = children(itemState, indexState, (...args: Reactive<any>[]) =>
-      collectCleanupSignals(i, ...args)
-    );
+    const res = children(itemState, indexState, cleanup);
     const el = valueToElement(res);
     info.push([el, itemState, indexState]);
   }
@@ -425,6 +427,11 @@ export const For = <T>({ each, children }: ForPropsJSX<T>) => {
         el[0].remove();
         el[1]!().terminate();
         el[2]!().terminate();
+        const terminators = toTerminate[info.length - 1];
+        if (terminators) {
+          terminators.forEach((terminator) => terminator.terminate());
+          toTerminate[info.length - 1] = [];
+        }
       }
 
       info[0][0].replaceWith(el);
@@ -472,8 +479,11 @@ export const For = <T>({ each, children }: ForPropsJSX<T>) => {
       elInfo[0].remove();
       elInfo[1]!().terminate();
       elInfo[2]!().terminate();
-      toTerminate[index].forEach((terminator) => terminator.terminate());
-      toTerminate[index] = [];
+      const terminators = toTerminate[index];
+      if (terminators) {
+        terminators.forEach((terminator) => terminator.terminate());
+        toTerminate[index] = [];
+      }
     }
   });
 

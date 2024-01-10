@@ -1,4 +1,5 @@
 import { type Reactive, RouteData, type CaseData, State } from './index.js';
+export type Cleanup = (...args: Reactive<any>[]) => void;
 export type LinkProps = Omit<JSX.HTMLAttributes, 'href'> & {
     href: string | Reactive<string>;
 };
@@ -25,7 +26,7 @@ export type SwitchProps<T> = {
     children: CaseData<T> | CaseData<T>[];
     condition: Reactive<T>;
 };
-export type ForItemFn<T> = (item: State<T>, index: State<number>, cleanup: (...args: Reactive<any>[]) => void) => ComponentChild;
+export type ForItemFn<T> = (item: State<T>, index: State<number>, cleanup: Cleanup) => ComponentChild;
 export type ForPropsJSX<T> = {
     each: Reactive<T[]>;
     children: ForItemFn<T>;

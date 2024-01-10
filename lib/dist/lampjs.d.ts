@@ -37,7 +37,7 @@ type RoutePropsJSX = {
     content: () => JSX.Element;
     children?: JSX.Element | JSX.Element[];
 };
-export declare const Route: (props: RoutePropsJSX) => RouteData<string | number | boolean | JSX.Element | Promise<any> | Reactive<any> | ComponentChild[] | null | undefined>;
+export declare const Route: (props: RoutePropsJSX) => RouteData<string | number | boolean | Reactive<any> | JSX.Element | Promise<any> | ComponentChild[] | null | undefined>;
 export declare const Link: ({ children, href }: LinkProps) => JSX.Element;
 export declare const If: ({ condition, then, else: elseBranch }: IfPropsJSX) => JSX.Element;
 export declare const For: <T>({ each, children }: ForPropsJSX<T>) => JSX.Element;
