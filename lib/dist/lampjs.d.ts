@@ -1,4 +1,4 @@
-import type { JSX, ComponentChild, ComponentAttributes, ComponentFactory, RouterPropsJSX, ForPropsJSX, SwitchPropsJSX, SuspenseProps, IfPropsJSX, LinkProps } from './types.js';
+import type { JSX, ComponentChild, ComponentAttributes, ComponentFactory, RouterPropsJSX, ForPropsJSX, SwitchPropsJSX, SuspenseProps, IfPropsJSX, LinkProps, RouteContent } from './types.js';
 export declare const mount: (root: HTMLElement | null, el: JSX.Element | JSX.Element[]) => void;
 export declare class Reactive<T> {
     private onStateChange;
@@ -24,20 +24,21 @@ export declare const reactiveElement: <T extends readonly Reactive<any>[]>(fn: (
 export declare const Fragment: ({ children }: {
     children: ComponentChild;
 }) => ComponentChild;
-export declare const getRouteElement: <T = ComponentChild>(path: string, pathAcc: string, data: RouteData<T>) => T | T[] | null;
-export declare class RouteData<T = ComponentChild> {
+export declare const getRouteElement: <T = JSX.Element>(fullPath: string, pathAcc: string, data: RouteData<T>) => T | T[] | null;
+export declare class RouteData<T = JSX.Element> {
     readonly path: string;
-    readonly element: () => T;
+    readonly element: RouteContent<T>;
     readonly nested: RouteData<T>[];
-    constructor(path: string, element: () => T, nested: RouteData<T>[]);
+    constructor(path: string, element: RouteContent<T>, nested: RouteData<T>[]);
 }
-export declare const Router: (props: RouterPropsJSX) => HTMLElement | SVGElement | Text | RouteData<ComponentChild> | CaseData<any> | Promise<JSX.SyncElement> | null;
+export declare const Router: (props: RouterPropsJSX) => HTMLElement | SVGElement | Text | RouteData<any> | CaseData<any> | Promise<JSX.SyncElement> | null;
 type RoutePropsJSX = {
     path: string;
-    content: () => JSX.Element;
+    content: RouteContent<JSX.Element>;
     children?: JSX.Element | JSX.Element[];
 };
-export declare const Route: (props: RoutePropsJSX) => RouteData<string | number | boolean | Reactive<any> | JSX.Element | Promise<any> | ComponentChild[] | null | undefined>;
+export declare const Route: (props: RoutePropsJSX) => RouteData<JSX.Element>;
+export declare const redirect: (to: string) => void;
 export declare const Link: ({ children, href }: LinkProps) => JSX.Element;
 export declare const If: ({ condition, then, else: elseBranch }: IfPropsJSX) => JSX.Element;
 export declare const For: <T>({ each, children }: ForPropsJSX<T>) => JSX.Element;

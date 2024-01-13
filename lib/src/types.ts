@@ -1,5 +1,7 @@
 import { type Reactive, RouteData, type CaseData, State } from './index.js';
 
+export type RouteContent<T> = (slugs: Record<string, string>, queryParams: Record<string, string>) => T;
+
 export type Cleanup = (...args: Reactive<any>[]) => void;
 
 export type LinkProps = Omit<JSX.HTMLAttributes, 'href'> & { href: string | Reactive<string> };
@@ -107,7 +109,7 @@ export interface ChangeEvent<T = Element> extends SyntheticEvent<T> {
 declare global {
   namespace JSX {
     type NodeElements = HTMLElement | SVGElement | Text;
-    type NonNodeElements = RouteData | CaseData<any>;
+    type NonNodeElements = RouteData<any> | CaseData<any>;
     type SyncElement = NodeElements | NonNodeElements;
     type Element = SyncElement | Promise<SyncElement>;
 

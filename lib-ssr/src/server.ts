@@ -96,6 +96,10 @@ export default async function startServer(
     const params: Record<string, string> = req.params;
     const url = params[0];
 
+    const queryEntries = Object.entries(req.query);
+    const searchParamContent = queryEntries.map(([key, value]) => `${key}=${value}`).join('&');
+    const searchParams = searchParamContent.length > 0 ? '?' + searchParamContent : '';
+
     if (prod) {
       const reg = new RegExp(/\..*$/);
 
@@ -125,7 +129,7 @@ export default async function startServer(
 
     const options = {
       headInject: clientJs + viteJs + styleTags,
-      route: url
+      route: url + searchParams
     };
 
     const promiseCache: CacheType = {};

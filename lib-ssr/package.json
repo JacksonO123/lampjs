@@ -5,7 +5,7 @@
   "types": "./dist/index.d.ts",
   "description": "A server side rendering runtime for the LampJs framework",
   "author": "Jackson Otto",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "bin": {
     "lampjs-ssr": "./dist/bin.js"
   },
@@ -55,6 +55,6 @@
     "@rollup/plugin-node-resolve": "^15.2.3"
   },
   "peerDependencies": {
-    "@jacksonotto/lampjs": "^4.5.1"
+    "@jacksonotto/lampjs": "^4.6.0"
   }
 }

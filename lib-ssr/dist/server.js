@@ -68,6 +68,9 @@ export default async function startServer(cliProd, cliPort, getApp) {
     app.use('*', async (req, res) => {
         const params = req.params;
         const url = params[0];
+        const queryEntries = Object.entries(req.query);
+        const searchParamContent = queryEntries.map(([key, value]) => `${key}=${value}`).join('&');
+        const searchParams = searchParamContent.length > 0 ? '?' + searchParamContent : '';
         if (prod) {
             const reg = new RegExp(/\..*$/);
             if (reg.test(url)) {
@@ -92,7 +95,7 @@ export default async function startServer(cliProd, cliPort, getApp) {
         const styleTags = prod ? getStyleTags(resolve(cwd, 'dist', 'assets')) : '';
         const options = {
             headInject: clientJs + viteJs + styleTags,
-            route: url
+            route: url + searchParams
         };
         const promiseCache = {};
         let html = '<!DOCTYPE html>' + (await toHtmlString(createElement(App, null), options, promiseCache));

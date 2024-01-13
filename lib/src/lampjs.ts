@@ -13,7 +13,8 @@ import type {
   DataFromPromiseResponse,
   IfPropsJSX,
   LinkProps,
-  Cleanup
+  Cleanup,
+  RouteContent
 } from './types.js';
 import { isSvgTag, applyChildren, setElementStyle, applyChild } from './util.js';
 
@@ -187,43 +188,84 @@ const validChild = (child: any) => {
   return (!Array.isArray(child) && child !== null) || (Array.isArray(child) && child.length !== 0);
 };
 
-export const getRouteElement = <T = ComponentChild>(
-  path: string,
+const getRegExpForSlugs = (url: string) => {
+  const slugs: string[] = [];
+  let parts = url.split('[').filter((item) => item.length !== 0);
+
+  return [
+    slugs,
+    parts
+      .map((part) => {
+        const tempParts = part.split(']');
+
+        if (tempParts.length === 1) return part;
+
+        slugs.push(tempParts[0]);
+        tempParts[0] = '(.*)';
+        return tempParts.join('');
+      })
+      .join('')
+  ] as const;
+};
+
+const getUrlInfo = (path: string) => {
+  const tempPath = path.slice(1);
+  const [url, paramString] = tempPath.split('?');
+  const [slugs, reg] = getRegExpForSlugs(url);
+  const paramSlugs: string[] = [];
+  let paramsReg = new RegExp('');
+
+  if (paramString !== undefined) {
+    paramsReg = new RegExp(
+      paramString
+        .split('&')
+        .map((item) => {
+          const [slugs, reg] = getRegExpForSlugs(item);
+          paramSlugs.push(slugs[0]);
+          return reg;
+        })
+        .join('&')
+    );
+  }
+
+  return [slugs, new RegExp('/' + reg), paramSlugs, paramsReg] as const;
+};
+
+export const getRouteElement = <T = JSX.Element>(
+  fullPath: string,
   pathAcc: string,
   data: RouteData<T>
 ): T | T[] | null => {
+  const [path, params] = fullPath.split('?');
   const dataPath = trimPath(data.path);
-
   const currentPath = pathAcc + (pathAcc === '/' ? '' : '/') + dataPath;
+  const search = params || '?';
 
-  if (path === currentPath) {
-    return data.element();
-  }
+  const [slugs, urlReg, paramSlugs, paramReg] = getUrlInfo(currentPath);
 
-  if (dataPath.endsWith('*')) {
-    const tempPath = path.replace(pathAcc, '');
-    const pathParts = tempPath.split('/');
-    const pathPart = pathParts[0];
-    const newMatch = dataPath.substring(0, dataPath.length - 1);
+  const matches = path.match(urlReg);
+  const searchMatches = search.match(paramReg);
+  if (matches && searchMatches) {
+    const pathMatches = Array.from(matches).slice(1);
+    const paramMatches = Array.from(searchMatches).slice(1);
 
-    if (pathPart.startsWith(newMatch)) {
-      for (let i = 0; i < data.nested.length; i++) {
-        const el = getRouteElement<T>(
-          path,
-          pathAcc + (pathAcc === '/' ? '' : '/') + pathPart,
-          data.nested[i]
-        );
-        if (validChild(el)) return el;
+    if (pathMatches.length > 0) {
+      const slugMap: Record<string, string> = {};
+      const paramMap: Record<string, string> = {};
+
+      for (let i = 0; i < pathMatches.length; i++) {
+        slugMap[slugs[i]] = pathMatches[i];
       }
 
-      const followingPath = path.replace(pathAcc, '');
-      if (followingPath.split('/').length === 1) {
-        return data.element();
+      for (let i = 0; i < paramMatches.length; i++) {
+        paramMap[paramSlugs[i]] = paramMatches[i];
       }
+
+      return data.element(slugMap, paramMap);
     }
-
-    return null;
   }
+
+  if (path === currentPath) return data.element({}, {});
 
   if (path.startsWith(currentPath)) {
     for (let i = 0; i < data.nested.length; i++) {
@@ -237,11 +279,11 @@ export const getRouteElement = <T = ComponentChild>(
 
 const currentPathname = createState('/');
 
-export class RouteData<T = ComponentChild> {
+export class RouteData<T = JSX.Element> {
   readonly path: string;
-  readonly element: () => T;
+  readonly element: RouteContent<T>;
   readonly nested: RouteData<T>[];
-  constructor(path: string, element: () => T, nested: RouteData<T>[]) {
+  constructor(path: string, element: RouteContent<T>, nested: RouteData<T>[]) {
     this.path = path;
     this.element = element;
     this.nested = nested;
@@ -260,16 +302,19 @@ export const Router = (props: RouterPropsJSX) => {
   });
 
   const handleNewRoute = (path: string) => {
+    const search = location.search.slice(1);
+    const fullPath = path + '?' + search;
+
     if (Array.isArray(children)) {
       for (let i = 0; i < children.length; i++) {
-        const el = getRouteElement(path, '/', children[i]);
+        const el = getRouteElement(fullPath, '/', children[i]);
         if (validChild(el)) return el;
       }
 
       return page404();
     }
 
-    const el = getRouteElement(path, '/', children);
+    const el = getRouteElement(fullPath, '/', children);
     if (validChild(el)) return el;
 
     return page404();
@@ -289,13 +334,13 @@ export const Router = (props: RouterPropsJSX) => {
 
 type RoutePropsJSX = {
   path: string;
-  content: () => JSX.Element;
+  content: RouteContent<JSX.Element>;
   children?: JSX.Element | JSX.Element[];
 };
 
 type RouteProps = {
   path: string;
-  content: () => JSX.Element;
+  content: RouteContent<JSX.Element>;
   children?: RouteData | RouteData[];
 };
 
@@ -304,12 +349,16 @@ export const Route = (props: RoutePropsJSX) => {
   return new RouteData(path, content, children ? (Array.isArray(children) ? children : [children]) : []);
 };
 
+export const redirect = (to: string) => {
+  currentPathname(to);
+  window.history.pushState({}, '', to);
+};
+
 export const Link = ({ children, href }: LinkProps) => {
   const handleClick = (e: any) => {
     e.preventDefault();
     const hrefVal = isState(href) ? (href as Reactive<string>).value : (href as string);
-    currentPathname(hrefVal);
-    window.history.pushState({}, '', hrefVal);
+    redirect(hrefVal);
   };
 
   return createElement('a', { onClick: handleClick, href: getStateValue(href) }, children);
