@@ -210,25 +210,27 @@ const getRegExpForSlugs = (url: string) => {
 
 const getUrlInfo = (path: string) => {
   const tempPath = path.slice(1);
-  const [url, paramString] = tempPath.split('?');
+  const url = tempPath.split('?')[0];
   const [slugs, reg] = getRegExpForSlugs(url);
-  const paramSlugs: string[] = [];
-  let paramsReg = new RegExp('');
 
-  if (paramString !== undefined) {
-    paramsReg = new RegExp(
-      paramString
-        .split('&')
-        .map((item) => {
-          const [slugs, reg] = getRegExpForSlugs(item);
-          paramSlugs.push(slugs[0]);
-          return reg;
-        })
-        .join('&')
-    );
-  }
+  return [slugs, new RegExp('/' + reg)] as const;
+};
 
-  return [slugs, new RegExp('/' + reg), paramSlugs, paramsReg] as const;
+const getSearchParams = (str: string) => {
+  if (!str) return {};
+
+  return str.split('&').reduce(
+    (acc, curr) => {
+      const [key, value] = curr.split('=');
+      try {
+        acc[key] = JSON.parse(value);
+      } catch (_) {
+        acc[key] = value;
+      }
+      return acc;
+    },
+    {} as Record<string, string>
+  );
 };
 
 export const getRouteElement = <T = JSX.Element>(
@@ -236,32 +238,25 @@ export const getRouteElement = <T = JSX.Element>(
   pathAcc: string,
   data: RouteData<T>
 ): T | T[] | null => {
-  const [path, params] = fullPath.split('?');
+  const [path, paramString] = fullPath.split('?');
   const dataPath = trimPath(data.path);
   const currentPath = pathAcc + (pathAcc === '/' ? '' : '/') + dataPath;
-  const search = params || '?';
 
-  const [slugs, urlReg, paramSlugs, paramReg] = getUrlInfo(currentPath);
+  const [slugs, urlReg] = getUrlInfo(currentPath);
+  const params = getSearchParams(paramString);
 
   const matches = path.match(urlReg);
-  const searchMatches = search.match(paramReg);
-  if (matches && searchMatches) {
+  if (matches) {
     const pathMatches = Array.from(matches).slice(1);
-    const paramMatches = Array.from(searchMatches).slice(1);
 
     if (pathMatches.length > 0) {
       const slugMap: Record<string, string> = {};
-      const paramMap: Record<string, string> = {};
 
       for (let i = 0; i < pathMatches.length; i++) {
         slugMap[slugs[i]] = pathMatches[i];
       }
 
-      for (let i = 0; i < paramMatches.length; i++) {
-        paramMap[paramSlugs[i]] = paramMatches[i];
-      }
-
-      return data.element(slugMap, paramMap);
+      return data.element(slugMap, params);
     }
   }
 
@@ -302,8 +297,8 @@ export const Router = (props: RouterPropsJSX) => {
   });
 
   const handleNewRoute = (path: string) => {
-    const search = location.search.slice(1);
-    const fullPath = path + '?' + search;
+    const search = location.search;
+    const fullPath = path + search;
 
     if (Array.isArray(children)) {
       for (let i = 0; i < children.length; i++) {
