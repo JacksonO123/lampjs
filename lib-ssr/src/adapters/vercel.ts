@@ -19,11 +19,32 @@ export const vercelBuild = async () => {
   const serverCodeUrl = new URL('./node_modules/@jacksonotto/lampjs-ssr/dist/refs/vercel.js', cwd);
   const serverCode = readFileSync(fileURLToPath(serverCodeUrl), 'utf-8');
   const vercelOutputDir = new URL('../output/', cwd);
-  const renderFuncUrl = new URL('./functions/index.func/', vercelOutputDir);
+  // const vercelOutputDir = new URL('./.vercel/output/', cwd);
+  const renderFuncUrl = new URL('./functions/api/index.func/', vercelOutputDir);
   const apiUrl = new URL('./api/index.js', renderFuncUrl);
 
   mkdirSync(new URL('./api/', renderFuncUrl), { recursive: true });
   writeFileSync(new URL('./.vc-config.json', renderFuncUrl), JSON.stringify(vcConfigJson));
+
+  const configJson = {
+    version: 3,
+    routes: [
+      {
+        src: '/assets/(.*)',
+        headers: { 'Cache-Control': 'public, max-age=31556952, immutable' },
+        continue: true
+      },
+      {
+        handle: 'filesystem'
+      },
+      {
+        src: '/.*',
+        dest: '/api'
+      }
+    ]
+  };
+
+  writeFileSync(new URL('./config.json', vercelOutputDir), JSON.stringify(configJson));
   copyFileSync(new URL('./package.json', cwd), new URL('./package.json', renderFuncUrl));
 
   const bundledFile = fileURLToPath(new URL('./api.js', cwd));
